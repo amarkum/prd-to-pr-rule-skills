@@ -26,7 +26,7 @@ function loadPlaywright() {
       path: out, format: "A4", printBackground: true, preferCSSPageSize: true, displayHeaderFooter: true,
       headerTemplate: "<span></span>",
       footerTemplate: '<div style="font:8px Helvetica,Arial,sans-serif;color:#667;width:100%;padding:0 13mm;display:flex;justify-content:space-between">' +
-        '<span>PRD to PR Playbook · v2.0 · Claude Code</span><span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>',
+        '<span>PRD to PR Playbook · Claude Code</span><span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>',
     });
     console.log("wrote " + out);
     if (screensAt > -1) {

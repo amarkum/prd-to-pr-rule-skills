@@ -1,0 +1,73 @@
+# Installs a product repo's toolchain as its .ai/repo.yaml describes, so the shared ai-sdlc workflow needs no
+# per-stack copies. The optional `ci:` section of the manifest sets it:
+#
+#   ci:
+#     runtime: node            # node | python; default: python for airflow and backend, node for mfe and frontend
+#     node_version: "22"       # used when the repo has no .nvmrc
+#     python_version: "3.12"
+#     install: npm ci          # shell commands that install the test dependencies
+#     coverage: reports/coverage/cobertura-coverage.xml   # Cobertura XML for changed-line coverage, if produced
+#
+# The shared workflow calls it as ./.ai-sdlc/.github/actions/toolchain after checking out the standard there.
+name: ai-sdlc toolchain
+description: Set up Python or Node and install a product repo's test dependencies from the ci section of .ai/repo.yaml
+outputs:
+  runtime:
+    description: python or node
+    value: ${{ steps.ci.outputs.runtime }}
+  coverage:
+    description: Path of the Cobertura XML report, empty if the repo produces none
+    value: ${{ steps.ci.outputs.coverage }}
+  min_coverage:
+    description: Changed-line coverage threshold (evidence.min_changed_line_coverage, default 80)
+    value: ${{ steps.ci.outputs.min_coverage }}
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v7
+      with:
+        python-version: "3.12"
+    - name: Read the ci section of .ai/repo.yaml
+      id: ci
+      shell: bash
+      run: |
+        if [ ! -f .ai/repo.yaml ]; then
+          echo "::error file=.ai/repo.yaml::This repo has no .ai/repo.yaml. Run tools/aisdlc.py init from the AI SDLC standard."
+          exit 1
+        fi
+        python3 -m pip install --quiet pyyaml
+        python3 - <<'PY'
+        import os, yaml
+        manifest = yaml.safe_load(open(".ai/repo.yaml", encoding="utf-8")) or {}
+        stack = (manifest.get("repo") or {}).get("stack", "")
+        ci = manifest.get("ci") or {}
+        runtime = ci.get("runtime") or ("python" if stack in ("airflow", "backend") else "node")
+        with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
+            out.write(f"runtime={runtime}\n")
+            out.write(f"python_version={ci.get('python_version') or '3.12'}\n")
+            out.write(f"node_version={ci.get('node_version') or '22'}\n")
+            out.write(f"coverage={ci.get('coverage') or ''}\n")
+            out.write(f"min_coverage={(manifest.get('evidence') or {}).get('min_changed_line_coverage', 80)}\n")
+            out.write("install<<AISDLC_EOF\n" + str(ci.get("install") or "").strip() + "\nAISDLC_EOF\n")
+        PY
+    - if: steps.ci.outputs.runtime == 'python'
+      uses: actions/setup-python@v7
+      with:
+        python-version: ${{ steps.ci.outputs.python_version }}
+    - if: steps.ci.outputs.runtime == 'node' && hashFiles('.nvmrc') != ''
+      uses: actions/setup-node@v7
+      with:
+        node-version-file: .nvmrc
+    - if: steps.ci.outputs.runtime == 'node' && hashFiles('.nvmrc') == ''
+      uses: actions/setup-node@v7
+      with:
+        node-version: ${{ steps.ci.outputs.node_version }}
+    - name: Tools for the standard's scripts
+      shell: bash
+      run: python3 -m pip install --quiet pyyaml diff-cover
+    - name: Install the repo's dependencies
+      if: steps.ci.outputs.install != ''
+      shell: bash
+      run: bash -eo pipefail -c "$INSTALL"
+      env:
+        INSTALL: ${{ steps.ci.outputs.install }}

@@ -1,6 +1,6 @@
 ---
 name: triage
-description: The Maintain stage: diagnoses a production or process signal (a breached control band, Sentry issue, alert, bug ticket or incident thread) read-only and writes it as intent.md; small fixes may go to a draft PR through the normal gates, and fixed incidents get a regression eval. Use for "investigate this alert", "triage PAY-501", or from ai-maintain.
+description: The Maintain stage: diagnoses a production or process signal (a breached control band, Sentry issue, alert, bug ticket or incident thread) read-only and writes it as intent.md; small fixes may go to a draft PR through the normal gates, and fixed incidents get a regression eval. Use for "investigate this alert", "triage PAY-501", or from the ai-sdlc maintain job.
 argument-hint: "<bands.json | sentry-issue | JIRA-KEY | description>"
 ---
 

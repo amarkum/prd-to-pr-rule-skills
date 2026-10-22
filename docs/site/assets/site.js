@@ -151,7 +151,7 @@
       list.append(row);
     }
     list.append(h("div", { class: "hbar-axis", "aria-hidden": "true" }, h("div"), h("div", { class: "hbar-ticks" },
-      [0, 0.25, 0.5, 0.75, 1].map((t) => h("span", { style: { left: `calc(var(--plot) * ${t})` } }, (t * max).toFixed(2))))));
+      [0, 0.25, 0.5, 0.75, 1].map((t) => h("span", { style: { left: `calc(var(--plot) * ${t})` } }, f(t * max))))));
     body.append(list);
   }
 

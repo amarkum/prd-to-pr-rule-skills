@@ -118,6 +118,7 @@ section { display: flex; flex-direction: column; gap: 18px; }
 .facts dt { font: 500 0.74rem/1.5 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); padding-top: 2px; }
 .facts dd { margin: 0; color: var(--ink); min-width: 0; }
 @media (max-width: 560px) { .facts { grid-template-columns: minmax(0, 1fr); gap: 2px 0; } .facts dd { margin-bottom: 10px; } }
+.facts.stacked { grid-template-columns: minmax(0, 1fr); gap: 2px 0; } .facts.stacked dd { margin-bottom: 10px; color: var(--ink-2); }
 
 /* tables */
 .tw { overflow-x: auto; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--sheet); }

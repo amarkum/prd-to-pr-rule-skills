@@ -1,5 +1,52 @@
 # Changelog
 
+From this release on, entries are dated: merging to `main` is the release, and plugins carry no version numbers.
+
+## 2026-10-22: zero-touch distribution
+
+Developers install nothing and repos copy nothing.
+
+- **Plugins reach every developer through managed settings.**
+  - The new `sdlc-standard` bundle plugin depends on every other plugin.
+  - `policy/managed-settings.json` force-enables the bundle, plus `sdlc-core`, which is locked on so its hooks
+    always run.
+  - An Owner pastes the file once into claude.ai (or deploys it with MDM or as a file). Cloud sessions receive it
+    too.
+  - Slack and claude.ai get the plugins through organization sync.
+  - `policy/README.md` has the steps, plus how to roll back and how to hold everyone on a known-good commit.
+- **No versions to bump.**
+  - `version` is gone from every plugin manifest and from the marketplace. Installs track the commit, so each merge
+    reaches every machine on its next auto-update.
+  - `tests/test_manifests.py` fails if a version comes back, or if the bundle misses a plugin.
+  - `tools/validate_plugins.py` keeps `make validate` strict and allows only that one warning.
+- **One shared CI workflow.**
+  - `.github/workflows/sdlc.yml` is a reusable workflow that holds every stage. It replaces the seven per-repo
+    workflow copies and the three stack variants of `ai-evidence.yml`.
+  - Each repo carries one caller, `.github/workflows/ai-sdlc.yml`, which never changes.
+  - `.github/actions/toolchain` installs each repo's toolchain from the new optional `ci:` section of
+    `.ai/repo.yaml`. The schema is updated.
+  - The scripts and plugins come from the standard at the workflow's own commit.
+  - The required check is now `ai-sdlc / evidence`.
+  - Fixed: Node repos no longer `pip install` into the runner's system Python, which newer Ubuntu images refuse.
+- **`aisdlc.py init` writes only the repo's own files:** `CLAUDE.md`, `.ai/repo.yaml`, the data connectors and the
+  caller. That's 5 to 7 files instead of about 20.
+  - `--extras` adds the optional `REVIEW.md`, bands, READMEs and PR template.
+  - `--repo-plugins` writes `.claude/settings.json`, for organizations without managed settings.
+  - `doctor` says where the plugins come from, and lists leftover per-repo workflows.
+  - `--marketplace` is now `--standard`. The old flag still works.
+- **Permissions** for the inner loop (tests, lint, build, git reads) move from each repo's settings to the managed
+  policy.
+- **This repo's CI** lints the shared workflow and the caller template with actionlint, and sets up its own Python.
+
+To migrate a repo onboarded with 2.0:
+- Delete `.github/workflows/ai-*.yml`. `doctor` lists them.
+- Run `aisdlc.py init --target <repo> --stack <stack>`, which adds `ai-sdlc.yml` and skips files that exist.
+- Add a `ci:` section to `.ai/repo.yaml` if the defaults don't fit.
+- Require `ai-sdlc / evidence` in place of the old `evidence` check.
+- Remove `.claude/settings.json` once managed settings are deployed.
+
+No skill or hook behaviour changed, so no eval case was added.
+
 ## sdlc-core 2.0.1 (2026-10-22)
 
 - Fixed: the stop-verify hook asked for verification ("code changed but evidence is 'none'") when only specs, plans or

@@ -7,12 +7,20 @@ in all three.
 
 It is working code, not a slide deck. It contains:
 
-- **Claude Code plugins** (skills, subagents, hooks, scripts and connectors) that any repo can switch on.
-- **Templates and a CLI** that set up a product repo in one command.
-- **CI workflows** that re-run and attest the evidence.
-- **Managed policy** for enterprise rollout.
+- **Claude Code plugins** (skills, subagents, hooks, scripts and connectors), delivered to every developer through
+  managed settings.
+- **One shared CI workflow** that every repo calls from a single small file, to re-run and attest the evidence.
+- **A CLI** that writes a product repo's few own files in one command.
+- **Managed policy**: the one file an administrator deploys.
 - **A knowledge base** that grows with every story.
 - **Documentation** as interactive HTML pages and a PDF.
+
+**Distribution takes no effort from developers and little upkeep.**
+- Developers install nothing. Each repo carries one CI file that never changes.
+- Merging to `main` is the release. Installs track the commit, so there are no versions to bump. A merge reaches
+  every machine, CI run and Slack thread by itself, and a revert rolls it back the same way.
+
+[`policy/README.md`](policy/README.md) has the one-time setup.
 
 The process follows the six-stage loop of Anthropic's AI-native SDLC playbook: Plan, Design, Build, Test, Deploy and
 Maintain. Each stage saves a file that the next stage reads. People make the decisions at the gates, and hooks enforce
@@ -27,7 +35,7 @@ those gates as code. An incomplete PRD goes back to its product owner as concret
 - [Start here: every link](#start-here-every-link)
 - [What it does, in one page](#what-it-does-in-one-page)
 - [What's in the repository](#whats-in-the-repository)
-- [Quick start](#quick-start)
+- [Roll it out](#roll-it-out)
 - [Six ways to run it](#six-ways-to-run-it)
 - [What was verified](#what-was-verified)
 - [Changing the standard](#changing-the-standard)
@@ -60,7 +68,7 @@ browser; they need no build step or server. To host them for your team, turn on 
 | Behavioural eval results (real Claude sessions with and without the plugin) | [`docs/evals.md`](docs/evals.md) |
 | The worked example: PRDs before and after, intent, spec, plan and test results from three repos | [`examples/`](examples/README.md) |
 | The original draft plan this standard replaces | [`AI_Native_Engineering_Implementation_Plan.pdf`](AI_Native_Engineering_Implementation_Plan.pdf) |
-| Enterprise policy, explained line by line | [`policy/README.md`](policy/README.md) |
+| Rolling it out: the one-time admin setup, updates and rollback, and the policy explained line by line | [`policy/README.md`](policy/README.md) |
 | What each plugin does and how to install it | [`plugins/sdlc-core/README.md`](plugins/sdlc-core/README.md), [`plugins/sdlc-connectors/README.md`](plugins/sdlc-connectors/README.md) |
 | How lessons are recorded and retired | [`knowledge/README.md`](knowledge/README.md) |
 | How to change and release the standard | [`CONTRIBUTING.md`](CONTRIBUTING.md), [`CHANGELOG.md`](CHANGELOG.md) |
@@ -111,6 +119,7 @@ Three ideas carry the design:
 
 | Plugin | Contents |
 |---|---|
+| [`sdlc-standard`](plugins/sdlc-standard/README.md) | The bundle: no components of its own. It depends on every plugin below, so enabling it in managed settings installs all of them, and plugins added later arrive with it. |
 | [`sdlc-core`](plugins/sdlc-core/README.md) | **11 skills, one or more per stage:**<br>- `prd-to-pr` runs the whole loop: `/sdlc-core:prd-to-pr <PRD link>`.<br>- `prd-review` gates the PRD and writes questions for the product owner.<br>- `context-gather`, `spec-write`, `plan`, `build`, `verify`.<br>- `pr-open`, `pr-babysit`, `triage`, `learn`.<br>**5 subagents:** `prd-analyst`, `repo-investigator`, `builder`, `qa-verifier`, `pr-reviewer`.<br>**3 always-on rules files.**<br>**Hooks:** shell guard, edit guard, PR gate, session context and stop-verify.<br>**7 scripts** (listed below).<br>**5 eval cases.** |
 | [`sdlc-connectors`](plugins/sdlc-connectors/README.md) | The Atlassian Rovo (Confluence and Jira) and Sentry MCP servers, both over OAuth.<br>The `schema-lookup` and `history-lookup` skills.<br>`schema_snapshot.py`, which snapshots data contracts and flags breaking changes. |
 | `stack-airflow` | The `airflow-dag` skill: idempotent, interval-driven writes; DAG integrity tests; `dag.test()`. |
@@ -133,46 +142,53 @@ The scripts are standard-library Python. Skills, hooks and CI all use the same c
 
 | Path | What it is |
 |---|---|
-| `tools/aisdlc.py` | The onboarding CLI. Commands:<br>- `init` sets up a product repo for its stack.<br>- `vendor` copies a pinned version into a repo for surfaces that don't install plugins: web sessions, scheduled tasks and Claude in Slack.<br>- `doctor` checks a repo's setup.<br>- `knowledge-audit` flags stale lessons. |
-| `templates/repo/` | What `init` writes into a product repo:<br>- `CLAUDE.md`, `REVIEW.md` and a PR template.<br>- `.ai/repo.yaml` (the repo manifest) and `.ai/bands.yaml`.<br>- an `evals/` folder.<br>- Connectors in `.mcp.json`. Airflow: read-only MongoDB, the SQL schema database through DBHub, and Airflow. Web stacks: Playwright.<br>- Eight workflows: `ai-prd-intake`, `ai-design`, `ai-build`, `ai-evidence`, `ai-review`, `ai-agent-evals`, `ai-maintain`, `ai-learn`. |
+| `tools/aisdlc.py` | The onboarding CLI. Commands:<br>- `init` writes a repo's own files.<br>- `doctor` checks a repo's setup and lists leftovers of older setups.<br>- `vendor` copies the plugins into a repo. It's a fallback for organizations without managed settings.<br>- `knowledge-audit` flags stale lessons.<br>`tools/validate_plugins.py` runs strict plugin validation. |
+| `templates/repo/` | What `init` writes into a product repo. These are only the files specific to that repo:<br>- `CLAUDE.md`.<br>- `.ai/repo.yaml`: the stack, its checks and how CI installs it.<br>- Connectors in `.mcp.json`. Airflow: read-only MongoDB, the SQL schema database through DBHub, and Airflow. Web stacks: Playwright.<br>- `.github/workflows/ai-sdlc.yml`, the one CI file.<br>`extras/` (with `--extras`) holds the optional `REVIEW.md`, `.ai/bands.yaml`, READMEs and PR template. |
 | `standards/` | The Confluence PRD template, and the JSON Schema for `.ai/repo.yaml` |
 | `policy/` | Managed settings in two tiers:<br>- **Standard:** the approved marketplace and MCP servers, no bypass mode, a minimum Claude Code version.<br>- **Regulated:** adds a sandbox, credential isolation, and managed-only permissions and hooks. |
 | `knowledge/` | Org and stack lessons, each with an owner and a review date |
 | `docs/` | The interactive pages (`site/`), the playbook PDF and its build script (`build-pdf.cjs`), the research notes and the eval results |
 | `examples/` | PAY-412, one story across three repos:<br>- PRDs before and after the product owner's answers.<br>- Intent, spec and plan.<br>- JUnit results from pytest, Vitest and Playwright.<br>- `demo.py`, which runs the deterministic layer end to end. |
-| `tests/` | 98 unit tests (Python 3.9 and 3.13) for every script, hook and CLI command |
-| `.github/` | `CODEOWNERS` (placeholder teams), and this repo's own CI in `workflows/`:<br>- `validate`: tests and strict plugin validation, on every push to `main` and every PR.<br>- `plugin-evals`: run manually, since evals cost money.<br>- `knowledge-audit`: weekly. |
+| `tests/` | 105 unit tests (Python 3.9 and 3.13) for every script, hook and CLI command, and for the manifests |
+| `.github/` | The shared workflow:<br>- `workflows/sdlc.yml` holds every stage job: evidence, review, `@claude` fixes, PRD intake, design, build, agent evals, maintain and learn.<br>- `actions/toolchain` sets up each repo from its `.ai/repo.yaml`.<br>This repo's own CI:<br>- `validate`: tests, strict plugin validation and actionlint.<br>- `plugin-evals`: run manually, since evals cost money.<br>- `knowledge-audit`: weekly.<br>Also `CODEOWNERS`, with placeholder teams. |
 | `Makefile` | `test`, `validate`, `demo`, `evals`, `details` and `pdf` (see [What was verified](#what-was-verified)) |
 
-## Quick start
+## Roll it out
+
+**Once, by an administrator.** [`policy/README.md`](policy/README.md) has each step.
+
+1. Copy this repository into your organization as a private or internal repo.
+2. Paste [`policy/managed-settings.json`](policy/managed-settings.json) into **claude.ai > Organization settings >
+   Claude Code > Managed settings** (or deploy it with MDM). Every developer who signs in gets the plugins on their
+   next session, and keeps getting updates. Cloud sessions included.
+3. Sync the repository under **Organization settings > Plugins & skills**, so Slack, claude.ai and Cowork get the
+   same skills.
+4. Store `ANTHROPIC_API_KEY` (and the Atlassian credentials) as organization secrets.
+
+**Once per repo.** Writes the repo's own files: `CLAUDE.md`, `.ai/repo.yaml`, connectors, and the one CI file.
 
 ```bash
-# 1. Set up a product repo. This writes CLAUDE.md, REVIEW.md, .ai/repo.yaml, .ai/bands.yaml, evals/, connectors,
-#    the workflows, and .claude/settings.json, which turns on this marketplace's plugins.
 python3 tools/aisdlc.py init   --target ../data-airflow --stack airflow  --jira PAY --description "Payroll pipelines"
 python3 tools/aisdlc.py init   --target ../payroll-mfe  --stack mfe      --jira PAY
 python3 tools/aisdlc.py init   --target ../web-shell    --stack frontend --jira PAY
 python3 tools/aisdlc.py doctor --target ../data-airflow
-
-# 2. In the repo, start Claude Code and trust the folder; the plugins install. Then:
-/sdlc-core:prd-to-pr https://<site>.atlassian.net/wiki/spaces/PAY/pages/<id>
-
-# 3. For surfaces that don't install plugins (web sessions, scheduled tasks, Claude in Slack), vendor a pinned copy:
-python3 tools/aisdlc.py vendor --target ../payroll-mfe --stack mfe
 ```
 
-**Requirements:**
+Then fill in `CLAUDE.md`, commit, and make `ai-sdlc / evidence` a required check. The other CI stages stay off until
+you set the repository variable `AISDLC_AUTOMATION=on`.
 
-- Python 3.9 or later, with PyYAML for `evidence.py run`.
-- `git` and `gh`.
-- Node, only for the web stacks and the PDF build.
+**Developers** do nothing. They open Claude Code in the repo and start:
 
-`ai-evidence` runs on every PR from day one. Make it a required check. The other `ai-*` workflows stay off until three
-things are set up:
+```
+/sdlc-core:prd-to-pr https://<site>.atlassian.net/wiki/spaces/PAY/pages/<id>
+```
 
-- The repository variable `AISDLC_AUTOMATION=on`.
-- The `ANTHROPIC_API_KEY` secret.
-- For PRD intake: the `ATLASSIAN_SITE` variable and the `ATLASSIAN_EMAIL` and `ATLASSIAN_API_TOKEN` secrets.
+**Without managed settings** (no Team or Enterprise plan and no MDM):
+- `init --repo-plugins` installs the plugins per repo, after each contributor trusts the folder.
+- `vendor` copies them into the repo. It works on every surface, but each release then needs a re-run in every repo.
+
+**Requirements:** Python 3.9 or later (with PyYAML for `evidence.py run`), `git` and `gh`. Node only for the web stacks
+and the PDF build.
 
 ## Six ways to run it
 
@@ -191,8 +207,8 @@ with the first. The [ways to implement](docs/site/implement.html) page compares 
 ## What was verified
 
 ```bash
-make test      # 98 unit tests: PRD lint, coverage, fail-to-pass, evidence and plan checks, evals runner, bands, hooks, CLI
-make validate  # claude plugin validate --strict on the marketplace and all 5 plugins
+make test      # 105 unit tests: PRD lint, coverage, fail-to-pass, evidence and plan checks, evals runner, bands, hooks, CLI
+make validate  # strict plugin validation of the marketplace and all 6 plugins (the omitted version is the only allowed warning)
 make demo      # PRD gate -> AC coverage -> evidence -> PR gate deny/allow -> locked test and release gate
 make evals     # behavioural evals: real Claude sessions with and without the plugin (costs money)
 make details   # always-on context cost per plugin
@@ -205,6 +221,9 @@ make pdf       # rebuild docs/playbook.pdf from docs/site/playbook.html
 - Strict plugin validation passes.
 - The demo runs end to end.
 - `init`, `vendor` and `doctor` work for all three stacks.
+- Installing `sdlc-standard` with the Claude Code CLI installs all five plugins, each versioned by its commit.
+- actionlint passes on the shared workflow and the caller template.
+- The toolchain step reads each stack's `.ai/repo.yaml`.
 - The pages render without console errors or sideways scrolling, on desktop and phone, in light and dark.
 - The behavioural evals ran 30 real Claude sessions on sdlc-core 2.0.1: 5 cases, with and without the plugin, 3 runs
   each. All five cases pass with the plugin. Without it, Claude wrote code past the spec and plan gates in 6 of 6 runs,
@@ -214,21 +233,23 @@ make pdf       # rebuild docs/playbook.pdf from docs/site/playbook.html
 **Still to check in your environment:**
 
 - Live calls to your Confluence, Jira, Sentry, MongoDB and schema database.
-- The GitHub workflows on real runners.
-- Web sessions, scheduled tasks and Claude in Slack with the vendored configuration.
+- The shared workflow on real runners, called from a product repo.
+- Managed settings from the admin console: the plugins arriving on a developer machine and in a web session.
+- Organization sync to Slack: the plugins arriving in a Claude Tag thread.
 - The policy tiers on real machines.
 - Replace the placeholder teams in CODEOWNERS with real ones.
 
 ## Changing the standard
 
-The standard is versioned like code:
+Merging to `main` is the release:
 
-- **Semver per plugin.** The plugin manifest and the marketplace entry stay in step; a test enforces it.
-- **Evals for behaviour changes.** Any change to a skill or hook's behaviour needs an eval case, or a stated reason why not.
-- **Review.** CODEOWNERS review each change.
-- **Release.** `claude plugin tag` cuts the release.
+- **No versions.** Plugins carry no `version`, so installs track the commit. A test fails if one is added.
+- **Review and checks.** CODEOWNERS review each change, and branch protection requires the `validate` checks.
+- **Evals for behaviour changes.** Any change to a skill or hook's behaviour needs an eval case, or a stated reason why
+  not.
+- **Rollback.** Revert the commit. To hold everyone on a known-good commit, pin `ref` in managed settings.
 
-Repos pick up new versions automatically in plugin mode, or by re-running `vendor`. See [CONTRIBUTING.md](CONTRIBUTING.md).
+How a merge reaches each surface is in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 To change the pages, edit the content in `docs/site/assets/data.js` (stages, mechanisms, setups, evidence) or
 `docs/site/assets/companies.js` (the company cases). The layout code doesn't need to change.

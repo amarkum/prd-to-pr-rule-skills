@@ -1,7 +1,6 @@
 {
   "name": "stack-airflow",
   "displayName": "Stack pack: Airflow data pipelines",
-  "version": "2.0.0",
   "description": "Airflow DAG conventions, data-contract rules and test patterns (DagBag integrity, idempotent re-runs, dag.test, data-quality checks) that the builder loads automatically when working on DAG code.",
   "author": {
     "name": "Data Engineering Guild"

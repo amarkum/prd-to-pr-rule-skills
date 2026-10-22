@@ -9,8 +9,8 @@
     }
   },
   "enabledPlugins": {
-    "sdlc-core@ai-sdlc": true,
-    "sdlc-connectors@ai-sdlc": true
+    "sdlc-standard@ai-sdlc": true,
+    "sdlc-core@ai-sdlc": true
   },
   "strictKnownMarketplaces": [
     {
@@ -47,7 +47,9 @@
       "Bash(npx playwright test *)",
       "Bash(npx tsc *)",
       "Bash(gh pr view *)",
-      "Bash(gh pr checks *)"
+      "Bash(gh pr checks *)",
+      "Bash(gh pr list *)",
+      "Bash(python -m pytest *)"
     ],
     "disableBypassPermissionsMode": "disable"
   },
@@ -146,6 +148,6 @@
     "OTEL_EXPORTER_OTLP_ENDPOINT": "https://otel-collector.example.internal:4317"
   },
   "companyAnnouncements": [
-    "AI SDLC standard v2: start with /sdlc-core:prd-to-pr <PRD link>. intent.md, an approved spec.md and an accepted plan.md come before code; PRs need evidence; humans merge and release."
+    "AI SDLC standard: installed and kept up to date for you. Start with /sdlc-core:prd-to-pr <PRD link>. intent.md, an approved spec.md and an accepted plan.md come before code; PRs need evidence; humans merge and release."
   ]
 }

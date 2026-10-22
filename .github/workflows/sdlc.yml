@@ -1,0 +1,622 @@
+# The AI SDLC pipeline every product repo runs. A repo calls it from one small file that `tools/aisdlc.py init`
+# writes and that never needs to change (templates/repo/common/.github/workflows/ai-sdlc.yml):
+#
+#   jobs:
+#     ai-sdlc:
+#       uses: <org>/<standard-repo>/.github/workflows/sdlc.yml@main
+#       secrets: inherit
+#
+# Every stage lives here, so a merge to the standard's main branch reaches every repo on its next event; nothing is
+# copied into repos. Each job picks its trigger from the caller's event (in a called workflow, the github context and
+# vars belong to the caller). The scripts, the toolchain action and the plugins come from this repository at the
+# exact commit of this file (job.workflow_repository and job.workflow_sha), so they always match.
+#
+#   Job             Stage                 Runs when the caller gets ...
+#   evidence        4 Test (required)     a pull request opened, updated, reopened or marked ready
+#   review          5 Deploy              a pull request ready for review                                (automation)
+#   respond         5 Deploy              an "@claude ..." comment from a member                          (automation)
+#   intake          1 Plan                repository_dispatch prd-ready, or a manual run of stage intake   (automation)
+#   design          2 Design              a push of an accepted specs/<KEY>/intent.md, or stage design      (automation)
+#   build           3 Build, 4 Test       a push of an approved spec or accepted plan, repository_dispatch
+#                                         spec-approved, or stage build                                  (automation)
+#   agent-evals     4 Test                a pull request touching CLAUDE.md, REVIEW.md, .claude/, evals/ or
+#                                         .ai/repo.yaml; the schedule; or stage evals                      (automation)
+#   maintain        6 Maintain            the schedule, or stage maintain                                 (automation)
+#   learn           6 Maintain            a merged pull request labelled ai-assisted                      (automation)
+#
+# Automation jobs run only when the repository variable AISDLC_AUTOMATION is "on". Secrets arrive with
+# `secrets: inherit`: ANTHROPIC_API_KEY; ATLASSIAN_EMAIL and ATLASSIAN_API_TOKEN for intake (with the ATLASSIAN_SITE
+# variable); AISDLC_TOKEN, read access to this repository, only when it is private.
+name: ai-sdlc
+on:
+  workflow_call:
+
+jobs:
+  # ---------------------------------------------------------------- 4 Test: the evidence gate (required check)
+  evidence:
+    name: evidence
+    if: >-
+      github.event_name == 'pull_request' &&
+      contains(fromJSON('["opened","synchronize","reopened","ready_for_review"]'), github.event.action)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: write      # sticky evidence comment
+      id-token: write           # artifact attestation (Sigstore)
+      attestations: write
+      artifact-metadata: write
+    concurrency:
+      group: ai-evidence-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}   # evidence is for the commit reviewers see
+          fetch-depth: 0                                      # merge-base for fail-to-pass and diff-cover
+      - name: The standard, at this workflow's commit
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          token: ${{ secrets.AISDLC_TOKEN || github.token }}
+          path: .ai-sdlc
+          persist-credentials: false
+      - run: echo ".ai-sdlc/" >> .git/info/exclude            # keeps the tree clean for the evidence
+      - id: toolchain
+        uses: ./.ai-sdlc/.github/actions/toolchain
+      - name: Evidence (checks, AC coverage, fail-to-pass, plan)
+        id: evidence
+        continue-on-error: true
+        run: python3 .ai-sdlc/plugins/sdlc-core/scripts/evidence.py run --manifest .ai/repo.yaml --base "origin/$BASE_REF"
+        env:
+          BASE_REF: ${{ github.base_ref }}
+      - name: Changed-line coverage
+        id: coverage
+        if: steps.toolchain.outputs.coverage != '' && hashFiles(steps.toolchain.outputs.coverage) != ''
+        continue-on-error: true
+        run: >-
+          diff-cover "$COVERAGE_XML" --compare-branch="origin/$BASE_REF" --fail-under="$MIN_COVERAGE"
+          --format markdown:.ai/evidence/diff-cover.md
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          COVERAGE_XML: ${{ steps.toolchain.outputs.coverage }}
+          MIN_COVERAGE: ${{ steps.toolchain.outputs.min_coverage }}
+      - name: Job summary
+        if: always()
+        run: cat .ai/evidence/summary.md .ai/evidence/diff-cover.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+      - name: Upload evidence
+        id: upload
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ai-evidence-${{ github.event.pull_request.head.sha }}
+          path: |
+            .ai/evidence/
+            reports/
+          if-no-files-found: warn
+          retention-days: 90
+      - name: Attest evidence
+        if: always() && steps.upload.outputs.artifact-digest != '' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/attest@v4   # private repos need GitHub Enterprise Cloud for attestations
+        with:
+          subject-name: ai-evidence-${{ github.event.pull_request.head.sha }}.zip
+          subject-digest: sha256:${{ steps.upload.outputs.artifact-digest }}
+      - name: Evidence comment
+        if: always() && github.event.pull_request.head.repo.full_name == github.repository
+        uses: marocchino/sticky-pull-request-comment@v3.0.5
+        with:
+          header: ai-evidence
+          path: .ai/evidence/summary.md
+      - name: Gate
+        run: |
+          python3 .ai-sdlc/plugins/sdlc-core/scripts/evidence.py check --base "origin/$BASE_REF" --docs-only-ok
+          test "$COVERAGE" != "failure" || { echo "changed-line coverage below threshold"; exit 1; }
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          COVERAGE: ${{ steps.coverage.outcome }}
+      - name: Triage the failure (read-only)
+        if: failure() && vars.AISDLC_AUTOMATION == 'on' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            The evidence gate failed for PR #${{ github.event.pull_request.number }}. Read .ai/evidence/summary.md and the
+            logs in .ai/evidence/logs/. Identify the most likely cause, say whether it looks flaky or real, and post a
+            three-line summary on the PR with `gh pr comment`. Read-only: change nothing, re-run nothing.
+          claude_args: >-
+            --max-turns 15
+            --allowedTools "Read,Grep,Glob,Bash(gh pr comment *)"
+
+  # ---------------------------------------------------------------- 5 Deploy: one review per ready PR
+  review:
+    if: >-
+      vars.AISDLC_AUTOMATION == 'on' && github.event_name == 'pull_request' &&
+      contains(fromJSON('["opened","synchronize","ready_for_review"]'), github.event.action) &&
+      github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0}
+      - name: The standard, at this workflow's commit
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          token: ${{ secrets.AISDLC_TOKEN || github.token }}
+          path: .ai-sdlc
+          persist-credentials: false
+      - run: echo ".ai-sdlc/" >> .git/info/exclude
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          plugin_marketplaces: ${{ github.workspace }}/.ai-sdlc
+          plugins: sdlc-standard@ai-sdlc
+          use_sticky_comment: true
+          prompt: |
+            Review PR #${{ github.event.pull_request.number }} with the sdlc-core pr-reviewer agent, following REVIEW.md
+            when the repo has one: the Bugs, Security and Compliance passes, Compliance checked against
+            specs/<KEY>/spec.md and plan.md (the Jira key is in the branch name and the title). Post one comment:
+            Important findings first (pass, file:line, issue, fix), at most five nits, then the count of nits not shown.
+            Never approve, request changes or push commits.
+          claude_args: >-
+            --max-turns 40
+            --allowedTools "Read,Grep,Glob,Agent,Bash(git diff *),Bash(git log *),Bash(gh pr view *),Bash(gh pr diff *),Bash(gh pr comment *)"
+
+  # ---------------------------------------------------------------- 5 Deploy: "@claude fix the null check" on a PR
+  respond:
+    if: >-
+      vars.AISDLC_AUTOMATION == 'on' &&
+      (github.event_name == 'issue_comment' || github.event_name == 'pull_request_review_comment') &&
+      contains(github.event.comment.body, '@claude') &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0}
+      - name: The standard, at this workflow's commit
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          token: ${{ secrets.AISDLC_TOKEN || github.token }}
+          path: .ai-sdlc
+          persist-credentials: false
+      - run: echo ".ai-sdlc/" >> .git/info/exclude
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          plugin_marketplaces: ${{ github.workspace }}/.ai-sdlc
+          plugins: sdlc-standard@ai-sdlc
+          claude_args: >-
+            --max-turns 60
+            --allowedTools "Read,Grep,Glob,Write,Edit,Agent,Skill,Bash(git *),Bash(gh pr view *),Bash(gh pr diff *),Bash(python3 *),Bash(pytest *),Bash(npm *),Bash(npx *)"
+
+  # ---------------------------------------------------------------- 1 Plan: the PRD gate
+  intake:
+    # Confluence or Jira Automation sends repository_dispatch prd-ready when the product owner labels the PRD ready.
+    # NEEDS_CLARIFICATION: a comment on the PRD page and a Jira clarification task. READY: intent.md plus the design
+    # pass in one draft PR, because the product owner accepted the intent by labelling the page.
+    if: >-
+      vars.AISDLC_AUTOMATION == 'on' &&
+      ((github.event_name == 'repository_dispatch' && github.event.action == 'prd-ready') ||
+       (github.event_name == 'workflow_dispatch' && github.event.inputs.stage == 'intake'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    env:
+      PAGE: ${{ github.event.client_payload.page_id || github.event.inputs.page }}
+      KEY: ${{ github.event.client_payload.key || github.event.inputs.key }}
+      ATLASSIAN_SITE: ${{ vars.ATLASSIAN_SITE }}
+      ATLASSIAN_EMAIL: ${{ secrets.ATLASSIAN_EMAIL }}
+      ATLASSIAN_API_TOKEN: ${{ secrets.ATLASSIAN_API_TOKEN }}
+    steps:
+      - name: Validate inputs (they come from outside GitHub)
+        run: |
+          [[ "$KEY" =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ]] || { echo "invalid Jira key"; exit 1; }
+          [[ "$PAGE" =~ ^([0-9]+|https://[^[:space:]]+)$ ]] || { echo "invalid page reference"; exit 1; }
+      - uses: actions/checkout@v7
+      - name: The standard, at this workflow's commit
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          token: ${{ secrets.AISDLC_TOKEN || github.token }}
+          path: .ai-sdlc
+          persist-credentials: false
+      - run: echo ".ai-sdlc/" >> .git/info/exclude
+      - name: Fetch the PRD version under review
+        run: python3 .ai-sdlc/plugins/sdlc-core/scripts/atlassian.py page-md --page "$PAGE" --out "specs/$KEY/prd.md"
+      - name: Deterministic lint (the floor)
+        continue-on-error: true
+        run: python3 .ai-sdlc/plugins/sdlc-core/scripts/prd_lint.py "specs/$KEY/prd.md" --json "specs/$KEY/prd-lint.json" --md "specs/$KEY/prd-lint.md"
+      - name: Semantic review
+        id: review
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          plugin_marketplaces: ${{ github.workspace }}/.ai-sdlc
+          plugins: sdlc-standard@ai-sdlc
+          prompt: |
+            /sdlc-core:prd-review specs/${{ env.KEY }}/prd.md
+            CI mode. The PRD is already fetched and linted (specs/${{ env.KEY }}/prd-lint.json). Do not post to Confluence
+            or Jira; this workflow does that. Write specs/${{ env.KEY }}/prd-review.md and, only if the verdict is
+            NEEDS_CLARIFICATION, specs/${{ env.KEY }}/po-feedback.md for the product owner.
+          claude_args: >-
+            --max-turns 40
+            --allowedTools "Read,Grep,Glob,Write,Agent,Skill,Bash(python3 *)"
+            --json-schema '{"type":"object","properties":{"verdict":{"type":"string","enum":["READY","NEEDS_CLARIFICATION"]},"blocking":{"type":"integer"}},"required":["verdict","blocking"]}'
+      - name: Report back to the product owner
+        if: fromJSON(steps.review.outputs.structured_output).verdict == 'NEEDS_CLARIFICATION'
+        run: |
+          S=.ai-sdlc/plugins/sdlc-core/scripts/atlassian.py
+          python3 "$S" page-comment --page "$PAGE" --body-file "specs/$KEY/po-feedback.md"
+          python3 "$S" jira-create --project "${KEY%%-*}" --summary "Clarify PRD for $KEY" \
+            --description-file "specs/$KEY/po-feedback.md" --labels prd-clarification --parent "$KEY"
+          python3 "$S" jira-transition --issue "$KEY" --to "${CLARIFY_STATUS:-Needs Clarification}" || echo "transition not available; skipped"
+        env:
+          CLARIFY_STATUS: ${{ vars.CLARIFICATION_STATUS }}
+      - name: Draft the spec for review
+        if: fromJSON(steps.review.outputs.structured_output).verdict == 'READY'
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          plugin_marketplaces: ${{ github.workspace }}/.ai-sdlc
+          plugins: sdlc-standard@ai-sdlc
+          prompt: |
+            /sdlc-core:prd-to-pr ${{ env.KEY }} intent
+            CI mode: the PRD gate passed (specs/${{ env.KEY }}/prd-review.md) and the product owner labelled the page ready,
+            so write specs/${{ env.KEY }}/intent.md with status: accepted (source: the Confluence page and version). Then run
+            context-gather and spec-write, commit to branch spec/${{ env.KEY }}, and open a DRAFT pull request with intent.md,
+            context.md and spec.md so the product owner and tech lead can review and approve the spec. List the flagged
+            concerns and their policy owners in the PR body. Stop after opening the PR.
+          claude_args: >-
+            --max-turns 80
+            --allowedTools "Read,Grep,Glob,Write,Edit,Agent,Skill,Bash(git *),Bash(gh pr create *),Bash(python3 *),Bash(rg *)"
+
+  # ---------------------------------------------------------------- 2 Design: an accepted intent becomes a draft spec
+  design-find:
+    if: >-
+      vars.AISDLC_AUTOMATION == 'on' &&
+      ((github.event_name == 'push' && github.ref_name == github.event.repository.default_branch) ||
+       (github.event_name == 'workflow_dispatch' && github.event.inputs.stage == 'design'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      keys: ${{ steps.keys.outputs.keys }}
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0}
+      - id: keys
+        run: |
+          if [ -n "$INPUT_KEY" ]; then candidates="$INPUT_KEY"
+          else candidates=$(git diff --name-only "$BEFORE" "$GITHUB_SHA" -- 'specs/*/intent.md' 2>/dev/null | cut -d/ -f2); fi
+          ready=()
+          for k in $candidates; do
+            [[ "$k" =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ]] || continue
+            grep -qE '^status:[[:space:]]*accepted' "specs/$k/intent.md" 2>/dev/null || continue
+            [ -f "specs/$k/spec.md" ] && continue
+            ready+=("\"$k\"")
+          done
+          echo "keys=[$(IFS=,; echo "${ready[*]}")]" >> "$GITHUB_OUTPUT"
+        env:
+          INPUT_KEY: ${{ github.event.inputs.key }}
+          BEFORE: ${{ github.event.before }}
+  design:
+    needs: design-find
+    if: needs.design-find.outputs.keys != '[]'
+    strategy:
+      matrix:
+        key: ${{ fromJSON(needs.design-find.outputs.keys) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0}
+      - name: The standard, at this workflow's commit
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          token: ${{ secrets.AISDLC_TOKEN || github.token }}
+          path: .ai-sdlc
+          persist-credentials: false
+      - run: echo ".ai-sdlc/" >> .git/info/exclude
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          plugin_marketplaces: ${{ github.workspace }}/.ai-sdlc
+          plugins: sdlc-standard@ai-sdlc
+          prompt: |
+            /sdlc-core:prd-to-pr ${{ matrix.key }} design
+            CI mode: specs/${{ matrix.key }}/intent.md is accepted. Run context-gather and spec-write, commit to branch
+            spec/${{ matrix.key }}, and open a DRAFT pull request with context.md and spec.md (status: draft). List the
+            flagged concerns and their policy owners in the PR body. Stop after opening the PR.
+          claude_args: >-
+            --max-turns 80
+            --allowedTools "Read,Grep,Glob,Write,Edit,Agent,Skill,Bash(git *),Bash(gh pr create *),Bash(python3 *),Bash(rg *)"
+
+  # ---------------------------------------------------------------- 3 Build and 4 Test: an approved spec becomes a draft PR
+  build-find:
+    if: >-
+      vars.AISDLC_AUTOMATION == 'on' &&
+      ((github.event_name == 'push' && github.ref_name == github.event.repository.default_branch) ||
+       (github.event_name == 'repository_dispatch' && github.event.action == 'spec-approved') ||
+       (github.event_name == 'workflow_dispatch' && github.event.inputs.stage == 'build'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      keys: ${{ steps.keys.outputs.keys }}
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0}
+      - id: keys
+        run: |
+          if [ -n "$INPUT_KEY" ]; then candidates="$INPUT_KEY"
+          else candidates=$(git diff --name-only "$BEFORE" "$GITHUB_SHA" -- 'specs/*/spec.md' 'specs/*/plan.md' 2>/dev/null | cut -d/ -f2 | sort -u); fi
+          ready=()
+          for k in $candidates; do
+            [[ "$k" =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ]] || continue
+            grep -qE '^status:[[:space:]]*approved' "specs/$k/spec.md" 2>/dev/null || continue
+            if [ -f "specs/$k/plan.md" ] && ! grep -qE '^status:[[:space:]]*accepted' "specs/$k/plan.md"; then continue; fi
+            git ls-remote --exit-code --heads origin "feat/$k-*" >/dev/null 2>&1 && continue   # already being built
+            ready+=("\"$k\"")
+          done
+          echo "keys=[$(IFS=,; echo "${ready[*]}")]" >> "$GITHUB_OUTPUT"
+        env:
+          INPUT_KEY: ${{ github.event.client_payload.key || github.event.inputs.key }}
+          BEFORE: ${{ github.event.before }}
+  build:
+    needs: build-find
+    if: needs.build-find.outputs.keys != '[]'
+    strategy:
+      matrix:
+        key: ${{ fromJSON(needs.build-find.outputs.keys) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0}
+      - name: The standard, at this workflow's commit
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          token: ${{ secrets.AISDLC_TOKEN || github.token }}
+          path: .ai-sdlc
+          persist-credentials: false
+      - run: echo ".ai-sdlc/" >> .git/info/exclude
+      - uses: ./.ai-sdlc/.github/actions/toolchain      # the repo's checks need its toolchain
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          plugin_marketplaces: ${{ github.workspace }}/.ai-sdlc
+          plugins: sdlc-standard@ai-sdlc
+          prompt: |
+            /sdlc-core:prd-to-pr ${{ matrix.key }} plan
+            CI mode: the spec is approved. If specs/${{ matrix.key }}/plan.md is missing, run the plan skill. When the
+            spec is risk: high, commit plan.md (status: draft) to branch plan/${{ matrix.key }}, open it as a draft PR for
+            the tech lead to accept, and stop. Otherwise record status: accepted with accepted_by: "auto (CI, risk <tier>)".
+            Then run build, verify and pr-open on branch feat/${{ matrix.key }}-<slug>. Open the PR as a draft.
+            If verify still fails after two repair rounds, open no PR; report the failures instead.
+          claude_args: >-
+            --max-turns 200
+            --allowedTools "Read,Grep,Glob,Write,Edit,Agent,Skill,Bash(git *),Bash(gh pr create *),Bash(python3 *),Bash(pytest *),Bash(ruff *),Bash(npm *),Bash(npx *)"
+
+  # ---------------------------------------------------------------- 4 Test: agent evals for the repo's Claude configuration
+  agent-evals:
+    # CLAUDE.md, REVIEW.md, .claude/ and the plugins steer the agent, so changes to them are regression-tested like code:
+    # on pull requests that touch them and on the schedule (which also catches model changes). Costs money per eval.
+    if: >-
+      vars.AISDLC_AUTOMATION == 'on' &&
+      ((github.event_name == 'pull_request' && contains(fromJSON('["opened","synchronize","reopened"]'), github.event.action)) ||
+       github.event_name == 'schedule' ||
+       (github.event_name == 'workflow_dispatch' && github.event.inputs.stage == 'evals'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0}
+      - id: present
+        name: Evals present (and, on a PR, touched configuration)
+        run: |
+          if ! ls evals/*.json >/dev/null 2>&1; then echo "No evals yet: add evals/<name>.json (see the standard's docs)"; exit 0; fi
+          if [ "$EVENT" = "pull_request" ] && ! git diff --name-only "origin/$BASE_REF...HEAD" |
+               grep -qE '^(CLAUDE\.md|REVIEW\.md|\.claude/|evals/|\.ai/repo\.yaml)'; then
+            echo "This PR doesn't change the agent's configuration"; exit 0
+          fi
+          echo "run=true" >> "$GITHUB_OUTPUT"
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+      - name: The standard, at this workflow's commit
+        if: steps.present.outputs.run == 'true'
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          token: ${{ secrets.AISDLC_TOKEN || github.token }}
+          path: .ai-sdlc
+          persist-credentials: false
+      - if: steps.present.outputs.run == 'true'
+        run: echo ".ai-sdlc/" >> .git/info/exclude
+      - if: steps.present.outputs.run == 'true'
+        uses: ./.ai-sdlc/.github/actions/toolchain
+      - name: Claude Code with the standard's plugins
+        if: steps.present.outputs.run == 'true'
+        run: |
+          npm install -g @anthropic-ai/claude-code
+          claude plugin marketplace add "$GITHUB_WORKSPACE/.ai-sdlc"
+          claude plugin install sdlc-standard@ai-sdlc
+      - name: Run the evals
+        if: steps.present.outputs.run == 'true'
+        run: python3 .ai-sdlc/plugins/sdlc-core/scripts/agent_evals.py run --threshold 0.8 --json agent-evals.json --md agent-evals.md
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - name: Report
+        if: always() && steps.present.outputs.run == 'true'
+        run: cat agent-evals.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+      - uses: actions/upload-artifact@v7
+        if: always() && steps.present.outputs.run == 'true'
+        with: {name: agent-evals, path: "agent-evals.*", retention-days: 90}
+      - uses: marocchino/sticky-pull-request-comment@v3.0.5
+        if: always() && steps.present.outputs.run == 'true' && github.event_name == 'pull_request'
+        with: {header: ai-agent-evals, path: agent-evals.md}
+
+  # ---------------------------------------------------------------- 6 Maintain: control bands decide when Claude is invoked
+  maintain-detect:
+    # A deterministic check watches a metric (default: the failure rate of this repo's ai-sdlc pull request runs, which
+    # the evidence gate dominates) and invokes Claude only when a band in .ai/bands.yaml (or the standard's default) is
+    # breached: 1 sigma logs, 2 sigma diagnoses read-only and files an intent, 3 sigma may also propose a fix as a PR.
+    if: >-
+      vars.AISDLC_AUTOMATION == 'on' &&
+      (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.stage == 'maintain'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      tier: ${{ steps.bands.outputs.tier }}
+      tools: ${{ steps.tools.outputs.allowed }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: The standard, at this workflow's commit
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          token: ${{ secrets.AISDLC_TOKEN || github.token }}
+          path: .ai-sdlc
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with: {python-version: "3.12"}
+      - run: python3 -m pip install --quiet pyyaml
+      - name: Collect the metric
+        run: |
+          gh run list --workflow "$WORKFLOW" --event pull_request --json conclusion,createdAt --limit 500 > runs.json
+          python3 .ai-sdlc/plugins/sdlc-core/scripts/bands.py series-gh-runs --runs runs.json --out series.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WORKFLOW: ${{ github.workflow }}
+      - id: bands
+        name: Check the bands (deterministic, no model)
+        run: |
+          config=.ai/bands.yaml
+          [ -f "$config" ] || config=.ai-sdlc/templates/repo/extras/.ai/bands.yaml   # the standard's default bands
+          python3 .ai-sdlc/plugins/sdlc-core/scripts/bands.py check --config "$config" --series series.json --json bands.json --github-output "$GITHUB_OUTPUT"
+      - id: tools
+        name: Tools allowed at this tier
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          b = json.load(open("bands.json"))
+          tools = [t for t in (b.get("tools") or "Read,Grep,Glob").split(",") if t] + ["Bash(gh issue create *)"]
+          if b["tier"] == "3sigma":
+              tools += ["Write", "Edit", "Skill", "Bash(git *)", "Bash(gh pr create *)"]
+              tools += [f"Bash(gh workflow run {r.split(':', 1)[1]}.yml *)" for r in b.get("routes", []) if r.startswith("runbook:")]
+          print("allowed=" + ",".join(tools))
+          PY
+      - run: '{ echo "### Control bands"; echo "\`\`\`json"; cat bands.json; echo "\`\`\`"; } >> "$GITHUB_STEP_SUMMARY"'
+      - uses: actions/upload-artifact@v7
+        with: {name: bands, path: "bands.json\nseries.json", retention-days: 30}
+  maintain:
+    needs: maintain-detect
+    if: needs.maintain-detect.outputs.tier == '2sigma' || needs.maintain-detect.outputs.tier == '3sigma'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0}
+      - name: The standard, at this workflow's commit
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          token: ${{ secrets.AISDLC_TOKEN || github.token }}
+          path: .ai-sdlc
+          persist-credentials: false
+      - run: echo ".ai-sdlc/" >> .git/info/exclude
+      - uses: actions/download-artifact@v7
+        with: {name: bands}
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          plugin_marketplaces: ${{ github.workspace }}/.ai-sdlc
+          plugins: sdlc-standard@ai-sdlc
+          prompt: |
+            /sdlc-core:triage bands.json
+            CI mode. A control band was breached at tier ${{ needs.maintain-detect.outputs.tier }} (details in bands.json
+            and series.json). Diagnose read-only first. Write the finding in the intent.md format and file it with
+            `gh issue create --label ai-intent`. At 3sigma you may also open a draft PR for a small, well-bounded fix
+            (a revert or a quarantine with a ticket) or run a runbook listed in bands.json routes; nothing else.
+          claude_args: >-
+            --max-turns 60
+            --allowedTools "${{ needs.maintain-detect.outputs.tools }}"
+
+  # ---------------------------------------------------------------- 6 Maintain: lessons after a merge (never merged automatically)
+  learn:
+    if: >-
+      vars.AISDLC_AUTOMATION == 'on' && github.event_name == 'pull_request' && github.event.action == 'closed' &&
+      github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'ai-assisted')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0}
+      - name: The standard, at this workflow's commit
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          token: ${{ secrets.AISDLC_TOKEN || github.token }}
+          path: .ai-sdlc
+          persist-credentials: false
+      - run: echo ".ai-sdlc/" >> .git/info/exclude
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          plugin_marketplaces: ${{ github.workspace }}/.ai-sdlc
+          plugins: sdlc-standard@ai-sdlc
+          prompt: |
+            /sdlc-core:learn ${{ github.event.pull_request.number }}
+            Repo-scoped lessons: open a PR in this repo (docs/knowledge/, CLAUDE.md). Org- or stack-wide lessons: write them to
+            .ai/knowledge-proposals.md and list them in that PR, so a maintainer can forward them to the standard repo.
+          claude_args: >-
+            --max-turns 40
+            --allowedTools "Read,Grep,Glob,Write,Edit,Skill,Bash(gh pr view *),Bash(gh api *),Bash(gh run list *),Bash(git *),Bash(gh pr create *)"

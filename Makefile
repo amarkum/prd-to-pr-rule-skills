@@ -3,9 +3,8 @@
 test:            ## unit tests: scripts, hooks, onboarding CLI, manifest consistency (stdlib + PyYAML)
 	python3 -m unittest discover -s tests
 
-validate:        ## strict validation of the marketplace and every plugin (needs the claude CLI)
-	claude plugin validate --strict .
-	for p in plugins/*/; do claude plugin validate --strict $$p || exit 1; done
+validate:        ## strict validation of the marketplace and every plugin; only the omitted version is allowed (needs the claude CLI)
+	python3 tools/validate_plugins.py
 
 details:         ## component inventory and always-on token cost per plugin
 	for p in plugins/*/; do claude --plugin-dir $$p plugin details $$(basename $$p); done

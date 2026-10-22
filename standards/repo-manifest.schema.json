@@ -122,6 +122,37 @@
         }
       }
     },
+    "ci": {
+      "type": "object",
+      "description": "How CI installs the repo; read by the shared ai-sdlc workflow (.github/actions/toolchain)",
+      "additionalProperties": false,
+      "properties": {
+        "runtime": {
+          "enum": [
+            "node",
+            "python"
+          ],
+          "description": "Default: python for airflow and backend, node for mfe and frontend"
+        },
+        "python_version": {
+          "type": "string",
+          "default": "3.12"
+        },
+        "node_version": {
+          "type": "string",
+          "default": "22",
+          "description": "Used when the repo has no .nvmrc"
+        },
+        "install": {
+          "type": "string",
+          "description": "Shell commands that install the test dependencies"
+        },
+        "coverage": {
+          "type": "string",
+          "description": "Cobertura XML path for changed-line coverage"
+        }
+      }
+    },
     "tests": {
       "type": "object",
       "required": [

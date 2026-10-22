@@ -23,6 +23,12 @@ checks:
     run: npx playwright test
     artifacts: ["reports/junit-e2e.xml", "reports/playwright-html/index.html"]
     required: false          # required in CI where the app and browsers are available
+ci:                        # how CI installs this repo, read by the shared ai-sdlc workflow (every key optional)
+  runtime: node            # the Node version comes from .nvmrc when the repo has one
+  install: |
+    npm ci
+    npx playwright install --with-deps chromium
+  coverage: reports/coverage/cobertura-coverage.xml   # Cobertura XML from the unit check, for changed-line coverage
 tests:
   junit_glob: "reports/junit-*.xml"
   run_files: "npx vitest run {files} --reporter=junit --outputFile.junit={junit}"

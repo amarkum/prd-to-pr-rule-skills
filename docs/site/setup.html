@@ -43,6 +43,29 @@
     <div class="grid" id="layers"></div>
   </section>
 
+  <section aria-labelledby="dist-h">
+    <div class="section-head">
+      <h2 id="dist-h">How it reaches everyone, with nothing to install or copy</h2>
+      <p>An administrator sets up three channels once. After that, merging to the standard's main branch is the release:
+        there's no version to bump and no PR in any product repo, and a revert rolls it back the same way.</p>
+    </div>
+    <div class="grid cols-3" id="channels"></div>
+    <div class="grid cols-2" style="margin-top: 16px">
+      <div class="sheet pad" id="files-chart"></div>
+      <div class="sheet pad">
+        <h3>A change, from merge to everyone</h3>
+        <ol class="small" style="margin: 10px 0 0; padding-left: 1.2em; display: grid; gap: 6px; color: var(--ink-2)">
+          <li>A PR to the standard: CODEOWNERS review it, and the <code>validate</code> checks (tests, strict plugin validation, actionlint) must pass.</li>
+          <li>Merge to <code>main</code>. That is the release: plugins carry no version, so Claude Code versions them by commit.</li>
+          <li>Developers get it from auto-update and use it from their next launch, or straight away with <code>/reload-plugins</code>.</li>
+          <li>CI uses it on the next run in any repo. Slack and claude.ai get it when the sync runs on the push.</li>
+          <li>To roll back, revert the commit. To hold everyone on a known-good commit, pin <code>ref</code> in managed settings.</li>
+        </ol>
+        <p class="small muted" style="margin-top: 10px">Setup steps: <code>policy/README.md</code>. Without managed settings, <code>aisdlc.py init --repo-plugins</code> or <code>vendor</code> are the fallbacks.</p>
+      </div>
+    </div>
+  </section>
+
   <section aria-labelledby="mech-h">
     <div class="section-head">
       <h2 id="mech-h">The mechanisms</h2>
@@ -65,12 +88,13 @@
   <section aria-labelledby="surf-h">
     <div class="section-head">
       <h2 id="surf-h">Which surfaces load what</h2>
-      <p>Claude Code runs in more places than a terminal, and not every place loads the same things. Repo-declared
-        plugins don't install in web sessions, scheduled tasks or Claude in Slack, and Slack sessions don't run repo hooks.
-        That's why the standard has a vendored mode, and why the CI required checks are the gate that holds everywhere.</p>
+      <p>Claude Code runs in more places than a terminal, and not every place loads the same things. Managed settings
+        put the plugins on developer machines and in web sessions; the shared workflow installs them in CI; Claude in Slack
+        gets them from its own admin settings and doesn't run repo hooks. That's why the CI required checks are the gate
+        that holds everywhere.</p>
     </div>
     <div class="tw"><table class="matrix" id="surfaces"></table></div>
-    <p class="small muted">From the Claude Code documentation, checked 22 October 2026. "Assumed" cells follow from scheduled tasks being cloud sessions; verify them in your environment.</p>
+    <p class="small muted">From the Claude Code and Claude Tag documentation, checked 22 October 2026. "Assumed" cells follow from scheduled tasks being cloud sessions; verify them in your environment.</p>
   </section>
 
   <section aria-labelledby="cost-h">
@@ -85,7 +109,7 @@
 
 <footer class="site">
   <div class="frame">
-    <span>AI SDLC standard 2.0 for Claude Code · source: <a href="https://github.com/amarkum/prd-to-pr-rule-skills" target="_blank" rel="noopener">amarkum/prd-to-pr-rule-skills</a></span>
+    <span>AI SDLC standard for Claude Code · source: <a href="https://github.com/amarkum/prd-to-pr-rule-skills" target="_blank" rel="noopener">amarkum/prd-to-pr-rule-skills</a></span>
     <span>Token costs from <code>claude plugin details</code>, Claude Code 2.1.308</span>
   </div>
 </footer>
@@ -96,7 +120,7 @@
 <script>
 (function () {
   "use strict";
-  const { h, segmented, hbar } = window.Site;
+  const { h, segmented, hbar, grouped } = window.Site;
   const S = window.SDLC;
 
   // layers
@@ -104,6 +128,16 @@
     h("div", {}, h("div", { class: "eyebrow" }, `Layer ${i + 1}`), h("h3", {}, l.name), h("div", { class: "small muted" }, l.where)),
     h("div", { class: "minw0" }, h("p", { style: { color: "var(--ink-2)" } }, l.what), h("div", { style: { marginTop: "6px" } }, h("span", { class: "artifact" }, l.path))))));
   if (window.matchMedia("(max-width: 600px)").matches) document.querySelectorAll("#layers > .sheet").forEach((el) => { el.style.gridTemplateColumns = "1fr"; });
+
+  // distribution
+  document.getElementById("channels").append(...S.channels.map((c) => h("div", { class: "sheet pad" },
+    h("div", { class: "eyebrow" }, c.reach), h("h3", { style: { margin: "4px 0 8px" } }, c.name),
+    h("dl", { class: "facts stacked" }, h("dt", {}, "Once"), h("dd", {}, c.once), h("dt", {}, "Updates"), h("dd", {}, c.updates)))));
+  grouped(document.getElementById("files-chart"), {
+    title: "Files each repo carries", note: "What aisdlc.py init writes into an empty repo. Standard 2.0 copied eight workflows into each repo; now there is one caller.",
+    series: [{ name: "Standard 2.0", color: "var(--series-mute)" }, { name: "Now", color: "var(--series-1)" }],
+    rows: S.repoFiles.map((r) => ({ label: r.label, values: [r.old, r.now] })), fmt: "n", max: 24
+  });
 
   // mechanism explorer
   const panel = document.getElementById("mech-panel");

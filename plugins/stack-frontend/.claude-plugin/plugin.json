@@ -1,7 +1,6 @@
 {
   "name": "stack-frontend",
   "displayName": "Stack pack: React frontend",
-  "version": "2.0.0",
   "description": "React and TypeScript feature conventions (UI states, accessibility, API typing, flags) and evidence-grade testing (Testing Library per AC, Playwright with AC-named tests, screenshots, traces and axe checks).",
   "author": {
     "name": "Web Platform Guild"

@@ -67,7 +67,8 @@ the same as the table above, except that the PRD-review baseline scored 0.
   in the sandbox's don't-ask mode.
   - These runs don't exercise the commit, verify and evidence path. With the plugin, sessions reported "evidence: none"
     and didn't claim a pass.
-  - Unit tests and `make demo` cover that path deterministically, and `ai-evidence` covers it in CI.
+  - Unit tests and `make demo` cover that path deterministically, and the `evidence` job of the shared ai-sdlc
+    workflow covers it in CI.
 - **A blocked template.** In one plan-gate run, Claude couldn't read the plan template, because Glob was denied
   outside the project. It wrote the plan from the skill's section list instead.
 - **Small sample.** Three runs per arm is a small sample. Treat the changes as directional, and re-run after any

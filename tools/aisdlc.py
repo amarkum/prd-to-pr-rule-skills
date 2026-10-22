@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 """aisdlc.py - onboard product repos to the AI SDLC standard and keep them healthy.
 
-  init             scaffold a repo for its stack: CLAUDE.md, REVIEW.md, .ai/repo.yaml, .claude/settings.json
-                   (marketplace, plugins, permissions), data connectors, CI workflows, PR template, specs/, docs/knowledge/
-  vendor           copy a pinned version of the plugins into the repo's .claude/ for surfaces that don't install
-                   repo-declared plugins: cloud sessions and scheduled tasks on the web, Claude in Slack, air-gapped CI.
-                   Always-on rules go to .claude/rules/ so they load even where hooks don't run.
-  doctor           check a repo's setup; exit 1 on failures
+The plugins reach developers through the organization's managed settings (policy/README.md) and CI logic lives in the
+standard's shared workflow, so a repo only carries what is specific to it.
+
+  init             write the repo's own files: CLAUDE.md, .ai/repo.yaml (stack, checks, CI install), data connectors
+                   (.mcp.json) and the one-file CI caller .github/workflows/ai-sdlc.yml. --extras adds the optional
+                   REVIEW.md, .ai/bands.yaml, evals/, specs/ and docs/knowledge/ READMEs and a PR template.
+                   --repo-plugins also writes .claude/settings.json (marketplace, plugins, permissions) for
+                   organizations that can't deploy managed settings.
+  vendor           copy the plugins into the repo's .claude/, a fallback for surfaces that get neither managed
+                   settings nor repo plugins. Re-run it to update. Always-on rules go to .claude/rules/.
+  doctor           check a repo's setup, including leftovers of the per-repo workflow copies; exit 1 on failures
   knowledge-audit  flag knowledge entries that are past review_by or missing fields; exit 1 if any
 
 Examples:
@@ -47,6 +52,13 @@ STACK_ALLOW = {
 COMMON_ALLOW = ["Bash(git status *)", "Bash(git diff *)", "Bash(git log *)", "Bash(git show *)",
                 "Bash(gh pr view *)", "Bash(gh pr list *)", "Bash(rg *)"]
 ASK = ["Bash(git push *)"]
+ALWAYS_ON = ["sdlc-standard", "sdlc-core"]   # what managed settings enable: the bundle, and sdlc-core locked on
+# The per-repo workflow copies of standard 2.0, replaced by .github/workflows/ai-sdlc.yml calling the shared workflow
+LEGACY_WORKFLOWS = ["ai-evidence.yml", "ai-prd-intake.yml", "ai-design.yml", "ai-build.yml", "ai-review.yml",
+                    "ai-agent-evals.yml", "ai-maintain.yml", "ai-learn.yml"]
+MANAGED_FILES = [Path("/etc/claude-code/managed-settings.json"),
+                 Path("/Library/Application Support/ClaudeCode/managed-settings.json"),
+                 Path("C:/Program Files/ClaudeCode/managed-settings.json")]
 DENY = ["Read(./.env)", "Read(./.env.local)", "Read(./.env.*.local)", "Read(./**/*.pem)", "Read(./**/*.key)",
         "Read(./**/secrets/**)"]
 TEXT_SUFFIXES = {".md", ".yaml", ".yml", ".json", ".toml", ".py", ".txt", ""}
@@ -99,11 +111,13 @@ def ensure_gitignore(target: Path, report: list) -> None:
 
 
 def plugin_settings(settings: dict, stack: str, marketplace: str, enabled: bool = True) -> dict:
+    """Repo-level plugin settings: the fallback when managed settings can't deliver the plugins (enabled=True), or
+    the plugins switched off where a vendored copy replaces them (enabled=False)."""
     settings.setdefault("$schema", "https://json.schemastore.org/claude-code-settings.json")
     mk = settings.setdefault("extraKnownMarketplaces", {})
     mk.setdefault("ai-sdlc", {"source": {"source": "github", "repo": marketplace}, "autoUpdate": True})
     plugins = settings.setdefault("enabledPlugins", {})
-    for p in STACK_PLUGINS[stack]:
+    for p in (ALWAYS_ON if enabled else ["sdlc-standard"] + STACK_PLUGINS[stack]):
         plugins[f"{p}@ai-sdlc"] = enabled
     perms = settings.setdefault("permissions", {})
     perms["allow"] = merge_list(perms.get("allow", []), COMMON_ALLOW + STACK_ALLOW[stack])
@@ -119,15 +133,18 @@ def cmd_init(a) -> int:
     if not target.is_dir():
         print(f"init: {target} is not a directory", file=sys.stderr)
         return 2
-    values = {"name": a.name or target.name, "stack": a.stack, "jira_project": a.jira,
+    values = {"name": a.name or target.name, "stack": a.stack, "jira_project": a.jira, "standard": a.standard,
               "description": a.description or f"<one-line description of {a.name or target.name}>"}
     report: list = []
     copy_tree(TEMPLATES / "common", target, values, a.force, report)
     copy_tree(TEMPLATES / a.stack, target, values, a.force, report)
+    if a.extras:
+        copy_tree(TEMPLATES / "extras", target, values, a.force, report)
     ensure_gitignore(target, report)
-    settings_path = target / ".claude" / "settings.json"
-    write_json(settings_path, plugin_settings(load_json(settings_path), a.stack, a.marketplace))
-    report.append(("merge", ".claude/settings.json"))
+    if a.repo_plugins:
+        settings_path = target / ".claude" / "settings.json"
+        write_json(settings_path, plugin_settings(load_json(settings_path), a.stack, a.standard))
+        report.append(("merge", ".claude/settings.json"))
     if a.stack == "airflow":
         dst = target / "tests" / "dags" / "test_dag_integrity.py"
         if not dst.exists() or a.force:
@@ -136,8 +153,10 @@ def cmd_init(a) -> int:
             report.append(("write", "tests/dags/test_dag_integrity.py"))
     for action, rel in report:
         print(f"{action:7} {rel}")
-    print(f"\nNext: fill the <!-- fill in --> parts of CLAUDE.md, check `checks:` in .ai/repo.yaml, then run\n"
-          f"  python3 {Path(__file__).resolve()} doctor --target {a.target}")
+    print(f"\nNext: fill in CLAUDE.md, check `checks:` and `ci:` in .ai/repo.yaml, commit, and run\n"
+          f"  python3 {Path(__file__).resolve()} doctor --target {a.target}\n"
+          f"Developers get the plugins from the organization's managed settings (policy/README.md); CI runs the shared\n"
+          f"workflow through .github/workflows/ai-sdlc.yml. Make \"ai-sdlc / evidence\" a required check.")
     return 0
 
 
@@ -184,7 +203,7 @@ def cmd_vendor(a) -> int:
     # Claude Code hooks (shell form: Claude Code exports $CLAUDE_PROJECT_DIR to hook processes)
     hook = 'python3 "$CLAUDE_PROJECT_DIR/.claude/aisdlc/hooks/aisdlc_hooks.py" '
     settings_path = claude / "settings.json"
-    settings = plugin_settings(load_json(settings_path), a.stack, a.marketplace, enabled=False)
+    settings = plugin_settings(load_json(settings_path), a.stack, a.standard, enabled=False)
     settings["hooks"] = {
         "SessionStart": [{"matcher": "startup|resume|clear|compact",
                           "hooks": [{"type": "command", "command": hook + "session-context", "timeout": 20}]}],
@@ -202,8 +221,7 @@ def cmd_vendor(a) -> int:
     mcp.setdefault("mcpServers", {}).update(load_json(PLUGINS / "sdlc-connectors/.mcp.json")["mcpServers"])
     write_json(target / ".mcp.json", mcp)
     sha = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
-    versions = {p: load_json(PLUGINS / p / ".claude-plugin/plugin.json").get("version") for p in STACK_PLUGINS[a.stack]}
-    write_json(aisdlc / "VERSION.json", {"source": a.marketplace, "commit": sha or None, "plugins": versions,
+    write_json(aisdlc / "VERSION.json", {"source": a.standard, "commit": sha or None, "plugins": STACK_PLUGINS[a.stack],
                                          "vendored_at": dt.date.today().isoformat()})
     print("\n".join(copied))
     print(f"\nVendored {len(copied)} components into {target}/.claude (plugins for this repo disabled in "
@@ -248,14 +266,31 @@ def cmd_doctor(a) -> int:
         check("FAIL", bool(tests.get("junit_glob")), "tests.junit_glob set (needed for AC coverage)")
         check("FAIL", "{files}" in str(tests.get("run_files", "")), "tests.run_files contains {files} (fail-to-pass)")
         check("FAIL", bool(tests.get("test_patterns")), "tests.test_patterns set")
+        ci = data.get("ci")
+        check("FAIL", ci is None or (isinstance(ci, dict) and ci.get("runtime") in (None, "node", "python")),
+              "ci: optional mapping; runtime is node or python")
     gi = (t / ".gitignore").read_text(encoding="utf-8") if (t / ".gitignore").is_file() else ""
     check("FAIL", ".ai/evidence/" in gi, ".gitignore excludes .ai/evidence/")
-    settings = load_json(t / ".claude" / "settings.json")
-    plugins_on = settings.get("enabledPlugins", {}).get("sdlc-core@ai-sdlc") is True
+    repo_on = load_json(t / ".claude" / "settings.json").get("enabledPlugins", {}).get("sdlc-core@ai-sdlc") is True
+    managed_on = False
+    for f in MANAGED_FILES:
+        try:
+            managed_on = managed_on or load_json(f).get("enabledPlugins", {}).get("sdlc-core@ai-sdlc") is True
+        except (OSError, ValueError, AttributeError):   # Claude Code itself refuses to start on a broken policy file
+            results.append(("WARN", f"managed settings file {f} can't be read as a JSON object"))
     vendored = (t / ".claude" / "aisdlc" / "VERSION.json").is_file()
-    check("FAIL", plugins_on or vendored, "sdlc-core enabled (plugin mode) or vendored (.claude/aisdlc)")
-    check("WARN", (t / ".github" / "workflows" / "ai-evidence.yml").is_file(), "CI evidence workflow present")
-    check("WARN", (t / "specs").is_dir(), "specs/ directory present")
+    if repo_on or managed_on or vendored:
+        how = "managed settings file" if managed_on else "repo settings" if repo_on else "vendored copy"
+        results.append(("ok", f"plugins: sdlc-core from the {how}"))
+    else:
+        results.append(("NOTE", "plugins: none set at repo level; expected from the organization's managed settings "
+                                "(confirm with /plugin in Claude Code)"))
+    caller = t / ".github" / "workflows" / "ai-sdlc.yml"
+    calls = caller.is_file() and "/.github/workflows/sdlc.yml@" in caller.read_text(encoding="utf-8")
+    check("WARN", calls, "CI: .github/workflows/ai-sdlc.yml calls the shared workflow")
+    legacy = [w for w in LEGACY_WORKFLOWS if (t / ".github" / "workflows" / w).is_file()]
+    check("WARN", not legacy, "no per-repo workflow copies left" + (
+        f" (delete {', '.join(legacy)}: the shared workflow replaces them)" if legacy else ""))
     check("FAIL", sys.version_info >= (3, 9), f"python >= 3.9 ({sys.version.split()[0]})")
     for tool, level in (("git", "FAIL"), ("gh", "WARN")):
         check(level, shutil.which(tool) is not None, f"{tool} on PATH")
@@ -318,12 +353,16 @@ def main(argv=None) -> int:
     i.add_argument("--name")
     i.add_argument("--jira", default="PROJ")
     i.add_argument("--description")
-    i.add_argument("--marketplace", default="amarkum/prd-to-pr-rule-skills")
+    i.add_argument("--standard", "--marketplace", dest="standard", default="amarkum/prd-to-pr-rule-skills",
+                   help="owner/repo of the standard (the marketplace and the shared workflow)")
+    i.add_argument("--extras", action="store_true", help="also write the optional REVIEW.md, bands, READMEs, PR template")
+    i.add_argument("--repo-plugins", action="store_true",
+                   help="also write .claude/settings.json with the plugins, for organizations without managed settings")
     i.add_argument("--force", action="store_true")
     v = sub.add_parser("vendor")
     v.add_argument("--target", required=True)
     v.add_argument("--stack", required=True, choices=STACKS)
-    v.add_argument("--marketplace", default="amarkum/prd-to-pr-rule-skills")
+    v.add_argument("--standard", "--marketplace", dest="standard", default="amarkum/prd-to-pr-rule-skills")
     d = sub.add_parser("doctor")
     d.add_argument("--target", default=".")
     k = sub.add_parser("knowledge-audit")

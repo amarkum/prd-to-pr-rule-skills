@@ -9,8 +9,8 @@
     }
   },
   "enabledPlugins": {
-    "sdlc-core@ai-sdlc": true,
-    "sdlc-connectors@ai-sdlc": true
+    "sdlc-standard@ai-sdlc": true,
+    "sdlc-core@ai-sdlc": true
   },
   "strictKnownMarketplaces": [
     {
@@ -25,9 +25,35 @@
       "Read(./**/*.pem)",
       "Read(./**/*.key)",
       "Bash(git push --force *)",
-      "Bash(git push -f *)"
+      "Bash(git push -f *)",
+      "Read(./.env.*.local)",
+      "Read(./**/secrets/**)"
     ],
-    "disableBypassPermissionsMode": "disable"
+    "disableBypassPermissionsMode": "disable",
+    "allow": [
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)",
+      "Bash(rg *)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr list *)",
+      "Bash(gh pr checks *)",
+      "Bash(pytest *)",
+      "Bash(python -m pytest *)",
+      "Bash(ruff *)",
+      "Bash(airflow dags list-import-errors *)",
+      "Bash(airflow dags test *)",
+      "Bash(npm test *)",
+      "Bash(npm run lint *)",
+      "Bash(npm run build *)",
+      "Bash(npx vitest *)",
+      "Bash(npx playwright test *)",
+      "Bash(npx tsc *)"
+    ],
+    "ask": [
+      "Bash(git push *)"
+    ]
   },
   "allowManagedMcpServersOnly": true,
   "allowedMcpServers": [
@@ -85,7 +111,7 @@
     "OTEL_EXPORTER_OTLP_ENDPOINT": "https://otel-collector.example.internal:4317"
   },
   "companyAnnouncements": [
-    "AI SDLC standard v2: start with /sdlc-core:prd-to-pr <PRD link>. intent.md, an approved spec.md and an accepted plan.md come before code; PRs need evidence; humans merge and release."
+    "AI SDLC standard: installed and kept up to date for you. Start with /sdlc-core:prd-to-pr <PRD link>. intent.md, an approved spec.md and an accepted plan.md come before code; PRs need evidence; humans merge and release."
   ],
   "requiredMinimumVersion": "2.1.308"
 }

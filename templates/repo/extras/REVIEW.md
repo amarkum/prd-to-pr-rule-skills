@@ -1,7 +1,8 @@
 # Review instructions
 
-Read by the managed Claude Code Review, the `ai-review` workflow and the `pr-reviewer` agent. Findings inform people;
-they never approve or block a PR on their own. Branch protection requires a code owner's approval.
+Optional: without this file, the `pr-reviewer` agent uses the same three passes with its defaults. Read by the managed
+Claude Code Review, the `review` job of the shared ai-sdlc workflow and the `pr-reviewer` agent. Findings inform
+people; they never approve or block a PR on their own. Branch protection requires a code owner's approval.
 
 ## Passes
 

@@ -17,8 +17,9 @@ intents, and lessons that compound. Deterministic hooks enforce the gates, so th
 
 ## Install
 
-Claude Code: `/plugin marketplace add amarkum/prd-to-pr-rule-skills`, then `/plugin install sdlc-core@ai-sdlc`.
-Teams usually enable it per repo from `.claude/settings.json`, which `tools/aisdlc.py init` writes.
+Organizations don't install it by hand: managed settings force-enable it with the `sdlc-standard` bundle for every
+developer (see `policy/README.md`). To try it yourself: `/plugin marketplace add amarkum/prd-to-pr-rule-skills`, then
+`/plugin install sdlc-core@ai-sdlc`.
 
 ## Requirements
 

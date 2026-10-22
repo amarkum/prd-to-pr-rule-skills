@@ -111,7 +111,7 @@
     <div class="section-head"><h2 id="lv-h">Three levels of trust</h2></div>
     <div class="levels">
       <div class="sheet"><span class="lv">LEVEL 1 · LOCAL</span><h3>The session proves its own work</h3><p>The verify skill runs <code>evidence.py</code> on the developer's machine or the agent's sandbox, at a committed SHA on a clean tree. The PR hooks read this result.</p></div>
-      <div class="sheet"><span class="lv">LEVEL 2 · CI RE-RUN</span><h3>A clean runner repeats it</h3><p><code>ai-evidence</code> checks out the PR's head commit, re-runs the same script, adds changed-line coverage and posts the verdict. It's a required check.</p></div>
+      <div class="sheet"><span class="lv">LEVEL 2 · CI RE-RUN</span><h3>A clean runner repeats it</h3><p>The shared workflow's <code>evidence</code> job checks out the PR's head commit, re-runs the same script, adds changed-line coverage and posts the verdict. It's the required check <code>ai-sdlc / evidence</code>.</p></div>
       <div class="sheet"><span class="lv">LEVEL 3 · ATTESTED</span><h3>The artifact can't be swapped</h3><p>The evidence bundle is uploaded and attested with Sigstore, tied to the commit. Reviewers trust this, not the PR description.</p></div>
     </div>
   </section>
@@ -119,7 +119,7 @@
 
 <footer class="site">
   <div class="frame">
-    <span>AI SDLC standard 2.0 for Claude Code · source: <a href="https://github.com/amarkum/prd-to-pr-rule-skills" target="_blank" rel="noopener">amarkum/prd-to-pr-rule-skills</a></span>
+    <span>AI SDLC standard for Claude Code · source: <a href="https://github.com/amarkum/prd-to-pr-rule-skills" target="_blank" rel="noopener">amarkum/prd-to-pr-rule-skills</a></span>
     <span>Weak-test figure: <a href="https://arxiv.org/abs/2506.09289" target="_blank" rel="noopener">UTBoost, ACL 2025</a></span>
   </div>
 </footer>

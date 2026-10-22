@@ -17,6 +17,11 @@ checks:                    # run in order by evidence.py and CI; required unless
   - id: import-errors
     run: airflow dags list-import-errors -l -o json
     required: false
+ci:                        # how CI installs this repo, read by the shared ai-sdlc workflow (every key optional)
+  runtime: python
+  python_version: "3.12"
+  install: pip install -r requirements-dev.txt   # your test dependencies (pytest, pytest-cov, mongomock, ...)
+  coverage: reports/coverage.xml                 # Cobertura XML from the unit check, for changed-line coverage
 tests:
   junit_glob: "reports/junit-*.xml"
   run_files: "pytest {files} -q -p no:cacheprovider --junitxml={junit}"

@@ -69,7 +69,7 @@
 
 <main class="frame">
   <div class="hero">
-    <div class="eyebrow">AI SDLC standard · Version 2.0 · 22 October 2026</div>
+    <div class="eyebrow">AI SDLC standard · 22 October 2026</div>
     <h1>PRD to PR Playbook</h1>
     <p class="lede">How a Confluence PRD becomes a reviewed pull request with test evidence, with Claude Code, across the
       Airflow data repo, the micro-frontends and the frontend shell. Everything described here exists in the
@@ -140,7 +140,7 @@
             <tr><td><strong>1 Plan</strong></td><td><code>prd-review</code></td><td><code>prd.md</code>, <code>prd-review.md</code>, <code>intent.md</code></td><td>Product owner: PRD READY and marked ready</td><td><code>prd_lint.py</code> and the rubric; questions go back as a Confluence comment and a Jira task</td></tr>
             <tr><td><strong>2 Design</strong></td><td><code>context-gather</code>, <code>spec-write</code></td><td><code>context.md</code>, <code>spec.md</code></td><td>A human approves the spec; tech lead for risk: medium or high</td><td>Edit hook: agents can't write <code>status: approved</code>; no code until it's set</td></tr>
             <tr><td><strong>3 Build</strong></td><td><code>plan</code>, <code>build</code></td><td><code>plan.md</code>, tests, code</td><td>The engineer accepts the plan in plan mode; tech lead for risk: high</td><td>Edit hook: no code before the plan is accepted; locked tests can't be edited</td></tr>
-            <tr><td><strong>4 Test</strong></td><td><code>verify</code></td><td><code>.ai/evidence/</code> (CI artifact)</td><td>A check: evidence PASS for the head commit</td><td>PR hooks; <code>ai-evidence</code> required check, attested</td></tr>
+            <tr><td><strong>4 Test</strong></td><td><code>verify</code></td><td><code>.ai/evidence/</code> (CI artifact)</td><td>A check: evidence PASS for the head commit</td><td>PR hooks; <code>ai-sdlc / evidence</code> required check, attested</td></tr>
             <tr><td><strong>5 Deploy</strong></td><td><code>pr-open</code>, <code>pr-babysit</code></td><td>Draft PR, review findings</td><td>Code owners merge; release manager authorises production</td><td>Hooks: draft PRs only, no merge, release commands need <code>RELEASE_APPROVAL</code>; branch protection</td></tr>
             <tr><td><strong>6 Maintain</strong></td><td><code>triage</code>, <code>learn</code></td><td>Incident <code>intent.md</code>, <code>retro.md</code>, knowledge, evals</td><td>Service owner triages: fix now, schedule, dismiss</td><td><code>bands.py</code> tiers set the tools Claude gets</td></tr>
           </tbody>
@@ -184,18 +184,19 @@
             <tr><td><strong>Hooks</strong></td><td>What must always or never happen: secrets, force-push, merge, gates, locked tests, releases</td><td>Advice; slow work</td><td>Every matching event; no context cost</td></tr>
             <tr><td><strong>Scripts</strong></td><td>Deterministic logic shared by skills, hooks and CI</td><td>Judgement calls</td><td>When called</td></tr>
             <tr><td><strong>Connectors (MCP)</strong></td><td>Confluence and Jira, Sentry, read-only MongoDB and schema DB, read-only Airflow, a browser</td><td>What CLIs do better: git, gh, test runners</td><td>Server at start; tools on demand</td></tr>
-            <tr><td><strong>Plugins</strong></td><td>Distribution and versioning of everything above the repo</td><td>Per-repo facts</td><td>Installed from the marketplace each repo names</td></tr>
+            <tr><td><strong>Plugins</strong></td><td>Distribution of everything above the repo</td><td>Per-repo facts</td><td>Installed on every machine by managed settings; versioned by commit</td></tr>
             <tr><td><strong>Settings and policy</strong></td><td>Permissions, sandbox, allowed marketplaces and MCP servers, minimum version, telemetry</td><td>Workflow logic</td><td>Always; managed settings win</td></tr>
-            <tr><td><strong>CI workflows</strong></td><td>Independent verification and the stage triggers</td><td>The only copy of a rule</td><td>On GitHub events and schedules</td></tr>
+            <tr><td><strong>CI workflows</strong></td><td>Independent verification and the stage triggers, in one shared workflow</td><td>The only copy of a rule; stage logic copied into repos</td><td>On GitHub events, through each repo's one-file caller</td></tr>
           </tbody>
         </table></div>
         <h3>Not every surface loads everything</h3>
-        <p>Repo-declared plugins install in the terminal, the IDE, the desktop app, GitHub Actions (the <code>plugins</code>
-          input) and the Agent SDK (the <code>plugins</code> option). They don't install in web sessions, scheduled tasks or
-          Claude in Slack, and Slack sessions don't run repo hooks or load <code>.mcp.json</code>. For those surfaces,
-          <code>tools/aisdlc.py vendor</code> copies the skills, agents, scripts and hooks into the repo's <code>.claude/</code>
-          and writes the rules to <code>.claude/rules/</code>. Wherever hooks can't run, the CI required checks and branch
-          protection are the gate, because they act on the pull request wherever it came from.</p>
+        <p>Managed settings deliver the plugins to the terminal, the IDE, the desktop app and web sessions. The shared
+          workflow installs them in GitHub Actions, and the Agent SDK takes the <code>plugins</code> option. Claude in Slack
+          doesn't receive managed settings: an administrator attaches the plugins in the Claude Tag settings, and Slack
+          sessions don't run repo hooks or load <code>.mcp.json</code>. Wherever hooks can't run, the CI required checks and
+          branch protection are the gate, because they act on the pull request wherever it came from. Organizations without
+          managed settings can fall back on <code>tools/aisdlc.py vendor</code>, which copies everything into the repo's
+          <code>.claude/</code>, at the cost of re-running it for every release.</p>
       </section>
 
       <section id="builder">
@@ -228,7 +229,7 @@
           concrete questions with proposed defaults they could accept in one word. Version 9 scored 97/100 and was READY.</p>
         <ol class="steps">
           <li>The product owner labels the PRD ready. Confluence Automation sends <code>repository_dispatch</code> to GitHub.</li>
-          <li><code>ai-prd-intake</code> fetches that page version as Markdown, lints it and runs the review headlessly with a
+          <li>The shared workflow's <code>intake</code> job fetches that page version as Markdown, lints it and runs the review headlessly with a
             typed verdict.</li>
           <li>NEEDS_CLARIFICATION: a Confluence footer comment with the questions, a "Clarify PRD" Jira task for the product
             owner, and the epic moved to Needs Clarification. The gate re-runs on the next page version.</li>
@@ -294,13 +295,13 @@
           <thead><tr><th>Level</th><th>What happens</th><th>Who trusts it</th></tr></thead>
           <tbody>
             <tr><td>1 Local</td><td>The verify skill runs the evidence at a committed SHA; the <code>qa-verifier</code> subagent checks the tests prove their ACs</td><td>The PR hooks</td></tr>
-            <tr><td>2 CI re-run</td><td><code>ai-evidence</code> re-runs the same script at the PR head on a clean runner, adds changed-line coverage, comments the verdict</td><td>Branch protection (required check)</td></tr>
+            <tr><td>2 CI re-run</td><td>The shared workflow's <code>evidence</code> job re-runs the same script at the PR head on a clean runner, adds changed-line coverage, comments the verdict</td><td>Branch protection (required check)</td></tr>
             <tr><td>3 Attested</td><td>The evidence bundle is uploaded and attested with Sigstore, tied to the commit</td><td>Reviewers and auditors</td></tr>
           </tbody>
         </table></div>
         <p><strong>Agent evals.</strong> CLAUDE.md, skills, hooks and the plugins steer the agent, so they get regression tests
           too. Each repo keeps 20 to 50 real tasks in <code>evals/</code> (a prompt plus the checks that define acceptable).
-          <code>agent_evals.py</code> runs each in a fresh worktree with <code>claude -p</code>; <code>ai-agent-evals</code> runs
+          <code>agent_evals.py</code> runs each in a fresh worktree with <code>claude -p</code>; the <code>agent-evals</code> job runs
           them on every change to that configuration and nightly, and fails below an 80% pass rate. Every production incident
           adds an eval. The standard's own skills are tested the same way with <code>claude plugin eval</code>, including a
           no-plugin baseline.</p>
@@ -311,13 +312,13 @@
         <ul>
           <li><strong>Review on every PR.</strong> <code>REVIEW.md</code> defines three passes (bugs, security, compliance with
             the spec and plan), what Important means, a cap of five nits, and what not to report. The managed Claude Code Review
-            reads it; the <code>ai-review</code> workflow does the same with claude-code-action. Findings never approve or block.</li>
+            reads it; the shared workflow's <code>review</code> job does the same with claude-code-action. Findings never approve or block.</li>
           <li><strong>The fix loop.</strong> <code>@claude</code> on a PR comment makes Claude address it and push to the PR.
             <code>pr-babysit</code> sweeps failing checks and open threads until only code-owner approval is left, and never merges.</li>
           <li><strong>Approval gates as hooks.</strong> Draft PRs only; no merges; no pushes to protected branches. Production
             release commands are blocked unless the release manager has set <code>RELEASE_APPROVAL</code> for the session, and
             even then each one asks. Non-negotiable hooks go in managed settings, where developers can't switch them off.</li>
-          <li><strong>CI/CD.</strong> Claude starts with read-only judgement steps: <code>ai-evidence</code> triages its own
+          <li><strong>CI/CD.</strong> Claude starts with read-only judgement steps: the <code>evidence</code> job triages its own
             failures and comments. Anything Claude writes arrives as a PR through branch protection. Deployments are exposed per
             environment, and production stays behind the release manager.</li>
         </ul>
@@ -355,12 +356,14 @@
             <tr><td><strong>1 Developer loop</strong> (start here)</td><td>Terminal, IDE, desktop</td><td>An engineer</td><td>Plugin hooks; people at each gate</td><td>10 to 20 stories measured against the baseline</td></tr>
             <tr><td><strong>2 CI evidence and review</strong></td><td>GitHub runners; managed Code Review</td><td>Pull request events</td><td>Required check, branch protection, CODEOWNERS</td><td>The required check is stable</td></tr>
             <tr><td><strong>3 Stage-triggered automation</strong></td><td>GitHub Actions</td><td>A labelled PRD, an accepted intent, an approved spec</td><td>Hooks in CI; PR approvals</td><td>Lead time falls and rework doesn't rise</td></tr>
-            <tr><td><strong>4 Cloud, parallel and Slack</strong></td><td>Anthropic-hosted sandboxes</td><td>Web, phone, Slack threads</td><td>Vendored hooks on the web; CI for Slack-made PRs</td><td>Review capacity becomes the limit</td></tr>
+            <tr><td><strong>4 Cloud, parallel and Slack</strong></td><td>Anthropic-hosted sandboxes</td><td>Web, phone, Slack threads</td><td>Plugin hooks on the web; CI for Slack-made PRs</td><td>Review capacity becomes the limit</td></tr>
             <tr><td><strong>5 Closed loop</strong></td><td>GitHub Actions or scheduled tasks</td><td>Metrics and schedules</td><td>Band tiers; review gate</td><td>Intent volume outgrows triage</td></tr>
             <tr><td><strong>6 Orchestrated at scale</strong></td><td>Agent SDK services or Managed Agents</td><td>Your workflow engine</td><td>SDK hooks and callbacks; the same CI gates</td><td>The end state</td></tr>
           </tbody>
         </table></div>
-        <pre><code># one-time per repo (from a checkout of the standard)
+        <pre><code># once, by an administrator: paste policy/managed-settings.json into claude.ai
+#   (Organization settings > Claude Code > Managed settings); every developer gets the plugins
+# once per repo: CLAUDE.md, .ai/repo.yaml, connectors and the one CI file
 python3 tools/aisdlc.py init   --target ../data-airflow --stack airflow  --jira PAY --description "Payroll pipelines"
 python3 tools/aisdlc.py init   --target ../payroll-mfe  --stack mfe      --jira PAY
 python3 tools/aisdlc.py init   --target ../web-shell    --stack frontend --jira PAY
@@ -374,18 +377,18 @@ python3 tools/aisdlc.py doctor --target ../data-airflow
         <div class="tw"><table>
           <thead><tr><th>Feature</th><th>How the standard uses it</th></tr></thead>
           <tbody>
-            <tr><td>CLAUDE.md and <code>.claude/rules/</code></td><td>Repo facts under a page; vendored always-on rules for surfaces without hooks</td></tr>
+            <tr><td>CLAUDE.md and <code>.claude/rules/</code></td><td>Repo facts under a page; the always-on rules arrive through the SessionStart hook</td></tr>
             <tr><td>Skills</td><td>Sixteen skills; <code>paths</code> loads stack skills automatically; <code>allowed-tools</code> runs bundled scripts without prompts; <code>disable-model-invocation</code> on the orchestrator</td></tr>
             <tr><td>Subagents</td><td>Five agents; <code>disallowedTools</code> keeps four read-only</td></tr>
             <tr><td>Hooks</td><td>SessionStart for context and rules; PreToolUse guards for shell, edits and MCP PR creation; Stop for the verify reminder; exec form, fail closed</td></tr>
             <tr><td>Plan mode, worktrees</td><td>The plan stage; parallel tasks and stories</td></tr>
-            <tr><td>Plugins and marketplace</td><td>Dependencies between plugins, per-repo enablement, auto-update, semver tags</td></tr>
-            <tr><td><code>claude plugin</code> CLI</td><td><code>validate --strict</code> in CI, <code>details</code> for the token budget, <code>eval</code> with a no-plugin baseline, <code>tag</code> for releases</td></tr>
+            <tr><td>Plugins and marketplace</td><td>A bundle plugin whose dependencies are the rest, force-enabled by managed settings; auto-update; versions from commits, so a merge is a release</td></tr>
+            <tr><td><code>claude plugin</code> CLI</td><td><code>validate --strict</code> in CI, <code>details</code> for the token budget, <code>eval</code> with a no-plugin baseline</td></tr>
             <tr><td>MCP</td><td>OAuth SaaS servers in the connectors plugin; read-only data servers per repo</td></tr>
-            <tr><td>Permissions, sandbox, managed settings</td><td>Repo allow and deny lists; a standard and a regulated policy tier; minimum version; telemetry</td></tr>
-            <tr><td>Headless mode and claude-code-action</td><td><code>claude -p --json-schema</code> for typed verdicts; the action's <code>plugins</code> input in every workflow; @claude fixes</td></tr>
+            <tr><td>Permissions, sandbox, managed settings</td><td>Org-wide allow and deny lists in managed settings; a standard and a regulated tier; minimum version; telemetry</td></tr>
+            <tr><td>Headless mode and claude-code-action</td><td><code>claude -p --json-schema</code> for typed verdicts; the action's <code>plugins</code> input in the shared workflow; @claude fixes</td></tr>
             <tr><td>Code Review</td><td>The managed reviewer reads <code>REVIEW.md</code>; severities Important, Nit and Pre-existing</td></tr>
-            <tr><td>Web sessions, scheduled tasks, Claude in Slack</td><td>Setups 4 and 5, with vendored configuration</td></tr>
+            <tr><td>Web sessions, scheduled tasks, Claude in Slack</td><td>Setups 4 and 5: web sessions and scheduled tasks get the plugins from server-managed settings, Slack from the Claude Tag admin settings</td></tr>
             <tr><td>Agent SDK, Managed Agents, dynamic workflows</td><td>Setup 6: the same plugins in your services, hosted long-running agents, multi-repo fan-out</td></tr>
             <tr><td>OpenTelemetry</td><td>Sessions, PRs, commits, cost and tokens, plus hook decisions, for the metrics in section 15</td></tr>
           </tbody>
@@ -395,15 +398,19 @@ python3 tools/aisdlc.py doctor --target ../data-airflow
       <section id="enterprise" class="pb">
         <h2>Running it in an enterprise</h2>
         <h3>Distribution and updates</h3>
-        <p>Plugins update automatically from the marketplace (running sessions need <code>/reload-plugins</code>). Vendored repos
-          re-run <code>aisdlc.py vendor</code> and review the diff; the version is pinned in <code>.claude/aisdlc/VERSION.json</code>.
-          CI workflows pin <code>AISDLC_REF</code> to a release tag. Each plugin uses semver: patch for wording, minor for a new
-          skill or check, major for a changed gate. CODEOWNERS give each stack pack to its guild.</p>
+        <p>An administrator pastes <code>policy/managed-settings.json</code> into the claude.ai admin console once (or deploys it
+          with MDM). Every developer then gets the <code>sdlc-standard</code> bundle at the start of their next session, web
+          sessions included, and auto-update keeps it current. Plugins carry no version: Claude Code versions them by commit,
+          so merging to <code>main</code> is the release and reverting is the rollback. CI follows the same commit, because
+          each repo's one-file caller runs the shared workflow at <code>main</code>. Slack, claude.ai and Cowork get the same
+          plugins through organization sync. A repo carries only its own facts: <code>CLAUDE.md</code>,
+          <code>.ai/repo.yaml</code>, its connectors and the caller. CODEOWNERS give each stack pack to its guild.</p>
         <h3>Two policy tiers</h3>
-        <p><code>policy/managed-settings.json</code> registers the marketplace, force-enables the core plugins, allows only this
+        <p><code>policy/managed-settings.json</code> registers the marketplace, force-enables the bundle and <code>sdlc-core</code>, allows only this
           marketplace and the vetted MCP servers, forbids bypass mode, sets a minimum Claude Code version and exports telemetry.
           <code>managed-settings.regulated.json</code> adds managed-only permission rules and hooks, an OS sandbox that refuses to
-          start when unavailable, an egress allowlist, credential isolation and no side-loaded plugins.</p>
+          start when unavailable, an egress allowlist, credential isolation and no side-loaded plugins. Server-managed settings
+          apply to the whole organization, so the regulated tier reaches its group by MDM, a file or a gateway policy.</p>
         <h3>Security model</h3>
         <ul>
           <li><strong>Least privilege by stage.</strong> Analysts and reviewers are read-only; connectors are read-only against
@@ -423,7 +430,7 @@ python3 tools/aisdlc.py doctor --target ../data-airflow
             <tr><td>Engineer</td><td>Runs the loop, accepts routine plans, reviews the AI's PR before others, merges with code owners</td></tr>
             <tr><td>Release manager</td><td>Production authorisation</td></tr>
             <tr><td>Service owner</td><td>Triage of what the loop finds; the control bands</td></tr>
-            <tr><td>Platform team</td><td>The standard, connectors, CI templates, metrics, releases, evals</td></tr>
+            <tr><td>Platform team</td><td>The standard, connectors, the shared CI workflow, managed settings, metrics, evals</td></tr>
             <tr><td>Security</td><td>Managed policy, the connector allowlist, high-risk approvals</td></tr>
           </tbody>
         </table></div>
@@ -439,7 +446,7 @@ python3 tools/aisdlc.py doctor --target ../data-airflow
           <thead><tr><th>Weeks</th><th>Do</th><th>Move on when</th></tr></thead>
           <tbody>
             <tr><td>1-4</td><td>Setup 1 in one repo per stack; baseline the last 20 comparable stories; PRD gate on every new PRD</td><td>The PRD gate and evidence ran on 3 stories</td></tr>
-            <tr><td>3-6</td><td>Setup 2: required evidence check, REVIEW.md, Code Review or ai-review</td><td>The required check is stable for 2 weeks</td></tr>
+            <tr><td>3-6</td><td>Setup 2: required evidence check, REVIEW.md, Code Review or the review job</td><td>The required check is stable for 2 weeks</td></tr>
             <tr><td>5-10</td><td>Setup 3 for one product area</td><td>Lead time below the baseline median</td></tr>
             <tr><td>7-12</td><td>Setup 4: parallel cloud sessions, Slack bug intake</td><td>Review time per PR isn't rising</td></tr>
             <tr><td>9-14</td><td>Setup 5: bands, triage, 20 agent evals nightly</td><td>The first intent from a band was triaged</td></tr>
@@ -492,11 +499,12 @@ python3 tools/aisdlc.py doctor --target ../data-airflow
         <h2>What was verified</h2>
         <h3>In this repository, 22 October 2026</h3>
         <ul>
-          <li><span class="status good">Pass</span> 98 unit tests on Python 3.9 and 3.13: PRD lint, AC coverage, fail-to-pass in
+          <li><span class="status good">Pass</span> 105 unit tests on Python 3.9 and 3.13: PRD lint, AC coverage, fail-to-pass in
             throwaway git repos, evidence (including plan drift and locked tests), the agent-evals runner with a stub CLI, control
             bands, every hook (including the plan gate, locks and release gate), the Atlassian client, schema snapshots, the
             onboarding CLI and manifest consistency.</li>
-          <li><span class="status good">Pass</span> <code>claude plugin validate --strict</code> for the marketplace and all five plugins (Claude Code 2.1.308).</li>
+          <li><span class="status good">Pass</span> Strict plugin validation for the marketplace and all six plugins (Claude Code 2.1.308); the deliberately omitted version is the only warning allowed.</li>
+          <li><span class="status good">Pass</span> Installing <code>sdlc-standard</code> with the Claude Code CLI installs all five plugins, each versioned by its commit; actionlint passes on the shared workflow and the caller template.</li>
           <li><span class="status good">Pass</span> <code>make demo</code>: PRD gate, cross-stack AC coverage, fail-to-pass and plan evidence, the PR gate
             going from deny to allow, a locked test and the release gate.</li>
           <li><span class="status good">Pass</span> Behavioural evals with real Claude sessions, 3 runs per arm on sdlc-core 2.0.1: all five cases pass
@@ -506,8 +514,8 @@ python3 tools/aisdlc.py doctor --target ../data-airflow
         <h3>Check in your environment</h3>
         <ul>
           <li><span class="status warn">To do</span> Live calls to your Confluence, Jira, Sentry, MongoDB and schema database.</li>
-          <li><span class="status warn">To do</span> The GitHub workflows on real runners, including installing a private marketplace in CI.</li>
-          <li><span class="status warn">To do</span> Web sessions, scheduled tasks and Claude in Slack with vendored configuration.</li>
+          <li><span class="status warn">To do</span> The shared workflow on real runners, called from a product repo, including a private copy of the standard.</li>
+          <li><span class="status warn">To do</span> Managed settings from the admin console reaching a developer machine and a web session; organization sync reaching a Slack thread.</li>
           <li><span class="status warn">To do</span> The policy tiers on real machines (the sandbox needs bubblewrap and socat on Linux).</li>
           <li><span class="status warn">To do</span> Replace the placeholder CODEOWNERS teams and the example Jira statuses.</li>
         </ul>
@@ -518,7 +526,7 @@ python3 tools/aisdlc.py doctor --target ../data-airflow
 
 <footer class="site">
   <div class="frame">
-    <span>AI SDLC standard 2.0 for Claude Code · source: <a href="https://github.com/amarkum/prd-to-pr-rule-skills" target="_blank" rel="noopener">amarkum/prd-to-pr-rule-skills</a></span>
+    <span>AI SDLC standard for Claude Code · source: <a href="https://github.com/amarkum/prd-to-pr-rule-skills" target="_blank" rel="noopener">amarkum/prd-to-pr-rule-skills</a></span>
     <span>Stages from <a href="https://claude.com/resources/articles/the-ai-native-sdlc-playbook" target="_blank" rel="noopener">Anthropic's AI-native SDLC playbook</a></span>
   </div>
 </footer>

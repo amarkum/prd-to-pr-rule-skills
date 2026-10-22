@@ -1,0 +1,45 @@
+# The AI SDLC pipeline for this repo. All of its logic lives in the shared workflow of the AI SDLC standard and updates
+# itself: this file only lists the events to listen to, and never needs to change.
+#
+# - Required check for branch protection: "ai-sdlc / evidence".
+# - Automation (review, @claude fixes, PRD intake, design, build, agent evals, maintain, learn) runs only when the
+#   repository variable AISDLC_AUTOMATION is "on".
+# - Secrets: ANTHROPIC_API_KEY. For PRD intake, ATLASSIAN_EMAIL and ATLASSIAN_API_TOKEN, plus the variable
+#   ATLASSIAN_SITE. AISDLC_TOKEN (read access to {{standard}}) only if that repository is private.
+name: ai-sdlc
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, closed]
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  push:
+    branches: [main]          # your default branch
+    paths: ["specs/**"]
+  repository_dispatch:
+    types: [prd-ready, spec-approved]
+  schedule:
+    - cron: "23 5 * * *"
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: Stage to run
+        type: choice
+        options: [build, design, intake, evals, maintain]
+      key:
+        description: Jira key (build, design, intake)
+      page:
+        description: Confluence page id or URL (intake)
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: read
+  id-token: write
+  attestations: write
+  artifact-metadata: write
+jobs:
+  ai-sdlc:
+    uses: "{{standard}}/.github/workflows/sdlc.yml@main"
+    secrets: inherit

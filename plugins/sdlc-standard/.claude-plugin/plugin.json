@@ -1,0 +1,21 @@
+{
+  "name": "sdlc-standard",
+  "displayName": "AI SDLC standard (everything)",
+  "description": "The whole AI SDLC standard in one plugin: installs sdlc-core, the connectors and every stack pack. Stack skills load only in repos that use that stack. Enable this one plugin in managed settings; plugins added to the standard later arrive with it.",
+  "author": {
+    "name": "Engineering Platform"
+  },
+  "repository": "https://github.com/amarkum/prd-to-pr-rule-skills",
+  "keywords": [
+    "sdlc",
+    "bundle",
+    "standard"
+  ],
+  "dependencies": [
+    "sdlc-core",
+    "sdlc-connectors",
+    "stack-airflow",
+    "stack-frontend",
+    "stack-mfe"
+  ]
+}

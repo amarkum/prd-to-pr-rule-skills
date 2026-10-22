@@ -25,13 +25,22 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 22
+      - uses: actions/setup-python@v7   # not the runner's system Python, which refuses pip installs (PEP 668)
+        with:
+          python-version: "3.12"
       - run: npm install -g @anthropic-ai/claude-code
-      - name: Validate marketplace and every plugin (strict)
-        run: |
-          claude plugin validate --strict .
-          for p in plugins/*/; do claude plugin validate --strict "$p"; done
+      - name: Validate marketplace and every plugin (strict; versions are omitted on purpose)
+        run: python3 tools/validate_plugins.py
       - name: Always-on token budget per plugin
         run: for p in plugins/*/; do claude --plugin-dir "$p" plugin details "$(basename "$p")"; done
+      - name: Lint the shared workflow and the caller template (actionlint)
+        run: |
+          bash <(curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.12/scripts/download-actionlint.bash) 1.7.12
+          # job.workflow_repository and job.workflow_sha are newer than actionlint's context list (docs: contexts reference)
+          ./actionlint -ignore 'property "workflow_(repository|sha)" is not defined' .github/workflows/*.yml
+          mkdir -p "$RUNNER_TEMP/caller/.github/workflows"
+          sed 's#{{standard}}#octo-org/ai-sdlc#' templates/repo/common/.github/workflows/ai-sdlc.yml > "$RUNNER_TEMP/caller/.github/workflows/ai-sdlc.yml"
+          (cd "$RUNNER_TEMP/caller" && "$GITHUB_WORKSPACE/actionlint" .github/workflows/ai-sdlc.yml)
       - name: Templates parse
         run: |
           pip install pyyaml

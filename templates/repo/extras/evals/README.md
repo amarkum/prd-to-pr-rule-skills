@@ -2,8 +2,8 @@
 
 Regression tests for the agent's configuration. `CLAUDE.md`, `REVIEW.md`, `.claude/` and the ai-sdlc plugins steer
 what Claude does here; when one of them changes, or a new model is adopted, these evals say whether Claude still does
-this repo's work to the same standard. `ai-agent-evals.yml` runs them on PRs that touch that configuration and nightly,
-and fails below an 80% pass rate.
+this repo's work to the same standard. The `agent-evals` job of the shared ai-sdlc workflow runs them on PRs that
+touch that configuration and nightly, and fails below an 80% pass rate.
 
 ## Add an eval
 

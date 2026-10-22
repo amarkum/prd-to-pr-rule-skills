@@ -1,7 +1,6 @@
 {
   "name": "stack-mfe",
   "displayName": "Stack pack: Module Federation micro-frontends",
-  "version": "2.0.0",
   "description": "Micro-frontend conventions on top of the frontend pack: exposed modules as versioned contracts, shared singletons, failure isolation in the host, type sharing and consumer contract tests.",
   "author": {
     "name": "Web Platform Guild"

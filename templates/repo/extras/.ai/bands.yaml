@@ -1,6 +1,7 @@
-# Control bands for the Maintain stage (ai-maintain.yml). Detection is deterministic: bands.py computes a rolling
+# Control bands for the Maintain stage (the maintain job of the shared ai-sdlc workflow). Optional: without this file
+# the job uses these defaults. Detection is deterministic: bands.py computes a rolling
 # baseline and applies the Western Electric rules. The tier decides what Claude may do; nothing else invokes it.
-metric: ci_test_failure_rate     # daily failure rate of the ai-evidence workflow, collected by ai-maintain.yml
+metric: ci_test_failure_rate     # daily failure rate of the repo's ai-sdlc pull request runs (the evidence gate)
 direction: up                    # a rising failure rate is bad; a falling one is not an alert
 baseline: rolling_30d
 min_sd: 0.02                     # a very stable baseline shouldn't turn one red run into a 3-sigma breach

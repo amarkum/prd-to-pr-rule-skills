@@ -27,34 +27,70 @@ class AisdlcToolTests(unittest.TestCase):
         self.assertEqual(res.returncode, 1)
         self.assertIn("FAIL  CLAUDE.md present", res.stdout)
 
-    def test_init_airflow_then_doctor_passes(self):
+    def test_init_writes_only_the_repos_own_files_then_doctor_passes(self):
         res = tool("init", "--target", str(self.repo), "--stack", "airflow", "--jira", "PAY", "--name", "data-airflow",
                    "--description", "Payroll pipelines")
         self.assertEqual(res.returncode, 0, res.stderr)
-        for rel in ["CLAUDE.md", "REVIEW.md", ".ai/repo.yaml", ".ai/dbhub.toml", ".mcp.json", ".github/workflows/ai-evidence.yml",
-                    ".github/workflows/ai-prd-intake.yml", ".github/workflows/ai-design.yml", ".github/workflows/ai-build.yml",
-                    ".github/workflows/ai-review.yml", ".github/workflows/ai-agent-evals.yml",
-                    ".github/workflows/ai-maintain.yml", ".ai/bands.yaml", "evals/README.md",
-                    ".github/pull_request_template.md", "specs/README.md",
-                    "docs/knowledge/README.md", "tests/dags/test_dag_integrity.py"]:
-            self.assertTrue((self.repo / rel).is_file(), rel)
+        written = sorted(str(p.relative_to(self.repo)) for p in self.repo.rglob("*") if p.is_file() and ".git/" not in str(p))
+        self.assertEqual(written, [".ai/dbhub.toml", ".ai/repo.yaml", ".github/workflows/ai-sdlc.yml", ".gitignore",
+                                   ".mcp.json", "CLAUDE.md", "tests/dags/test_dag_integrity.py"])
         self.assertIn("# data-airflow", (self.repo / "CLAUDE.md").read_text())
-        self.assertFalse((self.repo / "AGENTS.md").exists() or (self.repo / ".cursor").exists())
-        self.assertIn("name: data-airflow", (self.repo / ".ai/repo.yaml").read_text())
-        settings = json.loads((self.repo / ".claude/settings.json").read_text())
-        self.assertTrue(settings["enabledPlugins"]["stack-airflow@ai-sdlc"])
-        self.assertEqual(settings["extraKnownMarketplaces"]["ai-sdlc"]["source"]["repo"], "amarkum/prd-to-pr-rule-skills")
-        self.assertIn("Bash(pytest *)", settings["permissions"]["allow"])
+        manifest = (self.repo / ".ai/repo.yaml").read_text()
+        self.assertIn("name: data-airflow", manifest)
+        self.assertIn("runtime: python", manifest)                       # the shared workflow's toolchain
+        caller = (self.repo / ".github/workflows/ai-sdlc.yml").read_text()
+        self.assertIn('uses: "amarkum/prd-to-pr-rule-skills/.github/workflows/sdlc.yml@main"', caller)
+        self.assertNotIn("{{", caller)
         self.assertIn(".ai/evidence/", (self.repo / ".gitignore").read_text())
         doc = tool("doctor", "--target", str(self.repo))
         self.assertEqual(doc.returncode, 0, doc.stdout)
         self.assertIn("WARN  CLAUDE.md 'fill in' sections completed", doc.stdout)
+        self.assertIn("NOTE  plugins: none set at repo level; expected from the organization's managed settings", doc.stdout)
+        self.assertIn("ok    CI: .github/workflows/ai-sdlc.yml calls the shared workflow", doc.stdout)
+
+    def test_init_extras_repo_plugins_and_own_standard(self):
+        res = tool("init", "--target", str(self.repo), "--stack", "mfe", "--extras", "--repo-plugins",
+                   "--standard", "octo-org/ai-sdlc")
+        self.assertEqual(res.returncode, 0, res.stderr)
+        for rel in ["REVIEW.md", ".ai/bands.yaml", "evals/README.md", "specs/README.md", "docs/knowledge/README.md",
+                    ".github/pull_request_template.md"]:
+            self.assertTrue((self.repo / rel).is_file(), rel)
+        settings = json.loads((self.repo / ".claude/settings.json").read_text())
+        self.assertEqual(settings["enabledPlugins"], {"sdlc-standard@ai-sdlc": True, "sdlc-core@ai-sdlc": True})
+        self.assertEqual(settings["extraKnownMarketplaces"]["ai-sdlc"]["source"]["repo"], "octo-org/ai-sdlc")
+        self.assertIn("Bash(npx vitest *)", settings["permissions"]["allow"])
+        self.assertIn("octo-org/ai-sdlc/.github/workflows/sdlc.yml@main", (self.repo / ".github/workflows/ai-sdlc.yml").read_text())
+        self.assertIn("ok    plugins: sdlc-core from the repo settings", tool("doctor", "--target", str(self.repo)).stdout)
+
+    def test_doctor_flags_per_repo_workflow_copies(self):
+        tool("init", "--target", str(self.repo), "--stack", "frontend")
+        (self.repo / ".github/workflows/ai-evidence.yml").write_text("name: ai-evidence\n")
+        doc = tool("doctor", "--target", str(self.repo))
+        self.assertIn("WARN  no per-repo workflow copies left (delete ai-evidence.yml", doc.stdout)
+
+    def test_doctor_reads_a_managed_settings_file_and_survives_a_broken_one(self):
+        import contextlib
+        import importlib.util
+        import io
+        spec = importlib.util.spec_from_file_location("aisdlc_tool", TOOL)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        tool("init", "--target", str(self.repo), "--stack", "frontend")
+        good, bad = self.repo / "managed.json", self.repo / "broken.json"
+        good.write_text(json.dumps({"enabledPlugins": {"sdlc-standard@ai-sdlc": True, "sdlc-core@ai-sdlc": True}}))
+        bad.write_text("{not json")
+        mod.MANAGED_FILES = [bad, good]
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            mod.main(["doctor", "--target", str(self.repo)])
+        self.assertIn("ok    plugins: sdlc-core from the managed settings file", out.getvalue())
+        self.assertIn("broken.json can't be read as a JSON object", out.getvalue())
 
     def test_init_is_idempotent_and_merges_settings(self):
         (self.repo / ".claude").mkdir()
         (self.repo / ".claude/settings.json").write_text(json.dumps({"permissions": {"allow": ["Bash(make *)"]}}))
-        tool("init", "--target", str(self.repo), "--stack", "frontend")
-        second = tool("init", "--target", str(self.repo), "--stack", "frontend")
+        tool("init", "--target", str(self.repo), "--stack", "frontend", "--repo-plugins")
+        second = tool("init", "--target", str(self.repo), "--stack", "frontend", "--repo-plugins")
         self.assertIn("skip    CLAUDE.md", second.stdout)
         allow = json.loads((self.repo / ".claude/settings.json").read_text())["permissions"]["allow"]
         self.assertIn("Bash(make *)", allow)

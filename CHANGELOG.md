@@ -7,6 +7,8 @@
   branch. The behavioural evals surfaced it: a session that rightly stopped at the plan gate was told code had changed.
   The fix is deterministic, so unit tests cover it (`tests/test_hooks.py`) rather than a new eval case. No action
   needed in product repos; plugin-mode repos pick it up on update, vendored repos on the next `vendor`.
+- Docs: `docs/evals.md`, the evidence page and the playbook show the eval run on 2.0.1 (five cases, 3 runs per arm,
+  with a no-plugin baseline) and its limits. The README is now the full guide to the repo and its links.
 
 ## 2.0.0 (2026-10-22)
 

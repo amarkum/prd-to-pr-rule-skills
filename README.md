@@ -206,8 +206,10 @@ make pdf       # rebuild docs/playbook.pdf from docs/site/playbook.html
 - The demo runs end to end.
 - `init`, `vendor` and `doctor` work for all three stacks.
 - The pages render without console errors or sideways scrolling, on desktop and phone, in light and dark.
-- The behavioural evals ran real Claude sessions on fixed tasks and scored them, with and without the plugin. The
-  results for each case are in [`docs/evals.md`](docs/evals.md).
+- The behavioural evals ran 30 real Claude sessions on sdlc-core 2.0.1: 5 cases, with and without the plugin, 3 runs
+  each. All five cases pass with the plugin. Without it, Claude wrote code past the spec and plan gates in 6 of 6 runs,
+  and its PRD reviews missed parts of the organisation's rubric. The results and their limits are in
+  [`docs/evals.md`](docs/evals.md).
 
 **Still to check in your environment:**
 

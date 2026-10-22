@@ -194,9 +194,9 @@
     columns: ["PRD", "Score", "Findings"]
   });
   grouped(document.getElementById("eval-chart"), {
-    title: "Eval scores with and without the plugin", note: "claude plugin eval, 1 run per case; 1.0 is a full pass",
+    title: "Eval scores with and without the plugin", note: "claude plugin eval on sdlc-core 2.0.1: mean of 3 runs per arm; 1.00 is a full pass",
     series: [{ name: "With the plugin", color: "var(--series-1)" }, { name: "Without it", color: "var(--series-mute)" }],
-    rows: S.evals.map((e) => ({ label: e.label, values: [e.with, e.without] })), fmt: "x", max: 1
+    rows: S.evals.map((e) => ({ label: e.label, values: [e.with, e.without] })), fmt: "x2", max: 1
   });
 
   // hook answers

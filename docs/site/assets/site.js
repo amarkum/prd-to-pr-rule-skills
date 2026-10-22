@@ -28,7 +28,8 @@
     m: (v) => `${v} min`,
     tok: (v) => `~${Number(v).toLocaleString("en-US")}`,
     score: (v) => `${v}/100`,
-    x: (v) => (v === null ? "not run" : Number(v).toFixed(1))
+    x: (v) => (v === null ? "not run" : Number(v).toFixed(1)),
+    x2: (v) => (v === null ? "not run" : Number(v).toFixed(2))
   };
 
   /* A clean axis: a 1-2-2.5-5 step, the max a whole number of steps, and room past the longest bar for its label. */
@@ -150,7 +151,7 @@
       list.append(row);
     }
     list.append(h("div", { class: "hbar-axis", "aria-hidden": "true" }, h("div"), h("div", { class: "hbar-ticks" },
-      [0, 0.25, 0.5, 0.75, 1].map((t) => h("span", { style: { left: `calc(var(--plot) * ${t})` } }, (t * max).toFixed(2).replace(/0$/, ""))))));
+      [0, 0.25, 0.5, 0.75, 1].map((t) => h("span", { style: { left: `calc(var(--plot) * ${t})` } }, (t * max).toFixed(2))))));
     body.append(list);
   }
 

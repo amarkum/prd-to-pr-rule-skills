@@ -430,7 +430,7 @@ python3 tools/aisdlc.py doctor --target ../data-airflow
         <h3>Cost</h3>
         <p>Measured with <code>claude plugin details</code> on Claude Code 2.1.308, the always-on context cost is about 1,763
           tokens for sdlc-core, 278 for the connectors and 149 to 181 per stack pack. Skill and agent bodies load only when used.
-          A behavioural eval case cost about $0.10 per run. Track cost per merged PR from OpenTelemetry.</p>
+          A behavioural eval session cost $0.05 to $0.11; the full suite, 3 runs per arm with the baseline, cost $2.13. Track cost per merged PR from OpenTelemetry.</p>
       </section>
 
       <section id="rollout">
@@ -477,7 +477,7 @@ python3 tools/aisdlc.py doctor --target ../data-airflow
         <ul>
           <li><strong>Building the orchestrator first:</strong> months of infrastructure before learning whether the gates and evidence work.</li>
           <li><strong>One agent, one giant prompt, no gates:</strong> agents drift from specs. Use a deterministic skeleton with agent steps.</li>
-          <li><strong>Prose-only rules for things that must hold:</strong> the spec-gate eval scored 0.5 without the hooks and 1.0 with them.</li>
+          <li><strong>Prose-only rules for things that must hold:</strong> without the plugin, Claude wrote code past the spec and plan gates in 6 of 6 eval runs; with its hooks, in none.</li>
           <li><strong>Letting agents change tests to get green:</strong> block skip markers, lock bug-fix tests, require fail-to-pass.</li>
           <li><strong>Unbounded retries:</strong> cap them and escalate with what was tried.</li>
           <li><strong>Optimising for the share of AI code or PR counts:</strong> instability and review time rise.</li>
@@ -492,14 +492,15 @@ python3 tools/aisdlc.py doctor --target ../data-airflow
         <h2>What was verified</h2>
         <h3>In this repository, 22 October 2026</h3>
         <ul>
-          <li><span class="status good">Pass</span> 96 unit tests on Python 3.9 and 3.13: PRD lint, AC coverage, fail-to-pass in
+          <li><span class="status good">Pass</span> 98 unit tests on Python 3.9 and 3.13: PRD lint, AC coverage, fail-to-pass in
             throwaway git repos, evidence (including plan drift and locked tests), the agent-evals runner with a stub CLI, control
             bands, every hook (including the plan gate, locks and release gate), the Atlassian client, schema snapshots, the
             onboarding CLI and manifest consistency.</li>
           <li><span class="status good">Pass</span> <code>claude plugin validate --strict</code> for the marketplace and all five plugins (Claude Code 2.1.308).</li>
           <li><span class="status good">Pass</span> <code>make demo</code>: PRD gate, cross-stack AC coverage, fail-to-pass and plan evidence, the PR gate
             going from deny to allow, a locked test and the release gate.</li>
-          <li><span class="status good">Pass</span> Behavioural evals with real model runs (see <code>docs/evals.md</code>).</li>
+          <li><span class="status good">Pass</span> Behavioural evals with real Claude sessions, 3 runs per arm on sdlc-core 2.0.1: all five cases pass
+            with the plugin. Without it, Claude wrote code past the spec and plan gates in 6 of 6 runs (see <code>docs/evals.md</code>).</li>
           <li><span class="status good">Pass</span> Workflow, JSON and YAML templates parse; the pages render without console errors or horizontal overflow at desktop and phone widths in both themes.</li>
         </ul>
         <h3>Check in your environment</h3>

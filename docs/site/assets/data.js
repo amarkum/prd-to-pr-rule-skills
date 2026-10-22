@@ -248,11 +248,13 @@ window.SDLC = {
     { label: "Version 8 (incomplete)", score: 16, blocking: 3, advisory: 13, verdict: "NEEDS_CLARIFICATION" },
     { label: "Version 9 (after answers)", score: 97, blocking: 0, advisory: 1, verdict: "READY" }
   ],
-  /* claude plugin eval, Claude Code 2.1.308, 1 run per case (docs/evals.md) */
+  /* claude plugin eval, sdlc-core 2.0.1, Claude Code 2.1.308, 3 runs per arm, mean score (docs/evals.md) */
   evals: [
-    { label: "PRD review: incomplete PRD", with: 1.0, without: null },
-    { label: "PRD review: complete PRD", with: 1.0, without: null },
-    { label: "Spec gate blocks code", with: 1.0, without: 0.5 }
+    { label: "PRD review: incomplete PRD", with: 1.0, without: 0.11 },
+    { label: "PRD review: complete PRD", with: 1.0, without: 1.0 },
+    { label: "Spec gate blocks code", with: 1.0, without: 0.5 },
+    { label: "Plan gate blocks code", with: 1.0, without: 0.0 },
+    { label: "Locked test stays", with: 1.0, without: 1.0 }
   ],
   /* ac_coverage.py over examples/evidence/junit-*.xml */
   coverage: [{"ac":"AC-1","status":"COVERED","tests":[{"repo":"payroll-mfe","test":"StatusPanel > PAY-412 AC-1: renders one card per run with name, status and last-updated time","status":"passed"},{"repo":"web-shell","test":"payroll dashboard › PAY-412 AC-1 AC-3: admin sees cards and can filter (smoke through the shell)","status":"passed"}]},{"ac":"AC-2","status":"COVERED","tests":[{"repo":"data-airflow","test":"test_pay_412_ac_2_upserts_completed_status_once","status":"passed"},{"repo":"data-airflow","test":"test_pay_412_ac_2_rerun_of_same_interval_is_idempotent","status":"passed"}]},{"ac":"AC-3","status":"COVERED","tests":[{"repo":"payroll-mfe","test":"StatusPanel > PAY-412 AC-3: Failed filter shows only failed runs and sets ?status=failed","status":"passed"},{"repo":"web-shell","test":"payroll dashboard › PAY-412 AC-1 AC-3: admin sees cards and can filter (smoke through the shell)","status":"passed"}]},{"ac":"AC-4","status":"COVERED","tests":[{"repo":"payroll-mfe","test":"StatusPanel > PAY-412 AC-4: shows employer name on each card for ops agents","status":"passed"}]},{"ac":"AC-5","status":"COVERED","tests":[{"repo":"web-shell","test":"payroll dashboard › PAY-412 AC-5: employee sees access-unavailable state and no status request","status":"passed"}]},{"ac":"AC-6","status":"COVERED","tests":[{"repo":"payroll-mfe","test":"StatusPanel > PAY-412 AC-6: empty state text when no runs","status":"passed"}]},{"ac":"AC-7","status":"COVERED","tests":[{"repo":"payroll-mfe","test":"StatusPanel > PAY-412 AC-7: error state with Retry, retry refetches","status":"passed"}]}],

@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PRD to PR Playbook</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="The AI SDLC standard for Claude Code: how a Confluence PRD becomes a reviewed pull request through a six-stage loop.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,650&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div class="page" data-page="loop">
+<header class="topnav">
+  <div class="frame">
+    <a class="brand" href="index.html">AI SDLC STANDARD</a>
+    <nav aria-label="Pages">
+      <a href="index.html" data-page="loop">The loop</a>
+      <a href="setup.html" data-page="setup">What goes where</a>
+      <a href="implement.html" data-page="implement">Ways to implement</a>
+      <a href="evidence.html" data-page="evidence">Evidence</a>
+      <a href="companies.html" data-page="companies">How others do it</a>
+      <a href="playbook.html" data-page="playbook">Playbook</a>
+    </nav>
+  </div>
+</header>
+
+<main class="frame">
+  <div class="hero">
+    <div class="eyebrow">Version 2.0 · Claude Code · October 2026</div>
+    <h1>From a Confluence PRD to a reviewed pull request, in one loop</h1>
+    <p class="lede">The standard takes a PRD through six stages across the Airflow data repo, the micro-frontends and the
+      frontend shell. Each stage commits a file that the next stage reads. People decide at the gates, and hooks
+      enforce the gates as code, so they hold even when a prompt is ignored.</p>
+  </div>
+
+  <section aria-labelledby="loop-h">
+    <div class="section-head">
+      <h2 id="loop-h">The six stages</h2>
+      <p>The stages follow Anthropic's <a href="https://claude.com/resources/articles/the-ai-native-sdlc-playbook" target="_blank" rel="noopener">AI-native SDLC playbook</a>.
+        Select a stage to see what it commits, who decides, how the decision is enforced and how you measure it.</p>
+    </div>
+    <div class="loop">
+      <div>
+        <svg id="loop-svg" viewBox="0 0 440 440" role="group" aria-label="The six-stage loop; each stage is a button"></svg>
+        <div class="legend small" style="justify-content:center">
+          <span><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="3" y="3" width="8" height="8" transform="rotate(45 7 7)" style="fill:var(--ink)"/></svg>A person decides</span>
+          <span><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="4" style="fill:var(--paper);stroke:var(--ink);stroke-width:1.6"/></svg>A check decides</span>
+        </div>
+      </div>
+      <div class="sheet stage-panel" id="stage-panel" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="gates-h">
+    <div class="section-head">
+      <h2 id="gates-h">Where people decide</h2>
+      <p>Agents do the work between the gates. None of these decisions can be made by the agent itself: the hooks refuse.</p>
+    </div>
+    <div class="gates" id="gates"></div>
+  </section>
+
+  <section aria-labelledby="story-h">
+    <div class="section-head">
+      <h2 id="story-h">Follow one story through the loop</h2>
+      <p>PAY-412, a payroll run status tracker that touches all three repos. Every excerpt below is copied from the
+        worked example in the repository's <code>examples/</code> folder.</p>
+    </div>
+    <div class="story">
+      <div class="story-steps" id="story-steps" role="tablist" aria-label="Steps of the PAY-412 story"></div>
+      <div class="story-view" id="story-view" role="tabpanel"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="more-h">
+    <div class="section-head"><h2 id="more-h">Go deeper</h2></div>
+    <div class="linkcards">
+      <a href="setup.html"><strong>What goes where</strong><span>CLAUDE.md, rules, skills, subagents, hooks, connectors, plugins and policy, and which surfaces load each one.</span></a>
+      <a href="implement.html"><strong>Ways to implement</strong><span>Six setups from a developer's terminal to an orchestrated service, and how to roll them out.</span></a>
+      <a href="evidence.html"><strong>Evidence</strong><span>How tests become proof: AC coverage, fail-to-pass, plan match, locked tests, attestation.</span></a>
+      <a href="companies.html"><strong>How others do it</strong><span>29 sourced cases from Anthropic, Intercom, Spotify, Stripe, Wix and others, grouped into seven ways.</span></a>
+    </div>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="frame">
+    <span>AI SDLC standard 2.0 for Claude Code · source: <a href="https://github.com/amarkum/prd-to-pr-rule-skills" target="_blank" rel="noopener">amarkum/prd-to-pr-rule-skills</a></span>
+    <span>Stages inspired by Anthropic's AI-native SDLC playbook</span>
+  </div>
+</footer>
+</div>
+
+<script src="assets/data.js"></script>
+<script src="assets/site.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { h } = window.Site;
+  const S = window.SDLC;
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.getElementById("loop-svg");
+  const panel = document.getElementById("stage-panel");
+  const C = 220, R_OUT = 184, R_IN = 116, GAP = 1.4;
+
+  function s(tag, attrs, ...kids) {
+    const el = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs || {})) el.setAttribute(k, v);
+    for (const kid of kids) el.append(kid instanceof Node ? kid : document.createTextNode(kid));
+    return el;
+  }
+  const pt = (deg, r) => [C + r * Math.cos(deg * Math.PI / 180), C + r * Math.sin(deg * Math.PI / 180)];
+  function arcPath(a0, a1) {
+    const [x0, y0] = pt(a0, R_OUT), [x1, y1] = pt(a1, R_OUT), [x2, y2] = pt(a1, R_IN), [x3, y3] = pt(a0, R_IN);
+    return `M${x0} ${y0} A${R_OUT} ${R_OUT} 0 0 1 ${x1} ${y1} L${x2} ${y2} A${R_IN} ${R_IN} 0 0 0 ${x3} ${y3} Z`;
+  }
+
+  // the return path inside the ring shows the direction of travel
+  const defs = s("defs", {}, s("marker", { id: "arrowhead", viewBox: "0 0 10 10", refX: "6", refY: "5", markerWidth: "7", markerHeight: "7", orient: "auto-start-reverse" },
+    s("path", { d: "M0 1 L8 5 L0 9 Z", style: "fill:var(--muted)" })));
+  svg.append(defs);
+  const [rx0, ry0] = pt(-84, 100), [rx1, ry1] = pt(232, 100);
+  svg.append(s("path", { class: "return", d: `M${rx0} ${ry0} A100 100 0 1 1 ${rx1} ${ry1}`, "marker-end": "url(#arrowhead)" }));
+  svg.append(s("text", { class: "center-title", x: C, y: C - 8, "text-anchor": "middle" }, "The loop"));
+  svg.append(s("text", { class: "center-sub", x: C, y: C + 14, "text-anchor": "middle" }, "each stage commits"));
+  svg.append(s("text", { class: "center-sub", x: C, y: C + 31, "text-anchor": "middle" }, "what the next one reads"));
+
+  const arcs = [];
+  S.stages.forEach((st, i) => {
+    const a0 = -90 + i * 60 + GAP / 2, a1 = -90 + (i + 1) * 60 - GAP / 2, mid = (a0 + a1) / 2;
+    const g = s("g", { class: "arc", tabindex: "0", role: "button", "aria-label": `Stage ${st.n}: ${st.name}`, "data-id": st.id });
+    g.append(s("path", { d: arcPath(a0, a1), style: `fill:var(${st.color})` }));
+    const [px, py] = pt(mid, (R_IN + R_OUT) / 2);
+    const label = `${st.name}`;
+    const w = label.length * 7.6 + 34;
+    const pill = s("g", { class: "pill" });
+    pill.append(s("rect", { x: px - w / 2, y: py - 13, width: w, height: 26, rx: 13 }));
+    pill.append(s("text", { class: "num", x: px - w / 2 + 11, y: py + 4 }, String(st.n)));
+    pill.append(s("text", { x: px - w / 2 + 24, y: py + 4.5 }, label));
+    g.append(pill);
+    g.addEventListener("click", () => select(st.id));
+    g.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(st.id); }
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); move(1, true); }
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); move(-1, true); }
+    });
+    svg.append(g);
+    arcs.push(g);
+  });
+
+  // gates on the stage boundaries: k = boundary index (0 = Maintain -> Plan)
+  const gates = [
+    { k: 1, auto: false, text: "Intent accepted" }, { k: 2, auto: false, text: "Spec approved, plan accepted" },
+    { k: 4, auto: true, text: "Evidence PASS" }, { k: 5, auto: false, text: "Merged and released" },
+    { k: 0, auto: false, text: "Finding triaged" }];
+  for (const gt of gates) {
+    const [x, y] = pt(-90 + gt.k * 60, (R_IN + R_OUT) / 2);
+    const mark = gt.auto ? s("circle", { class: "gate auto", cx: x, cy: y, r: 7 })
+      : s("rect", { class: "gate", x: x - 6.5, y: y - 6.5, width: 13, height: 13, transform: `rotate(45 ${x} ${y})` });
+    mark.append(s("title", {}, gt.text));
+    svg.append(mark);
+  }
+
+  let current = S.stages[0].id;
+  function move(d, focus) {
+    const i = S.stages.findIndex((x) => x.id === current);
+    const next = S.stages[(i + d + S.stages.length) % S.stages.length].id;
+    select(next);
+    if (focus) arcs.find((a) => a.dataset.id === next).focus();
+  }
+  function chips(list, cls) { return h("div", { class: "tags" }, list.map((x) => h("span", { class: cls }, x))); }
+  function select(id) {
+    current = id;
+    const st = S.stages.find((x) => x.id === id);
+    arcs.forEach((a) => a.classList.toggle("selected", a.dataset.id === id));
+    panel.replaceChildren(
+      h("div", { class: "stage-title" }, h("span", { class: "stage-dot", "--c": `var(${st.color})`, style: { width: "14px", height: "14px" } }),
+        h("h2", {}, st.name), h("span", { class: "eyebrow" }, `Stage ${st.n} of 6`)),
+      h("p", { class: "purpose" }, st.purpose),
+      h("dl", { class: "facts" },
+        h("dt", {}, "Commits"), h("dd", {}, chips(st.commits, "artifact")),
+        h("dt", {}, "Skills and agents"), h("dd", {}, chips(st.skills, "chip")),
+        h("dt", {}, "Scripts"), h("dd", {}, chips(st.scripts, "artifact")),
+        h("dt", {}, "Who decides"), h("dd", {}, st.decides),
+        h("dt", {}, "Enforced by"), h("dd", {}, st.enforced),
+        h("dt", {}, "Runs in CI"), h("dd", {}, chips(st.ci, "artifact")),
+        h("dt", {}, "Leading measure"), h("dd", {}, st.leading),
+        h("dt", {}, "Lagging measure"), h("dd", {}, st.lagging)),
+      h("div", { class: "seg no-print" },
+        h("button", { type: "button", onclick: () => move(-1) }, "← Previous stage"),
+        h("button", { type: "button", onclick: () => move(1) }, "Next stage →")));
+    try { history.replaceState(null, "", `#${id}`); } catch (e) { /* sandboxed */ }
+  }
+  const fromHash = location.hash.slice(1);
+  select(S.stages.some((x) => x.id === fromHash) ? fromHash : S.stages[0].id);
+
+  // gates
+  const gateCards = [
+    { who: "Product owner", stage: "plan", title: "Accepts the intent", text: "The PRD passes the gate and is marked ready. If it doesn't, the questions go back as a Confluence comment and a Jira task, and nothing downstream starts." },
+    { who: "Tech lead or product owner", stage: "design", title: "Approves the spec", text: "Only a person sets status: approved. The edit hook blocks agents from writing it and blocks code changes until it is set." },
+    { who: "Engineer, or tech lead for risk: high", stage: "build", title: "Accepts the plan", text: "In plan mode, before any code. For a risk: high spec the hook stops the agent accepting its own plan." },
+    { who: "A check, not a person", stage: "test", title: "Evidence PASS at the head commit", text: "Computed by evidence.py and re-run in CI. The PR hooks refuse to open a PR without it." },
+    { who: "Code owners and the release manager", stage: "deploy", title: "Merge and release", text: "Agents open draft PRs only and can't merge. Production commands are blocked without a release authorisation." },
+    { who: "Service owner", stage: "maintain", title: "Triages what the loop finds", text: "Fix now, schedule or dismiss. Dismissals tune the control bands; fixed incidents become evals." }
+  ];
+  document.getElementById("gates").append(...gateCards.map((g) => {
+    const st = S.stages.find((x) => x.id === g.stage);
+    return h("div", { class: "sheet gate-card" },
+      h("div", { class: "who" }, h("span", { class: "stage-dot", "--c": `var(${st.color})`, style: { marginRight: "6px" } }), g.who),
+      h("h3", {}, g.title), h("p", {}, g.text));
+  }));
+
+  // story stepper
+  const steps = document.getElementById("story-steps");
+  const view = document.getElementById("story-view");
+  const buttons = S.story.map((step, i) => {
+    const st = S.stages.find((x) => x.id === step.stage);
+    const b = h("button", { type: "button", role: "tab", "aria-selected": "false", tabindex: i ? "-1" : "0" },
+      h("span", { class: "stage-dot", "--c": `var(${st.color})` }), h("span", {}, h("span", { class: "eyebrow", style: { display: "block" } }, st.name), step.title));
+    b.addEventListener("click", () => show(i));
+    b.addEventListener("keydown", (e) => {
+      const d = e.key === "ArrowDown" || e.key === "ArrowRight" ? 1 : e.key === "ArrowUp" || e.key === "ArrowLeft" ? -1 : 0;
+      if (d) { e.preventDefault(); const n = (i + d + S.story.length) % S.story.length; show(n); buttons[n].focus(); }
+    });
+    return b;
+  });
+  steps.append(...buttons);
+  function show(i) {
+    buttons.forEach((b, j) => { b.setAttribute("aria-selected", String(i === j)); b.tabIndex = i === j ? 0 : -1; });
+    const step = S.story[i];
+    view.replaceChildren(h("h3", {}, step.title), h("div", { class: "file" }, step.file), h("pre", {}, h("code", {}, step.text)));
+  }
+  show(0);
+})();
+</script>
+</body>
+</html>

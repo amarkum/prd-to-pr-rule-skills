@@ -14,7 +14,9 @@ vendored mode (`tools/aisdlc.py vendor`).
 - `tools/aisdlc.py`: init, vendor, doctor and knowledge-audit.
 - `standards/`: the PRD template and the repo-manifest schema. `policy/`: managed settings. `knowledge/`: org and
   stack lessons.
-- `docs/`: the playbook (HTML and PDF), research and eval results. `examples/`: PRDs, spec, JUnit, `demo.py`.
+- `docs/site/`: the interactive pages (plain HTML, CSS and JS; content in `assets/data.js` and `assets/companies.js`).
+  `docs/playbook.pdf` is built from `docs/site/playbook.html` (`make pdf`). `docs/research.md`: sourced notes behind the
+  companies page. `examples/`: PRDs, intent, spec, plan, JUnit, `demo.py`.
 
 ## Commands
 

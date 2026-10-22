@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Evidence That Holds</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,650&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .chain { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); counter-reset: step; }
+  .chain li { counter-increment: step; padding: 16px; display: flex; flex-direction: column; gap: 6px; }
+  .chain li::before { content: counter(step); font: 650 1.4rem/1 var(--font-display); color: var(--muted); }
+  .chain p { color: var(--ink-2); font-size: 0.92rem; }
+  .chain .fails { font-size: 0.86rem; color: var(--ink-2); border-top: 1px solid var(--grid); padding-top: 6px; }
+  .chain .fails b { color: var(--bad-ink); font-weight: 600; }
+  .f2p { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+  @media (max-width: 760px) { .f2p { grid-template-columns: minmax(0, 1fr); } }
+  .f2p .result { display: flex; flex-direction: column; gap: 8px; }
+  .f2p .result .cls { font: 650 1.5rem/1.15 var(--font-display); }
+  .cov td.cell { text-align: center; }
+  .cov button.cellbtn { background: none; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px; cursor: pointer; font: inherit; color: var(--ink); }
+  .cov button.cellbtn:hover, .cov button.cellbtn[aria-pressed="true"] { border-color: var(--ink); }
+  .levels { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); }
+  .levels .sheet { padding: 16px; display: flex; flex-direction: column; gap: 6px; }
+  .levels .lv { font: 500 0.74rem/1 var(--font-mono); letter-spacing: 0.08em; color: var(--muted); }
+  .levels p { color: var(--ink-2); font-size: 0.92rem; }
+</style>
+</head>
+<body>
+<div class="page" data-page="evidence">
+<header class="topnav">
+  <div class="frame">
+    <a class="brand" href="index.html">AI SDLC STANDARD</a>
+    <nav aria-label="Pages">
+      <a href="index.html" data-page="loop">The loop</a>
+      <a href="setup.html" data-page="setup">What goes where</a>
+      <a href="implement.html" data-page="implement">Ways to implement</a>
+      <a href="evidence.html" data-page="evidence">Evidence</a>
+      <a href="companies.html" data-page="companies">How others do it</a>
+      <a href="playbook.html" data-page="playbook">Playbook</a>
+    </nav>
+  </div>
+</header>
+
+<main class="frame">
+  <div class="hero">
+    <div class="eyebrow">Stage 4: Test</div>
+    <h1>Evidence that holds</h1>
+    <p class="lede">A green check mark is a claim. In public benchmarks, 15.7% to 28.4% of "passing" patches were wrong
+      because the tests were weak. The standard turns a test run into proof a reviewer can trust without re-running
+      anything: computed by scripts, tied to a commit, re-run in CI and attested.</p>
+  </div>
+
+  <section aria-labelledby="chain-h">
+    <div class="section-head">
+      <h2 id="chain-h">What <code>evidence.py run</code> checks, in order</h2>
+      <p>PASS is the only verdict that opens a pull request. A failure gives FAIL; a gap (an unlisted file, a dirty tree) gives INCOMPLETE.</p>
+    </div>
+    <ol class="chain" id="chain"></ol>
+  </section>
+
+  <section aria-labelledby="f2p-h">
+    <div class="section-head">
+      <h2 id="f2p-h">Fail-to-pass: does the new test prove the change?</h2>
+      <p>Every new or changed test runs twice: on the merge-base with the new test copied in, and at HEAD. Pick what
+        happened on each side.</p>
+    </div>
+    <div class="f2p">
+      <div class="sheet pad" style="display:flex;flex-direction:column;gap:14px">
+        <div><div class="eyebrow" style="margin-bottom:8px">On the base commit, the new test</div><div id="base-seg"></div></div>
+        <div><div class="eyebrow" style="margin-bottom:8px">At HEAD, it</div><div id="head-seg"></div></div>
+      </div>
+      <div class="sheet pad result" id="f2p-result" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="cov-h">
+    <div class="section-head">
+      <h2 id="cov-h">Acceptance criteria across three repos</h2>
+      <p>PAY-412's seven ACs, linked to JUnit results from pytest (data-airflow), Vitest (payroll-mfe) and Playwright
+        (web-shell). Tests are named after the AC, so the link is computed, not claimed. Select a cell to see the tests.</p>
+    </div>
+    <div class="tw"><table class="cov matrix" id="cov"></table></div>
+    <div class="sheet pad" id="cov-detail" aria-live="polite"></div>
+  </section>
+
+  <section aria-labelledby="gate-h">
+    <div class="section-head">
+      <h2 id="gate-h">The gates, measured</h2>
+      <p>The PRD gate's deterministic score for the example PRD before and after the product owner answered, and the
+        behavioural evals that check the skills and hooks change what Claude does.</p>
+    </div>
+    <div class="grid cols-2">
+      <div class="sheet pad" id="prd-chart"></div>
+      <div class="sheet pad" id="eval-chart"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="hooks-h">
+    <div class="section-head">
+      <h2 id="hooks-h">What the hooks answer</h2>
+      <p>Each row is a unit test in <code>tests/test_hooks.py</code>, run on every change to the standard.</p>
+    </div>
+    <div class="tw"><table id="hooks"></table></div>
+  </section>
+
+  <section aria-labelledby="lv-h">
+    <div class="section-head"><h2 id="lv-h">Three levels of trust</h2></div>
+    <div class="levels">
+      <div class="sheet"><span class="lv">LEVEL 1 · LOCAL</span><h3>The session proves its own work</h3><p>The verify skill runs <code>evidence.py</code> on the developer's machine or the agent's sandbox, at a committed SHA on a clean tree. The PR hooks read this result.</p></div>
+      <div class="sheet"><span class="lv">LEVEL 2 · CI RE-RUN</span><h3>A clean runner repeats it</h3><p><code>ai-evidence</code> checks out the PR's head commit, re-runs the same script, adds changed-line coverage and posts the verdict. It's a required check.</p></div>
+      <div class="sheet"><span class="lv">LEVEL 3 · ATTESTED</span><h3>The artifact can't be swapped</h3><p>The evidence bundle is uploaded and attested with Sigstore, tied to the commit. Reviewers trust this, not the PR description.</p></div>
+    </div>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="frame">
+    <span>AI SDLC standard 2.0 for Claude Code · source: <a href="https://github.com/amarkum/prd-to-pr-rule-skills" target="_blank" rel="noopener">amarkum/prd-to-pr-rule-skills</a></span>
+    <span>Weak-test figure: <a href="https://arxiv.org/abs/2506.09289" target="_blank" rel="noopener">UTBoost, ACL 2025</a></span>
+  </div>
+</footer>
+</div>
+
+<script src="assets/data.js"></script>
+<script src="assets/site.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { h, segmented, hbar, grouped } = window.Site;
+  const S = window.SDLC;
+
+  document.getElementById("chain").append(...S.checks.map((c) => h("li", { class: "sheet" },
+    h("h3", {}, c.name), h("p", {}, c.text), h("div", { class: "fails" }, h("b", {}, "Fails when: "), c.fails))));
+
+  // fail-to-pass explorer (mirrors classify() in fail_to_pass.py)
+  let base = "failed", head = "passed";
+  const result = document.getElementById("f2p-result");
+  function classify() {
+    if (head === "failed") return { cls: "FAIL_ON_HEAD", status: "bad", text: "The test or the change is broken. Evidence fails until it passes at HEAD." };
+    if (head === "skipped") return { cls: "SKIPPED", status: "warn", text: "A skipped test proves nothing, and the edit hook blocks agents from adding skip markers without a ticket." };
+    if (base === "passed") return { cls: "PASS_TO_PASS", status: "warn", text: "A useful regression guard, but it would have passed without the change, so it doesn't prove the change. If no new test fails on base, evidence fails (pure refactors can opt out)." };
+    if (base === "failed") return { cls: "FAIL_TO_PASS (strong)", status: "good", text: "The test failed on an assertion about the missing behaviour and passes with the change. This is the proof the standard asks for." };
+    return { cls: "FAIL_TO_PASS (weak)", status: "warn", text: "It only errored on base, for example because it imports a module the change adds. It counts, but --strict demands at least one strong result." };
+  }
+  function render() {
+    const r = classify();
+    result.replaceChildren(h("div", { class: "eyebrow" }, "Classified as"), h("div", { class: "cls" }, r.cls),
+      h("span", { class: `status ${r.status}` }, r.status === "good" ? "Proves the change" : r.status === "bad" ? "Blocks the PR" : "Doesn't prove it on its own"),
+      h("p", { style: { color: "var(--ink-2)" } }, r.text));
+  }
+  segmented(document.getElementById("base-seg"), [
+    { id: "failed", label: "fails on an assertion" }, { id: "error", label: "errors or can't import" }, { id: "passed", label: "passes" }],
+    (id) => { base = id; render(); }, { label: "Result on the base commit" });
+  segmented(document.getElementById("head-seg"), [
+    { id: "passed", label: "passes" }, { id: "failed", label: "fails or errors" }, { id: "skipped", label: "is skipped" }],
+    (id) => { head = id; render(); }, { label: "Result at HEAD" });
+
+  // AC coverage matrix
+  const table = document.getElementById("cov");
+  const detail = document.getElementById("cov-detail");
+  table.append(h("thead", {}, h("tr", {}, h("th", {}, "Acceptance criterion"), S.repos.map((r) => h("th", { class: "cell" }, r)), h("th", { class: "cell" }, "Status"))));
+  const tbody = h("tbody");
+  let pressed = null;
+  for (const ac of S.coverage) {
+    const cells = S.repos.map((repo) => {
+      const tests = ac.tests.filter((t) => t.repo === repo);
+      if (!tests.length) return h("td", { class: "cell" }, h("span", { class: "muted small" }, "–"));
+      const btn = h("button", { type: "button", class: "cellbtn", "aria-pressed": "false", "aria-label": `${ac.ac} in ${repo}: ${tests.length} passing test(s)` },
+        h("span", { class: "status good" }, `${tests.length} passing`));
+      btn.addEventListener("click", () => {
+        if (pressed) pressed.setAttribute("aria-pressed", "false");
+        btn.setAttribute("aria-pressed", "true"); pressed = btn;
+        detail.replaceChildren(h("div", { class: "eyebrow" }, `${ac.ac} in ${repo}`), h("p", { style: { margin: "6px 0 10px", color: "var(--ink-2)" } }, S.acText[ac.ac]),
+          h("ul", { style: { margin: 0, paddingLeft: "1.1em", display: "flex", flexDirection: "column", gap: "4px" } },
+            tests.map((t) => h("li", {}, h("code", {}, t.test), " ", h("span", { class: "status good small" }, t.status)))));
+      });
+      return h("td", { class: "cell" }, btn);
+    });
+    tbody.append(h("tr", {}, h("td", {}, h("strong", {}, ac.ac), h("div", { class: "small muted" }, S.acText[ac.ac])), cells,
+      h("td", { class: "cell" }, h("span", { class: "status good" }, "Covered"))));
+  }
+  table.append(tbody);
+  detail.replaceChildren(h("div", { class: "eyebrow" }, "Verdict"), h("p", { style: { marginTop: "6px", color: "var(--ink-2)" } },
+    "PASS: 7 of 7 acceptance criteria covered by 12 passing test cases across 3 repos. Each repo's evidence covers only its own row of the spec's repo-impact table; this view joins them."));
+
+  // charts
+  hbar(document.getElementById("prd-chart"), {
+    title: "PRD readiness score", note: "prd_lint.py on examples/prds (0 to 100)", fmt: "score", max: 100, ticks: 4,
+    rows: S.prd.map((p) => ({ label: p.label, value: p.score, sub: `${p.verdict}: ${p.blocking} blocking, ${p.advisory} advisory`, note: `${p.blocking} blocking, ${p.advisory} advisory` })),
+    columns: ["PRD", "Score", "Findings"]
+  });
+  grouped(document.getElementById("eval-chart"), {
+    title: "Eval scores with and without the plugin", note: "claude plugin eval, 1 run per case; 1.0 is a full pass",
+    series: [{ name: "With the plugin", color: "var(--series-1)" }, { name: "Without it", color: "var(--series-mute)" }],
+    rows: S.evals.map((e) => ({ label: e.label, values: [e.with, e.without] })), fmt: "x", max: 1
+  });
+
+  // hook answers
+  const rows = [
+    ["git push --force origin feat/PAY-412-x", "deny", "Force-push rewrites shared history."],
+    ["git push origin main", "deny", "Agents never push to protected branches."],
+    ["gh pr merge 12 --squash", "deny", "Humans merge. Agents only open draft PRs."],
+    ["gh pr create --draft (no evidence for HEAD)", "deny", "No passing evidence for this commit."],
+    ["make deploy ENV=production", "deny", "Production releases need a release authorisation (ask with RELEASE_APPROVAL set)."],
+    ["mongosh payroll --eval 'db.runs.deleteMany({})'", "deny", "Data stores are read-only for agents."],
+    ["cat .env", "deny", "Reading secret files is not allowed."],
+    ["Write status: approved into spec.md", "deny", "Approving a spec is a human decision."],
+    ["Edit app code while the spec is a draft", "deny", "No code before the spec is approved."],
+    ["Edit app code before plan.md is accepted", "deny", "Nothing is implemented without an accepted plan."],
+    ["Edit a locked test, or sed -i on it", "deny", "Fix the code, not the test."],
+    ["Add @pytest.mark.skip to a test", "deny", "Unless the line carries aisdlc: allow-skip with a reason."],
+    ["Edit .github/workflows/ci.yml", "ask", "CI and ownership changes need a human."],
+    ["git reset --hard HEAD~1", "ask", "This discards local work."]];
+  document.getElementById("hooks").append(
+    h("thead", {}, h("tr", {}, h("th", {}, "The agent tries"), h("th", {}, "Hook"), h("th", {}, "Reason given to Claude"))),
+    h("tbody", {}, rows.map(([cmd, v, why]) => h("tr", {}, h("td", {}, h("code", {}, cmd)),
+      h("td", {}, h("span", { class: `status ${v === "deny" ? "bad" : "warn"}` }, v)), h("td", {}, why)))));
+})();
+</script>
+</body>
+</html>

@@ -2,7 +2,8 @@
 
 Compiled 2026-10-22 from primary sources where they exist. Tags: **[P]** the organisation's own blog, paper or talk;
 **[V]** a vendor's case study; **[S]** secondary reporting. Where sources disagree, both numbers are given.
-Key figures for Stripe, Spotify, METR and ImpossibleBench were re-checked against the source pages on 2026-10-22.
+Key figures for Stripe, Spotify, METR and ImpossibleBench were re-checked against the source pages on 2026-10-22,
+and the Claude-based cases were added the same day.
 No primary source was found for coding agents working specifically on Module Federation micro-frontends; the closest
 frontend cases are listed.
 
@@ -26,6 +27,44 @@ frontend cases are listed.
 | **OpenAI** | Internal Codex use; "harness engineering" | AI review on almost every PR; a lean AGENTS.md as a map into docs | 70% more PRs merged per week | Keep instructions lean and navigable | [P] openai.com 2025-10, 2026-02 (seen via search excerpts) |
 | **Microsoft** | AI PR review at scale | Suggestions are never committed automatically | >90% of PRs, 10–20% faster median completion | AI review as a first pass, humans decide | [P] devblogs.microsoft.com 2025-07 |
 | **Nubank + Devin** | Splitting an 8-year ETL monolith | Fine-tuned on prior manual migrations; humans approved changes | 8x (page header) or 12x (body) efficiency; >20x cost savings [V, undated] | Data-pipeline migrations are a strong first use case | [V] devin.ai/customers |
+
+### Systems built on Claude (added 22 Oct 2026)
+
+Every quote below was checked against the downloaded page text; customer stories on claude.com carry no publish date, so
+their dates are the earliest the content allows.
+
+| Organisation | System | Built on | Gates | How they verify | Reported numbers | Sources |
+|---|---|---|---|---|---|---|
+| **Intercom** | Claude Code as a platform: private auto-updating plugin marketplace (skills, hooks, OpenTelemetry) plus AI PR auto-approval | Claude Code | Auto-approval only for small, low-risk PRs; anyone can ask for a human review; auditors engaged first | Review split into independent sub-agents; revert rates against human code; a hook blocks `gh pr create` unless the create-pr skill ran | ">93% of PRs agent-driven"; 19.2% of merged PRs auto-approved (median 14.6 vs 75.8 min to merge); backend revert rate 0.53% AI vs 5.39% human | [P] intercom.com/blog/ai-is-approving-our-pull-requests-heres-how-we-made-it-safe (2026-04-21); ideas.fin.ai/p/2x-nine-months-later (2026-04-16) |
+| **HubSpot** | Crucible (headless Claude Code on Kubernetes) and the Sidekick bot | Claude Code; review later moved to an in-house multi-model framework | Editable plan before the build; PRs not auto-marked ready; a judge agent filters review comments | Stop hook refuses to finish until the build passes and changes are pushed; branch and draft PR created deterministically | 7,000+ AI PRs merged; 50,000+ human PRs reviewed; time to review feedback -90% | [P] product.hubspot.com/blog/cloud-coding-agents-at-hubspot (2026-01-23); .../automated-code-review-the-6-month-evolution (2026-03-02) |
+| **Wix** (data engineering) | AirBot: Airflow failure, root cause, fix PR, in Slack | LangChain plus the Claude Agent SDK for fixes; other models for triage and chat | Read-only analysis, then a person approves the write step | Typed remediation plans; the repo's CLAUDE.md and team skills; least-privilege MCP gateway | 675 h/month saved (Jan) rising to ~850 (Sep); 28 of 180 PRs merged unchanged in 30 days | [P] wix.engineering (2026-01-15); Airflow Summit 2026 slides |
+| **CircleCI** | Chunk, a CI maintenance agent, plus Claude Code sidecar hooks | Claude Agent SDK | The customer merges a PR CI already passed | Sandboxes from the customer's CI config; Stop and PreToolUse hooks run tests in a CI-identical microVM | ">4 in 5 Chunk tasks trigger automatically"; task-to-PR conversion more than doubled | [V] claude.com/customers/circleci; [P] circleci.com/blog/chunk-sidecar-agent-hooks (2026-05-29) |
+| **Delivery Hero** | Herogen, Jira task to tested PR | In-house agent, Claude Opus 4.5 primary; Gemini on the review council | A council of review agents, then a human final check | Iterates on tests; measures merged vs rejected | 100+ merged change requests a day; 85% merged vs rejected (Apr); 170+ PRs/day later | [P] press release (2026-04-24); [V] claude.com/customers/delivery-hero, Google Cloud |
+| **Carvana** | Claude in Slack: alert to root cause to PR; release baseline checks; hourly checks | Claude in Slack (Claude Tag) | Human PR review; scoped identities per team; a read-only trial first | Releases compared with a log baseline kept as a skill | Alert volume -56%; time to an answer -65% | [V] claude.com/customers/carvana |
+| **Sentry** | Seer root-cause analysis handed to a Claude agent that opens the PR | Claude Managed Agents | A developer reviews, tests and merges | Analysis grounded in Sentry telemetry | 1M+ RCAs a year; integration built by one engineer | [V] claude.com/customers/sentry; [P] sentry.io changelog (2026-04-08) |
+| **LG CNS** | Build Factory modernisation | Claude Code on Bedrock | Pods of 5-7; seniors set the decomposition | Thin harness chaining analysis, generation, tests and verification | 2,888 of 2,913 APIs converted; 1,340 screens moved to React; ~50% of conventional cost | [V] claude.com/customers/lg-cns |
+| **Caylent** | Accelerate, a database migration pipeline | Claude Agent SDK on Bedrock | A guardrail agent validates every translation; engineer sign-off | Tests on translated procedures | 220 h vs 2,600 h; 1,850 of 2,500 procedures were dead code | [V] claude.com/customers/caylent |
+| **Deepgram** | Plan-mode sessions, an incident skill, multi-agent support triage | Claude Code | Human sign-off on every production change | Higher coverage bar for Claude-written code; durable-code cohort study | 4-10x durable code for regular users (internal) | [V] claude.com/customers/deepgram |
+| **League** | Swarm overnight builds and a PR risk-triage bot | Claude Code | Next-morning review; size and risk routing; feature flags | Risk-routed review | AI-authored code 70% to 98%; idea-to-PR cycle time halved | [V] claude.com/customers/league |
+| **Shopify** | Roast workflows with a Claude Code step | Claude Code | The workflow author sets the guardrails | Deterministic steps first; iterate until tests and types pass | "Thousands of test files" (no exact figure) | [P] shopify.engineering/introducing-roast (2025-06-18) |
+| **Rakuten** | Claude Code for delivery; a Managed Agents agent for production exceptions | Claude Code, Managed Agents | Not described | Root cause posted to Slack | Time to market 24 to 5 days (-79%) | [V] claude.com/customers/rakuten |
+
+**Anthropic's own figures.** "In May 2026, Anthropic averaged around 2,500 code changes merged per day; as of September,
+we merged over 30,000 per day" ([P] anthropic.com/engineering/redesigning-source-control, 2026-10-13). "Claude authors
+about 80% of the code merged into our codebase today" and the share of PRs with substantive review comments rose from 16%
+to 54% ([P] claude.com/resources/articles/how-anthropic-secures-its-ai-native-software-development-lifecycle, 2026-07-21).
+Claude posts its first evidence-grounded incident analysis a median of 14 minutes after an incident opens
+([P] claude.com/resources/articles/ai-ci-cd-on-call, 2026-08-18). The 59% of work and +67% merged PRs per engineer per day
+are from an August 2025 survey and Claude Code adoption data ([P] anthropic.com/research/how-ai-is-transforming-work-at-anthropic,
+2025-12-02); the 59% is self-reported.
+
+**Spotify re-checked.** Spotify's Chief Architect: "Honk architecturally is fairly simple. It's the Claude Agent SDK running
+in a Kubernetes pod." Honk is pluggable by design and its first version wasn't built on Claude.
+
+**Caveats.** Figures disagree across sources for Delivery Hero (100+ vs 170+ PRs a day), Wix (675 vs ~850 hours, with a
+changed model mix) and Spotify (PR frequency +60% vs +75%). Nobody published a micro-frontend case built on Claude.
+GMO Flatt Security reported misconfigured claude-code-action workflows exploited in the wild (2026-06-01): workflows that
+untrusted users can trigger should expose no secrets beyond what the action needs.
 
 ### Data engineering specifically
 

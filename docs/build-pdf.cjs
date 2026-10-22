@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Render docs/playbook.html to docs/playbook.pdf (A4, page numbers) with Playwright's Chromium.
+// Render docs/site/playbook.html to docs/playbook.pdf (A4, page numbers) with Playwright's Chromium.
 // Usage: node docs/build-pdf.cjs [--screens DIR]   (needs Playwright: npm i -g playwright, or a local install)
 const path = require("path");
 const { execSync } = require("child_process");
@@ -13,7 +13,7 @@ function loadPlaywright() {
 
 (async () => {
   const { chromium } = loadPlaywright();
-  const src = path.resolve(__dirname, "playbook.html");
+  const src = path.resolve(__dirname, "site", "playbook.html");
   const out = path.resolve(__dirname, "playbook.pdf");
   const screensAt = process.argv.indexOf("--screens");
   const browser = await chromium.launch();
@@ -26,7 +26,7 @@ function loadPlaywright() {
       path: out, format: "A4", printBackground: true, preferCSSPageSize: true, displayHeaderFooter: true,
       headerTemplate: "<span></span>",
       footerTemplate: '<div style="font:8px Helvetica,Arial,sans-serif;color:#667;width:100%;padding:0 13mm;display:flex;justify-content:space-between">' +
-        '<span>PRD to PR Playbook · v1.0</span><span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>',
+        '<span>PRD to PR Playbook · v2.0 · Claude Code</span><span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>',
     });
     console.log("wrote " + out);
     if (screensAt > -1) {

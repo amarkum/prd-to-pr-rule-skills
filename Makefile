@@ -16,5 +16,5 @@ demo:            ## deterministic end-to-end demo (PRD gate, AC coverage, fail-t
 evals:           ## behavioural evals with real model runs (costs money; Linux needs bubblewrap + socat)
 	cd plugins/sdlc-core && claude plugin eval . --trust-plugin --scaffold --allow-tools Bash Edit Write --runs 3 --threshold 0.8 --no-publish --max-cost-usd 10
 
-pdf:             ## render docs/playbook.html to docs/playbook.pdf (needs Node + Playwright)
+pdf:             ## render docs/site/playbook.html to docs/playbook.pdf (needs Node + Playwright)
 	node docs/build-pdf.cjs

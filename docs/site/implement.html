@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ways to Implement</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,650&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .needs { display: flex; flex-direction: column; gap: 8px; }
+  .needs label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; font-size: 0.95rem; }
+  .needs input { margin-top: 4px; width: 16px; height: 16px; accent-color: var(--accent); }
+  .pick { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+  @media (max-width: 760px) { .pick { grid-template-columns: minmax(0, 1fr); } }
+  .ladder { display: flex; flex-direction: column; gap: 12px; }
+  .setup { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 4px 16px; padding: 18px; }
+  .setup .n { font: 650 2rem/1 var(--font-display); color: var(--muted); grid-row: span 3; }
+  .setup.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .setup.on .n { color: var(--accent); }
+  .setup h3 { font: 650 1.2rem/1.25 var(--font-display); }
+  .setup .meta { display: flex; flex-wrap: wrap; gap: 6px; }
+  .setup .meta .chip { white-space: normal; }
+  .setup details summary { cursor: pointer; color: var(--accent); font-size: 0.9rem; margin-top: 4px; }
+  .setup .facts { margin-top: 10px; }
+  .why { font-size: 0.86rem; color: var(--accent); }
+  @media (max-width: 520px) { .setup { grid-template-columns: minmax(0, 1fr); } .setup .n { grid-row: auto; font-size: 1.4rem; } }
+  .rec-list { display: flex; flex-direction: column; gap: 10px; }
+  .rec-list li { color: var(--ink-2); }
+  .dots { display: flex; gap: 4px; justify-content: center; }
+  .dots span { width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center;
+    font: 600 0.72rem/1 var(--font-mono); border: 1px solid var(--rule); color: var(--muted); }
+  .dots span.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="page" data-page="implement">
+<header class="topnav">
+  <div class="frame">
+    <a class="brand" href="index.html">AI SDLC STANDARD</a>
+    <nav aria-label="Pages">
+      <a href="index.html" data-page="loop">The loop</a>
+      <a href="setup.html" data-page="setup">What goes where</a>
+      <a href="implement.html" data-page="implement">Ways to implement</a>
+      <a href="evidence.html" data-page="evidence">Evidence</a>
+      <a href="companies.html" data-page="companies">How others do it</a>
+      <a href="playbook.html" data-page="playbook">Playbook</a>
+    </nav>
+  </div>
+</header>
+
+<main class="frame">
+  <div class="hero">
+    <div class="eyebrow">Six setups, all on Claude</div>
+    <h1>Ways to implement</h1>
+    <p class="lede">From a developer's terminal to an orchestrated service. Every setup uses the same plugins, scripts and
+      repo files, so each one adds automation without changing the process. Start with the first; each builds on the
+      one before it.</p>
+  </div>
+
+  <section aria-labelledby="pick-h">
+    <div class="section-head">
+      <h2 id="pick-h">Where should you start?</h2>
+      <p>Tick what's true for your teams. The setups that cover it are highlighted below.</p>
+    </div>
+    <div class="pick">
+      <fieldset class="sheet pad needs" id="needs" style="margin:0"><legend class="eyebrow" style="padding:0 6px">What you need</legend></fieldset>
+      <div class="sheet pad" id="rec" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="ladder-h">
+    <div class="section-head">
+      <h2 id="ladder-h">The six setups</h2>
+    </div>
+    <div class="ladder" id="ladder"></div>
+  </section>
+
+  <section aria-labelledby="cmp-h">
+    <div class="section-head">
+      <h2 id="cmp-h">Side by side</h2>
+      <p>Where Claude runs, who starts the work, what enforces the gates, and how the standard reaches it.</p>
+    </div>
+    <div class="tw"><table id="compare"></table></div>
+  </section>
+
+  <section aria-labelledby="feat-h">
+    <div class="section-head">
+      <h2 id="feat-h">Claude features each setup uses</h2>
+    </div>
+    <div class="tw"><table class="matrix" id="features"></table></div>
+  </section>
+
+  <section aria-labelledby="roll-h">
+    <div class="section-head">
+      <h2 id="roll-h">A rollout plan</h2>
+      <p>Measure each step against the last 20 comparable stories before turning on the next. Lead time, rework and
+        escaped defects are the measures; the share of AI-written code is not.</p>
+    </div>
+    <div class="sheet pad" id="rollout"></div>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="frame">
+    <span>AI SDLC standard 2.0 for Claude Code · source: <a href="https://github.com/amarkum/prd-to-pr-rule-skills" target="_blank" rel="noopener">amarkum/prd-to-pr-rule-skills</a></span>
+    <span>Surfaces and features checked against the Claude Code docs, 22 October 2026</span>
+  </div>
+</footer>
+</div>
+
+<script src="assets/data.js"></script>
+<script src="assets/site.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { h, timeline } = window.Site;
+  const S = window.SDLC;
+
+  // ladder
+  const cards = S.setups.map((st) => {
+    const why = h("div", { class: "why" });
+    const card = h("article", { class: "sheet setup", id: `setup-${st.n}` },
+      h("div", { class: "n", "aria-hidden": "true" }, String(st.n)),
+      h("div", {}, h("h3", {}, `${st.n}. ${st.name}`), why),
+      h("div", { class: "meta" }, h("span", { class: "chip" }, st.where), h("span", { class: "chip" }, `Started by: ${st.starts}`)),
+      h("div", {},
+        h("p", { style: { color: "var(--ink-2)" } }, h("strong", { style: { color: "var(--ink)" } }, "Best for: "), st.best),
+        h("details", {}, h("summary", {}, "Set up, what you get, what to watch"),
+          h("dl", { class: "facts" },
+            h("dt", {}, "Set up"), h("dd", {}, st.setup),
+            h("dt", {}, "You get"), h("dd", {}, st.get),
+            h("dt", {}, "Gates enforced by"), h("dd", {}, st.gates),
+            h("dt", {}, "Watch for"), h("dd", {}, st.watch),
+            h("dt", {}, "Move on when"), h("dd", {}, st.next)))));
+    card._why = why;
+    return card;
+  });
+  document.getElementById("ladder").append(...cards);
+
+  // needs picker
+  const needsBox = document.getElementById("needs");
+  const boxes = S.needs.map((n) => {
+    const input = h("input", { type: "checkbox", id: `need-${n.id}`, value: n.id });
+    if (n.id === "daily") input.checked = true;
+    input.addEventListener("change", update);
+    needsBox.append(h("label", { for: `need-${n.id}` }, input, h("span", {}, n.text)));
+    return input;
+  });
+  function update() {
+    const picked = S.needs.filter((n, i) => boxes[i].checked);
+    const reasons = new Map();
+    for (const n of picked) for (const s of n.setups) reasons.set(s, (reasons.get(s) || []).concat(n.text));
+    cards.forEach((c, i) => {
+      const n = i + 1;
+      c.classList.toggle("on", reasons.has(n));
+      c._why.textContent = reasons.has(n) ? `Covers: ${reasons.get(n).join("; ")}` : "";
+    });
+    const top = Math.max(0, ...reasons.keys());
+    const rec = document.getElementById("rec");
+    if (!picked.length) {
+      rec.replaceChildren(h("div", { class: "eyebrow" }, "Recommendation"), h("p", { style: { marginTop: "8px", color: "var(--ink-2)" } }, "Tick at least one need. Without one, start with setup 1: it's the pilot for every team."));
+      return;
+    }
+    const path = S.setups.filter((s) => s.n <= top);
+    rec.replaceChildren(
+      h("div", { class: "eyebrow" }, "Recommendation"),
+      h("h3", { style: { margin: "8px 0", fontSize: "1.2rem", fontFamily: "var(--font-display)" } }, top <= 1 ? "Start with setup 1 and measure" : `Work up to setup ${top}, one step at a time`),
+      h("ol", { class: "rec-list", style: { paddingLeft: "1.2em", margin: 0 } }, path.map((s) => h("li", {}, h("strong", { style: { color: "var(--ink)" } }, `${s.name}. `), reasons.has(s.n) ? "Covers what you ticked." : "A prerequisite for the next step."))),
+      picked.some((n) => n.policy) ? h("p", { class: "small", style: { marginTop: "10px", color: "var(--ink-2)" } }, "Regulated data: deploy policy/managed-settings.regulated.json (sandbox, credential isolation, managed-only permissions and hooks) to the machines and repos that hold it.") : null);
+  }
+  update();
+
+  // comparison table
+  document.getElementById("compare").append(
+    h("thead", {}, h("tr", {}, ["Setup", "Where Claude runs", "Who starts it", "Gates enforced by", "Standard arrives via"].map((c) => h("th", {}, c)))),
+    h("tbody", {}, S.setups.map((s) => h("tr", {}, h("td", {}, h("strong", {}, `${s.n}. ${s.name}`)), h("td", {}, s.where), h("td", {}, s.starts), h("td", {}, s.gates), h("td", {}, s.loads)))));
+
+  // feature map
+  const features = [
+    ["Plugin marketplace and managed settings", [1, 2, 3, 5, 6]], ["Plan mode", [1, 4]], ["Git worktrees and subagents", [1, 4, 6]],
+    ["Hooks (gates)", [1, 2, 3, 4, 5, 6]], ["claude-code-action in GitHub Actions", [2, 3, 5]], ["Managed Code Review (REVIEW.md)", [2]],
+    ["Claude Code on the web", [4]], ["Scheduled tasks", [5]], ["Claude in Slack", [4, 5]], ["Agent SDK", [6]],
+    ["Claude Managed Agents", [6]], ["Dynamic workflows", [6]], ["Agent evals (agent_evals.py, claude plugin eval)", [2, 5]],
+    ["OpenTelemetry metrics", [1, 2, 3, 4, 5, 6]]];
+  document.getElementById("features").append(
+    h("thead", {}, h("tr", {}, h("th", {}, "Feature"), h("th", { class: "cell" }, "Setups"))),
+    h("tbody", {}, features.map(([name, on]) => h("tr", {}, h("td", {}, name),
+      h("td", { class: "cell" }, h("div", { class: "dots", "aria-label": `Setups ${on.join(", ")}` },
+        [1, 2, 3, 4, 5, 6].map((n) => h("span", { class: on.includes(n) ? "on" : "" }, String(n)))))))));
+
+  // rollout timeline
+  timeline(document.getElementById("rollout"), {
+    title: "Weeks from the start of the pilot", note: "A proposal to adapt, not a measurement. Each bar ends at a go/no-go check.",
+    weeks: 16, rows: S.rollout
+  });
+})();
+</script>
+</body>
+</html>

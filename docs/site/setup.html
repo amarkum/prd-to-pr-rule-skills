@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>What Goes Where</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,650&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div class="page" data-page="setup">
+<header class="topnav">
+  <div class="frame">
+    <a class="brand" href="index.html">AI SDLC STANDARD</a>
+    <nav aria-label="Pages">
+      <a href="index.html" data-page="loop">The loop</a>
+      <a href="setup.html" data-page="setup">What goes where</a>
+      <a href="implement.html" data-page="implement">Ways to implement</a>
+      <a href="evidence.html" data-page="evidence">Evidence</a>
+      <a href="companies.html" data-page="companies">How others do it</a>
+      <a href="playbook.html" data-page="playbook">Playbook</a>
+    </nav>
+  </div>
+</header>
+
+<main class="frame">
+  <div class="hero">
+    <div class="eyebrow">Rules, skills, subagents, hooks, connectors, plugins, policy</div>
+    <h1>What goes where</h1>
+    <p class="lede">Two questions place almost any piece of guidance: must it hold every time, and who needs it, when?
+      Skills and rules make the right thing likely. Hooks, scripts, CI checks and policy make the wrong thing
+      impossible, or at least visible.</p>
+  </div>
+
+  <section aria-labelledby="layers-h">
+    <div class="section-head">
+      <h2 id="layers-h">Four layers, from the organisation down to one developer</h2>
+      <p>Higher layers win. A developer can't switch off what policy enforces, and a repo can't widen what the standard denies.</p>
+    </div>
+    <div class="grid" id="layers"></div>
+  </section>
+
+  <section aria-labelledby="mech-h">
+    <div class="section-head">
+      <h2 id="mech-h">The mechanisms</h2>
+      <p>Pick one to see what belongs in it, what doesn't, when Claude Code loads it, what it costs, and where it lives in this repository.</p>
+    </div>
+    <div class="explorer">
+      <div id="mech-tabs"></div>
+      <div class="sheet pad" id="mech-panel" role="tabpanel" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="decide-h">
+    <div class="section-head">
+      <h2 id="decide-h">Where should this piece of guidance live?</h2>
+      <p>Answer up to six questions about one rule, convention or check you want Claude to follow.</p>
+    </div>
+    <div class="sheet pad" id="decide" style="max-width: 760px"></div>
+  </section>
+
+  <section aria-labelledby="surf-h">
+    <div class="section-head">
+      <h2 id="surf-h">Which surfaces load what</h2>
+      <p>Claude Code runs in more places than a terminal, and not every place loads the same things. Repo-declared
+        plugins don't install in web sessions, scheduled tasks or Claude in Slack, and Slack sessions don't run repo hooks.
+        That's why the standard has a vendored mode, and why the CI required checks are the gate that holds everywhere.</p>
+    </div>
+    <div class="tw"><table class="matrix" id="surfaces"></table></div>
+    <p class="small muted">From the Claude Code documentation, checked 22 October 2026. "Assumed" cells follow from scheduled tasks being cloud sessions; verify them in your environment.</p>
+  </section>
+
+  <section aria-labelledby="cost-h">
+    <div class="section-head">
+      <h2 id="cost-h">What it costs to have the standard installed</h2>
+      <p>Skill and subagent descriptions sit in every session's context; their bodies load only when used. Hooks,
+        scripts and policy cost nothing in context. The standard's budget is about 2,000 tokens for sdlc-core.</p>
+    </div>
+    <div class="sheet pad" id="cost"></div>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="frame">
+    <span>AI SDLC standard 2.0 for Claude Code · source: <a href="https://github.com/amarkum/prd-to-pr-rule-skills" target="_blank" rel="noopener">amarkum/prd-to-pr-rule-skills</a></span>
+    <span>Token costs from <code>claude plugin details</code>, Claude Code 2.1.308</span>
+  </div>
+</footer>
+</div>
+
+<script src="assets/data.js"></script>
+<script src="assets/site.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { h, segmented, hbar } = window.Site;
+  const S = window.SDLC;
+
+  // layers
+  document.getElementById("layers").append(...S.layers.map((l, i) => h("div", { class: "sheet pad", style: { display: "grid", gridTemplateColumns: "minmax(0,220px) minmax(0,1fr)", gap: "6px 20px", alignItems: "baseline" } },
+    h("div", {}, h("div", { class: "eyebrow" }, `Layer ${i + 1}`), h("h3", {}, l.name), h("div", { class: "small muted" }, l.where)),
+    h("div", { class: "minw0" }, h("p", { style: { color: "var(--ink-2)" } }, l.what), h("div", { style: { marginTop: "6px" } }, h("span", { class: "artifact" }, l.path))))));
+  if (window.matchMedia("(max-width: 600px)").matches) document.querySelectorAll("#layers > .sheet").forEach((el) => { el.style.gridTemplateColumns = "1fr"; });
+
+  // mechanism explorer
+  const panel = document.getElementById("mech-panel");
+  const kinds = { advisory: "Advisory: shapes what Claude does", enforced: "Enforced: holds every time", distribution: "Distribution" };
+  const selectMech = segmented(document.getElementById("mech-tabs"), S.mechanisms.map((m) => ({ id: m.id, label: m.name })), (id) => {
+    const m = S.mechanisms.find((x) => x.id === id);
+    panel.replaceChildren(
+      h("div", { style: { display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" } }, h("h2", {}, m.name), h("span", { class: `kind ${m.kind}` }, kinds[m.kind])),
+      h("dl", { class: "facts", style: { marginTop: "14px" } },
+        h("dt", {}, "Put here"), h("dd", {}, m.put),
+        h("dt", {}, "Keep out"), h("dd", {}, m.keep),
+        h("dt", {}, "Loads"), h("dd", {}, m.loads),
+        h("dt", {}, "Context cost"), h("dd", {}, m.cost),
+        h("dt", {}, "In this repo"), h("dd", {}, h("span", { class: "artifact" }, m.repo))),
+      h("pre", { style: { marginTop: "14px" } }, h("code", {}, m.example)));
+  }, { hash: true, label: "Mechanisms" });
+
+  // decision helper
+  const box = document.getElementById("decide");
+  function ask(i, trail) {
+    const q = S.decide[i];
+    box.replaceChildren(
+      h("div", { class: "eyebrow" }, `Question ${i + 1} of ${S.decide.length}`),
+      h("h3", { style: { margin: "8px 0 14px", fontSize: "1.15rem" } }, q.q),
+      h("div", { class: "seg" },
+        h("button", { type: "button", onclick: () => (typeof q.yes === "number" ? ask(q.yes, trail.concat("yes")) : answer(q.yes)) }, "Yes"),
+        h("button", { type: "button", onclick: () => (typeof q.no === "number" ? ask(q.no, trail.concat("no")) : answer(q.no)) }, "No")),
+      trail.length ? h("button", { type: "button", class: "btn quiet", style: { marginTop: "10px" }, onclick: () => ask(0, []) }, "Start again") : null);
+  }
+  function answer(id) {
+    if (id === "prompt") {
+      box.replaceChildren(h("div", { class: "eyebrow" }, "Put it in"),
+        h("h3", { style: { margin: "6px 0 8px", fontSize: "1.4rem", fontFamily: "var(--font-display)" } }, "The prompt, the spec or the plan"),
+        h("p", { style: { color: "var(--ink-2)" } }, "It sounds like context for one piece of work, not durable guidance. Write it into the spec or plan.md so the next stage reads it. If it comes up again, the learn skill promotes it."),
+        h("div", { class: "seg", style: { marginTop: "14px" } }, h("button", { type: "button", onclick: () => ask(0, []) }, "Ask about another")));
+      return;
+    }
+    const m = S.mechanisms.find((x) => x.id === id);
+    box.replaceChildren(
+      h("div", { class: "eyebrow" }, "Put it in"),
+      h("h3", { style: { margin: "6px 0 8px", fontSize: "1.4rem", fontFamily: "var(--font-display)" } }, m.name),
+      h("p", { style: { color: "var(--ink-2)" } }, m.put),
+      h("div", { class: "seg", style: { marginTop: "14px" } },
+        h("button", { type: "button", onclick: () => { selectMech(id); document.getElementById("mech-h").scrollIntoView({ behavior: "smooth" }); } }, `Open ${m.name} above`),
+        h("button", { type: "button", onclick: () => ask(0, []) }, "Ask about another")));
+  }
+  ask(0, []);
+
+  // surfaces matrix
+  const label = { yes: "Loads", part: "Partly", no: "No" };
+  const table = document.getElementById("surfaces");
+  table.append(h("thead", {}, h("tr", {}, h("th", {}, "Mechanism"), S.surfaces.map((s) => h("th", { class: "cell" }, s)))),
+    h("tbody", {}, S.surfaceRows.map((r) => h("tr", {}, h("td", {}, h("strong", {}, r.name)),
+      r.cells.map((c, i) => h("td", { class: "cell" }, h("span", { class: `mark ${c}` }, c === "yes" && r.verb ? r.verb : label[c]),
+        r.notes[i] ? h("div", { class: "small muted", style: { whiteSpace: "normal", maxWidth: "150px", margin: "4px auto 0" } }, r.notes[i]) : null))))));
+
+  // cost chart
+  hbar(document.getElementById("cost"), {
+    title: "Always-on context cost per plugin", note: "Tokens added to every session (estimates from claude plugin details)",
+    fmt: "tok", rows: S.tokenCost.map((r) => ({ label: r.label, value: r.value, note: r.note, sub: r.note })),
+    columns: ["Plugin", "Tokens", "Contains"]
+  });
+})();
+</script>
+</body>
+</html>

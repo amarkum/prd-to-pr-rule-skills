@@ -7,8 +7,10 @@ stage commits an artifact the next stage reads, humans decide at the gates, and 
 Incomplete PRDs go back to the product owner as concrete questions. Lessons and incidents compound into rules,
 checks and evals.
 
-**Read first:** [`docs/playbook.html`](docs/playbook.html) (also as [`docs/playbook.pdf`](docs/playbook.pdf)) covers
-the approach, what goes in CLAUDE.md, skills, hooks, plugins and connectors, the setups to try, and the research.
+**Read first:** the interactive pages in [`docs/site/`](docs/site/index.html): [the loop](docs/site/index.html),
+[what goes where](docs/site/setup.html), [ways to implement](docs/site/implement.html), [evidence](docs/site/evidence.html),
+[how other companies do it](docs/site/companies.html) and [the full playbook](docs/site/playbook.html) (also as
+[`docs/playbook.pdf`](docs/playbook.pdf)). Open them in a browser; they need no build step.
 
 ## The loop
 
@@ -62,7 +64,7 @@ CI automation (the `ai-*` workflows) is off until you set the repository variabl
 | `standards/` | Confluence PRD template; `.ai/repo.yaml` JSON Schema |
 | `policy/` | Managed settings: a standard tier and a regulated tier |
 | `knowledge/` | Org and stack lessons with owners and review dates |
-| `docs/` | Playbook (HTML and PDF), research survey, eval results |
+| `docs/` | Interactive pages (`site/`), the playbook PDF, research survey, eval results |
 | `examples/` | Example PRDs (incomplete and fixed), intent, spec and plan, three-stack JUnit, `demo.py` |
 | `tests/` | 96 unit tests (Python 3.9 and 3.13) |
 
@@ -73,7 +75,7 @@ make test      # 96 unit tests: lint, coverage, fail-to-pass, evidence and plan 
 make validate  # claude plugin validate --strict: marketplace + 5 plugins
 make demo      # PRD gate -> AC coverage -> evidence -> PR gate deny/allow -> locked test and release gate
 make evals     # behavioural evals with real model runs (results: docs/evals.md)
-make pdf       # rebuild docs/playbook.pdf
+make pdf       # rebuild docs/playbook.pdf from docs/site/playbook.html
 ```
 
 The eval suite measured the guardrails. Asked to implement against a draft spec, the agent stopped and asked for

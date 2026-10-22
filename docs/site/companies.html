@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How Others Automate Delivery</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,650&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .ways { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); }
+  .way { text-align: left; display: flex; flex-direction: column; gap: 6px; padding: 14px; cursor: pointer; font: inherit; color: var(--ink);
+    background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--radius); }
+  .way:hover { border-color: var(--muted); }
+  .way[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+  .way strong { font: 600 1rem/1.25 var(--font-body); }
+  .way span { color: var(--ink-2); font-size: 0.86rem; }
+  .way em { font-style: normal; font: 500 0.74rem/1 var(--font-mono); color: var(--muted); }
+  .sticky-filters { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 49px); z-index: 4; background: var(--paper); padding-block: 10px; border-bottom: 1px solid var(--rule); }
+  @media (max-width: 700px) { .sticky-filters { position: static; } }
+</style>
+</head>
+<body>
+<div class="page" data-page="companies">
+<header class="topnav">
+  <div class="frame">
+    <a class="brand" href="index.html">AI SDLC STANDARD</a>
+    <nav aria-label="Pages">
+      <a href="index.html" data-page="loop">The loop</a>
+      <a href="setup.html" data-page="setup">What goes where</a>
+      <a href="implement.html" data-page="implement">Ways to implement</a>
+      <a href="evidence.html" data-page="evidence">Evidence</a>
+      <a href="companies.html" data-page="companies">How others do it</a>
+      <a href="playbook.html" data-page="playbook">Playbook</a>
+    </nav>
+  </div>
+</header>
+
+<main class="frame">
+  <div class="hero">
+    <div class="eyebrow">Sourced survey · 22 October 2026</div>
+    <h1>How other companies automate delivery with AI agents</h1>
+    <p class="lede" id="lede">Cases from companies that wrote down how they do it, with the numbers they reported and a link to each source.</p>
+  </div>
+
+  <section aria-labelledby="ways-h">
+    <div class="section-head">
+      <h2 id="ways-h">Seven ways</h2>
+      <p>Most companies combine several. Select one to filter everything below.</p>
+    </div>
+    <div class="ways" id="ways"></div>
+  </section>
+
+  <section aria-labelledby="explore-h">
+    <div class="section-head"><h2 id="explore-h">The cases</h2></div>
+    <div class="sticky-filters">
+      <div class="filters">
+        <div class="row"><span class="eyebrow">Built on</span><div id="f-claude"></div></div>
+        <div class="row"><span class="eyebrow">Stage</span><div id="f-stage"></div></div>
+        <div class="row"><span class="count" id="count" aria-live="polite"></span><button type="button" class="btn quiet" id="reset">Clear filters</button></div>
+      </div>
+    </div>
+    <div class="grid cols-2">
+      <div class="sheet pad" id="chart-stages"></div>
+      <div class="sheet pad" id="chart-built"></div>
+    </div>
+    <div class="cases" id="cases"></div>
+  </section>
+
+  <section aria-labelledby="ba-h">
+    <div class="section-head">
+      <h2 id="ba-h">Before and after, as reported</h2>
+      <p>Each row has its own scale and its own definition, so read rows separately: they aren't a ranking.</p>
+    </div>
+    <div class="sheet pad" id="before-after"></div>
+  </section>
+
+  <section aria-labelledby="q-h">
+    <div class="section-head">
+      <h2 id="q-h">The cautionary data</h2>
+      <p>The same research explains why the standard gates on evidence rather than on green CI or a confident summary.</p>
+    </div>
+    <div class="tiles" id="quality"></div>
+  </section>
+
+  <section aria-labelledby="pat-h">
+    <div class="section-head">
+      <h2 id="pat-h">Patterns that recur, and where they live in this standard</h2>
+    </div>
+    <div class="tw"><table id="patterns"></table></div>
+    <p class="small muted">Source types: P is the company's own blog, paper or talk; V is a vendor case study; S is secondary reporting.
+      Customer stories on vendor sites carry no publish date, so their dates are the earliest the content allows. Full notes: <code>docs/research.md</code>.</p>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="frame">
+    <span>AI SDLC standard 2.0 for Claude Code · source: <a href="https://github.com/amarkum/prd-to-pr-rule-skills" target="_blank" rel="noopener">amarkum/prd-to-pr-rule-skills</a></span>
+    <span>Figures are each company's own reporting, not independently verified</span>
+  </div>
+</footer>
+</div>
+
+<script src="assets/data.js"></script>
+<script src="assets/companies.js"></script>
+<script src="assets/site.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { h, segmented, hbar, dumbbell } = window.Site;
+  const S = window.SDLC, C = window.COMPANIES;
+  const stageById = Object.fromEntries(S.stages.map((s) => [s.id, s]));
+  const state = { way: "all", claude: "all", stage: "any" };
+  const onClaude = (c) => c.claude === "yes" || c.claude === "partly";
+
+  const total = C.cases.length, claudeCount = C.cases.filter(onClaude).length;
+  document.getElementById("lede").textContent =
+    `${total} cases from companies that wrote down how they automate software delivery with AI agents, with the numbers they reported and a link to each source. ${claudeCount} of them are built on Claude, fully or in part.`;
+
+  // ways
+  const wayButtons = C.ways.map((w) => {
+    const n = C.cases.filter((c) => c.ways.includes(w.id)).length;
+    const b = h("button", { type: "button", class: "way", "aria-pressed": "false" }, h("strong", {}, w.name), h("span", {}, w.text), h("em", {}, `${n} cases`));
+    b.addEventListener("click", () => { state.way = state.way === w.id ? "all" : w.id; render(); });
+    b._id = w.id;
+    return b;
+  });
+  const allButton = h("button", { type: "button", class: "way", "aria-pressed": "false" }, h("strong", {}, "All seven together"),
+    h("span", {}, "Every case, whichever ways it combines. Most companies use two or three."), h("em", {}, `${C.cases.length} cases`));
+  allButton.addEventListener("click", () => { state.way = "all"; render(); });
+  allButton._id = "all";
+  wayButtons.push(allButton);
+  document.getElementById("ways").append(...wayButtons);
+
+  const setClaude = segmented(document.getElementById("f-claude"), [
+    { id: "all", label: "Any" }, { id: "claude", label: "Claude" }, { id: "other", label: "Other or undisclosed" }],
+    (id) => { state.claude = id; render(); }, { label: "Built on" });
+  const setStage = segmented(document.getElementById("f-stage"), [{ id: "any", label: "Any" }].concat(
+    S.stages.map((s) => ({ id: s.id, label: s.name, dot: `var(${s.color})` }))),
+    (id) => { state.stage = id; render(); }, { label: "Stage" });
+  document.getElementById("reset").addEventListener("click", () => { state.way = "all"; setClaude("all"); setStage("any"); render(); });
+
+  function filtered() {
+    return C.cases.filter((c) => (state.way === "all" || c.ways.includes(state.way))
+      && (state.claude === "all" || (state.claude === "claude" ? onClaude(c) : !onClaude(c)))
+      && (state.stage === "any" || c.stages.includes(state.stage)));
+  }
+
+  function card(c) {
+    const way = C.ways.find((w) => w.id === c.way);
+    const dots = h("div", { class: "stages", "aria-label": `Stages: ${c.stages.map((s) => stageById[s].name).join(", ")}` },
+      S.stages.map((s) => h("span", { class: `m-dot${c.stages.includes(s.id) ? "" : " off"}`, "--c": `var(${s.color})`, title: s.name })),
+      h("span", { class: "small muted", style: { marginLeft: "6px" } }, c.stages.map((s) => stageById[s].name).join(", ")));
+    return h("article", { class: "sheet case" },
+      h("header", {}, h("h3", {}, c.company), h("span", { class: `badge${onClaude(c) ? " claude" : ""}` }, c.builtOn)),
+      h("div", { class: "system" }, c.system),
+      h("div", { class: "small muted" }, way.name), dots,
+      h("div", { class: "metric" }, h("b", {}, c.metric.value), h("span", {}, `${c.metric.label} (${c.metric.date})`)),
+      h("dl", {}, h("dt", {}, "Trigger"), h("dd", {}, c.trigger), h("dt", {}, "Gates"), h("dd", {}, c.gates), h("dt", {}, "Verifies"), h("dd", {}, c.verify)),
+      h("p", { class: "lesson" }, h("strong", {}, "Lesson: "), c.lesson),
+      h("details", {}, h("summary", {}, "More, and sources"),
+        c.quote ? h("blockquote", {}, `“${c.quote}”`) : null,
+        c.more && c.more.length ? h("ul", {}, c.more.map((m) => h("li", {}, m))) : null,
+        h("div", { class: "srcs", style: { marginTop: "8px" } }, c.sources.map((s) => h("div", {}, h("span", { class: "t" }, `${s.t} · ${s.d}`),
+          h("a", { href: s.u, target: "_blank", rel: "noopener" }, s.n))))));
+  }
+
+  function render() {
+    wayButtons.forEach((b) => b.setAttribute("aria-pressed", String(state.way === b._id)));
+    const list = filtered();
+    document.getElementById("count").textContent = `Showing ${list.length} of ${total} cases`;
+    document.getElementById("cases").replaceChildren(...(list.length ? list.map(card)
+      : [h("p", { class: "muted" }, "No case matches all three filters. Clear one to see more.")]));
+    hbar(document.getElementById("chart-stages"), {
+      title: "Which stages they automate", note: `Cases in the current filter that automate each stage (of ${list.length})`,
+      rows: S.stages.map((s) => ({ label: s.name, value: list.filter((c) => c.stages.includes(s.id)).length, color: `var(${s.color})`, dot: `var(${s.color})`,
+        note: `${list.filter((c) => c.stages.includes(s.id)).map((c) => c.company).join(", ") || "none"}` })),
+      integer: true, columns: ["Stage", "Cases", "Companies"]
+    });
+    const built = C.builtOn.map((b) => ({ label: b, value: list.filter((c) => c.builtOn === b).length,
+      color: b === "Other or undisclosed" ? "var(--series-mute)" : "var(--series-1)",
+      note: list.filter((c) => c.builtOn === b).map((c) => c.company).join(", ") || "none" }));
+    hbar(document.getElementById("chart-built"), {
+      title: "What they're built on", note: "Claude products in blue; other tools or undisclosed in grey",
+      rows: built, integer: true, columns: ["Built on", "Cases", "Companies"]
+    });
+  }
+  render();
+
+  dumbbell(document.getElementById("before-after"), {
+    title: "Reported changes", note: "Grey is the earlier or comparison value; blue is the later or AI value. Hover or focus a row for the periods.",
+    rows: C.beforeAfter
+  });
+
+  document.getElementById("quality").append(...C.quality.map((q) => h("div", { class: "sheet tile" },
+    h("b", {}, q.value), h("p", {}, q.label), h("a", { class: "small", href: q.url, target: "_blank", rel: "noopener" }, q.src))));
+
+  document.getElementById("patterns").append(
+    h("thead", {}, h("tr", {}, h("th", {}, "Pattern"), h("th", {}, "Who shows it"), h("th", {}, "Where it lives in this standard"))),
+    h("tbody", {}, C.patterns.map((p) => h("tr", {}, h("td", {}, h("strong", {}, p.pattern)), h("td", {}, p.who), h("td", {}, p.here)))));
+})();
+</script>
+</body>
+</html>

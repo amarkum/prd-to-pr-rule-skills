@@ -1,0 +1,20 @@
+name: knowledge-audit
+on:
+  schedule:
+    - cron: "17 7 * * 1"     # Mondays 07:17 UTC
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - id: audit
+        continue-on-error: true
+        run: python3 tools/aisdlc.py knowledge-audit knowledge/ | tee audit.txt
+      - if: steps.audit.outcome == 'failure'
+        run: gh issue create --title "Knowledge entries need review" --body-file audit.txt --label ai-knowledge
+        env:
+          GH_TOKEN: ${{ github.token }}

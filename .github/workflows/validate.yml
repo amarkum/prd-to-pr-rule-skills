@@ -1,0 +1,38 @@
+name: validate
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.9", "3.13"]     # oldest and newest supported for the scripts and hooks
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install pyyaml
+      - run: python -m unittest discover -s tests -v
+  plugins:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm install -g @anthropic-ai/claude-code
+      - name: Validate marketplace and every plugin (strict)
+        run: |
+          claude plugin validate --strict .
+          for p in plugins/*/; do claude plugin validate --strict "$p"; done
+      - name: Always-on token budget per plugin
+        run: for p in plugins/*/; do claude --plugin-dir "$p" plugin details "$(basename "$p")"; done
+      - name: Templates parse
+        run: |
+          pip install pyyaml
+          python3 -c "import glob, json, yaml; [yaml.safe_load(open(f)) for f in glob.glob('templates/**/*.yml', recursive=True)]; [json.load(open(f)) for f in glob.glob('**/*.json', recursive=True) if '/results/' not in f]"

@@ -1,0 +1,8 @@
+{
+  "name": "stack-mfe",
+  "version": "1.0.0",
+  "description": "Module Federation micro-frontend conventions and contract testing for the AI SDLC builder (use with stack-frontend).",
+  "author": {"name": "Web Platform Guild"},
+  "repository": "https://github.com/amarkum/prd-to-pr-rule-skills",
+  "keywords": ["micro-frontends", "module-federation", "contracts"]
+}

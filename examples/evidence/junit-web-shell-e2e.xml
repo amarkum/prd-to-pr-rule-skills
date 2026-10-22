@@ -1,0 +1,17 @@
+<testsuites id="" name="" tests="2" failures="0" skipped="0" errors="0" time="14.08">
+<testsuite name="payroll-dashboard.spec.ts" timestamp="2026-10-21T09:31:12.551Z" hostname="chromium" tests="2" failures="0" skipped="0" time="12.4" errors="0">
+<testcase name="payroll dashboard › PAY-412 AC-5: employee sees access-unavailable state and no status request" classname="payroll-dashboard.spec.ts" time="6.1">
+<properties>
+<property name="tag" value="@PAY-412-AC-5">
+</property>
+</properties>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|payroll-dashboard-PAY-412-AC-5-chromium/access-unavailable.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="payroll dashboard › PAY-412 AC-1 AC-3: admin sees cards and can filter (smoke through the shell)" classname="payroll-dashboard.spec.ts" time="6.3">
+</testcase>
+</testsuite>
+</testsuites>

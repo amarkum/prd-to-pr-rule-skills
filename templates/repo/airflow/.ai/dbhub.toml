@@ -1,0 +1,11 @@
+# DBHub config for the schema database: read-only at the tool level, row-capped. Use a SELECT-only DB user as well.
+[[sources]]
+id = "schema_db"
+dsn = "${SCHEMA_DB_DSN}"
+query_timeout = 30
+
+[[tools]]
+name = "execute_sql"
+source = "schema_db"
+readonly = true
+max_rows = 200

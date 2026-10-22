@@ -1,0 +1,43 @@
+# Builds an approved spec headlessly and opens a draft PR with evidence. Trigger: Jira Automation when a story moves to
+# "Ready for Build" (repository_dispatch spec-approved), or manually. The plugin hooks still enforce every gate in CI.
+name: ai-build
+on:
+  repository_dispatch:
+    types: [spec-approved]
+  workflow_dispatch:
+    inputs:
+      key: {description: "Jira key with an approved spec in specs/<KEY>/spec.md", required: true}
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+env:
+  KEY: ${{ github.event.client_payload.key || inputs.key }}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Validate input
+        run: '[[ "$KEY" =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ]] || { echo "invalid Jira key"; exit 1; }'
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0}
+      # Toolchain for the repo's checks: copy the setup and install steps from this repo's ai-evidence.yml.
+      - uses: actions/setup-python@v7
+        with: {python-version: "3.12"}
+      - run: pip install pyyaml
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          plugin_marketplaces: https://github.com/amarkum/prd-to-pr-rule-skills.git
+          plugins: |
+            sdlc-core@ai-sdlc
+            sdlc-connectors@ai-sdlc
+            stack-airflow@ai-sdlc
+          prompt: |
+            /sdlc-core:prd-to-pr ${{ env.KEY }} plan
+            CI mode: the spec is approved. Run task-breakdown, build, verify and pr-open. Open the PR as a draft.
+            If verify still fails after two repair rounds, open no PR; report the failures instead.
+          claude_args: >-
+            --max-turns 200
+            --allowedTools "Read,Grep,Glob,Write,Edit,Agent,Skill,Bash(git *),Bash(gh pr create *),Bash(python3 *),Bash(pytest *),Bash(ruff *),Bash(npm *),Bash(npx *)"

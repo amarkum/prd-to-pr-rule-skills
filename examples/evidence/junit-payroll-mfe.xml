@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="6" failures="0" errors="0" time="2.18">
+  <testsuite name="src/status-panel/StatusPanel.test.tsx" timestamp="2026-10-21T09:20:41.114Z" hostname="ci-runner-3" tests="6" failures="0" errors="0" skipped="0" time="1.94">
+    <testcase classname="src/status-panel/StatusPanel.test.tsx" name="StatusPanel &gt; PAY-412 AC-1: renders one card per run with name, status and last-updated time" time="0.311" />
+    <testcase classname="src/status-panel/StatusPanel.test.tsx" name="StatusPanel &gt; PAY-412 AC-3: Failed filter shows only failed runs and sets ?status=failed" time="0.402" />
+    <testcase classname="src/status-panel/StatusPanel.test.tsx" name="StatusPanel &gt; PAY-412 AC-4: shows employer name on each card for ops agents" time="0.188" />
+    <testcase classname="src/status-panel/StatusPanel.test.tsx" name="StatusPanel &gt; PAY-412 AC-6: empty state text when no runs" time="0.120" />
+    <testcase classname="src/status-panel/StatusPanel.test.tsx" name="StatusPanel &gt; PAY-412 AC-7: error state with Retry, retry refetches" time="0.523" />
+    <testcase classname="src/status-panel/StatusPanel.test.tsx" name="StatusPanel &gt; status is not conveyed by colour alone (axe)" time="0.396" />
+  </testsuite>
+</testsuites>

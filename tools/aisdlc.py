@@ -1,0 +1,345 @@
+#!/usr/bin/env python3
+"""aisdlc.py - onboard product repos to the AI SDLC standard and keep them healthy.
+
+  init             scaffold a repo for its stack: AGENTS.md, CLAUDE.md, REVIEW.md, .ai/repo.yaml, .claude/settings.json
+                   (marketplace, plugins, permissions), data connectors, CI workflows, PR template, specs/, docs/knowledge/
+  vendor           copy a pinned version of the plugins into the repo's .claude/ and .cursor/ for places that don't load
+                   marketplace plugins (Claude Code cloud sessions, Cursor cloud agents, air-gapped CI)
+  doctor           check a repo's setup; exit 1 on failures
+  knowledge-audit  flag knowledge entries that are past review_by or missing fields; exit 1 if any
+
+Examples:
+  python3 tools/aisdlc.py init --target ../data-airflow --stack airflow --jira PAY --description "Payroll pipelines"
+  python3 tools/aisdlc.py doctor --target ../data-airflow
+  python3 tools/aisdlc.py vendor --target ../payroll-mfe --stack mfe
+  python3 tools/aisdlc.py knowledge-audit knowledge/
+Standard library only (PyYAML is used by doctor when present).
+"""
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import json
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+TEMPLATES = ROOT / "templates" / "repo"
+PLUGINS = ROOT / "plugins"
+STACKS = ("airflow", "mfe", "frontend")
+STACK_PLUGINS = {
+    "airflow": ["sdlc-core", "sdlc-connectors", "stack-airflow"],
+    "mfe": ["sdlc-core", "sdlc-connectors", "stack-frontend", "stack-mfe"],
+    "frontend": ["sdlc-core", "sdlc-connectors", "stack-frontend"],
+}
+WEB_ALLOW = ["Bash(npm run lint *)", "Bash(npm run build *)", "Bash(npm test *)", "Bash(npx vitest *)",
+             "Bash(npx playwright test *)", "Bash(npx tsc *)"]
+STACK_ALLOW = {
+    "airflow": ["Bash(pytest *)", "Bash(python -m pytest *)", "Bash(ruff *)",
+                "Bash(airflow dags list-import-errors *)", "Bash(airflow dags test *)"],
+    "mfe": WEB_ALLOW,
+    "frontend": WEB_ALLOW,
+}
+COMMON_ALLOW = ["Bash(git status *)", "Bash(git diff *)", "Bash(git log *)", "Bash(git show *)",
+                "Bash(gh pr view *)", "Bash(gh pr list *)", "Bash(rg *)"]
+ASK = ["Bash(git push *)"]
+DENY = ["Read(./.env)", "Read(./.env.local)", "Read(./.env.*.local)", "Read(./**/*.pem)", "Read(./**/*.key)",
+        "Read(./**/secrets/**)"]
+TEXT_SUFFIXES = {".md", ".yaml", ".yml", ".json", ".toml", ".py", ".txt", ""}
+
+
+# ---------------------------------------------------------------- helpers
+
+def render(text: str, values: dict) -> str:
+    return re.sub(r"\{\{(\w+)\}\}", lambda m: str(values.get(m.group(1), m.group(0))), text)
+
+
+def merge_list(existing: list, extra: list) -> list:
+    return existing + [x for x in extra if x not in existing]
+
+
+def load_json(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+
+
+def write_json(path: Path, data: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+
+
+def copy_tree(src: Path, dst: Path, values: dict, force: bool, report: list) -> None:
+    for f in sorted(p for p in src.rglob("*") if p.is_file()):
+        rel = f.relative_to(src)
+        if rel.name == "gitignore.aisdlc":
+            continue
+        target = dst / rel
+        if target.exists() and not force:
+            report.append(("skip", str(rel)))
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if f.suffix in TEXT_SUFFIXES:
+            target.write_text(render(f.read_text(encoding="utf-8"), values), encoding="utf-8")
+        else:
+            shutil.copy2(f, target)
+        report.append(("write", str(rel)))
+
+
+def ensure_gitignore(target: Path, report: list) -> None:
+    wanted = (TEMPLATES / "common" / "gitignore.aisdlc").read_text(encoding="utf-8").splitlines()
+    path = target / ".gitignore"
+    have = path.read_text(encoding="utf-8").splitlines() if path.is_file() else []
+    missing = [w for w in wanted if w and w not in have]
+    if missing:
+        path.write_text("\n".join(have + ([""] if have and have[-1] else []) + missing) + "\n", encoding="utf-8")
+        report.append(("update", ".gitignore"))
+
+
+def plugin_settings(settings: dict, stack: str, marketplace: str, enabled: bool = True) -> dict:
+    settings.setdefault("$schema", "https://json.schemastore.org/claude-code-settings.json")
+    mk = settings.setdefault("extraKnownMarketplaces", {})
+    mk.setdefault("ai-sdlc", {"source": {"source": "github", "repo": marketplace}, "autoUpdate": True})
+    plugins = settings.setdefault("enabledPlugins", {})
+    for p in STACK_PLUGINS[stack]:
+        plugins[f"{p}@ai-sdlc"] = enabled
+    perms = settings.setdefault("permissions", {})
+    perms["allow"] = merge_list(perms.get("allow", []), COMMON_ALLOW + STACK_ALLOW[stack])
+    perms["ask"] = merge_list(perms.get("ask", []), ASK)
+    perms["deny"] = merge_list(perms.get("deny", []), DENY)
+    return settings
+
+
+# ---------------------------------------------------------------- init
+
+def cmd_init(a) -> int:
+    target = Path(a.target).resolve()
+    if not target.is_dir():
+        print(f"init: {target} is not a directory", file=sys.stderr)
+        return 2
+    values = {"name": a.name or target.name, "stack": a.stack, "jira_project": a.jira,
+              "description": a.description or f"<one-line description of {a.name or target.name}>"}
+    report: list = []
+    copy_tree(TEMPLATES / "common", target, values, a.force, report)
+    copy_tree(TEMPLATES / a.stack, target, values, a.force, report)
+    ensure_gitignore(target, report)
+    settings_path = target / ".claude" / "settings.json"
+    write_json(settings_path, plugin_settings(load_json(settings_path), a.stack, a.marketplace))
+    report.append(("merge", ".claude/settings.json"))
+    if a.stack == "airflow":
+        dst = target / "tests" / "dags" / "test_dag_integrity.py"
+        if not dst.exists() or a.force:
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(PLUGINS / "stack-airflow/skills/airflow-dag/templates/test_dag_integrity.py", dst)
+            report.append(("write", "tests/dags/test_dag_integrity.py"))
+    for action, rel in report:
+        print(f"{action:7} {rel}")
+    print(f"\nNext: fill the <!-- fill in --> parts of AGENTS.md, check `checks:` in .ai/repo.yaml, then run\n"
+          f"  python3 {Path(__file__).resolve()} doctor --target {a.target}")
+    return 0
+
+
+# ---------------------------------------------------------------- vendor
+
+def cmd_vendor(a) -> int:
+    target = Path(a.target).resolve()
+    claude, aisdlc = target / ".claude", target / ".claude" / "aisdlc"
+    if aisdlc.exists():
+        shutil.rmtree(aisdlc)
+    (aisdlc / "scripts").mkdir(parents=True)
+    (aisdlc / "hooks").mkdir()
+    (aisdlc / "rules").mkdir()
+    sub = "${CLAUDE_PROJECT_DIR}/.claude/aisdlc"
+    copied = []
+    for plugin in STACK_PLUGINS[a.stack]:
+        root = PLUGINS / plugin
+        for skill in sorted((root / "skills").glob("*/")):
+            dst = claude / "skills" / skill.name
+            if dst.exists():
+                shutil.rmtree(dst)
+            shutil.copytree(skill, dst)
+            for md in dst.rglob("*.md"):
+                md.write_text(md.read_text(encoding="utf-8").replace("${CLAUDE_PLUGIN_ROOT}", sub), encoding="utf-8")
+            copied.append(f"skill {skill.name}")
+        for agent in sorted((root / "agents").glob("*.md")) if (root / "agents").is_dir() else []:
+            (claude / "agents").mkdir(parents=True, exist_ok=True)
+            shutil.copy2(agent, claude / "agents" / agent.name)
+            copied.append(f"agent {agent.stem}")
+        for script in sorted((root / "scripts").glob("*.py")) if (root / "scripts").is_dir() else []:
+            shutil.copy2(script, aisdlc / "scripts" / script.name)
+        for rule in sorted((root / "rules").glob("*.mdc")) if (root / "rules").is_dir() else []:
+            shutil.copy2(rule, aisdlc / "rules" / rule.name)
+            (target / ".cursor" / "rules").mkdir(parents=True, exist_ok=True)
+            shutil.copy2(rule, target / ".cursor" / "rules" / f"aisdlc-{rule.name}")
+    shutil.copy2(PLUGINS / "sdlc-core/hooks/aisdlc_hooks.py", aisdlc / "hooks" / "aisdlc_hooks.py")
+
+    # Claude Code hooks (shell form: $CLAUDE_PROJECT_DIR is exported to hooks by Claude Code and Cursor alike)
+    hook = 'python3 "$CLAUDE_PROJECT_DIR/.claude/aisdlc/hooks/aisdlc_hooks.py" '
+    settings_path = claude / "settings.json"
+    settings = plugin_settings(load_json(settings_path), a.stack, a.marketplace, enabled=False)
+    settings["hooks"] = {
+        "SessionStart": [{"matcher": "startup|resume|clear|compact",
+                          "hooks": [{"type": "command", "command": hook + "session-context", "timeout": 20}]}],
+        "PreToolUse": [
+            {"matcher": "Bash", "hooks": [{"type": "command", "command": hook + "shell-guard", "timeout": 90}]},
+            {"matcher": "Edit|Write|MultiEdit|NotebookEdit",
+             "hooks": [{"type": "command", "command": hook + "edit-guard", "timeout": 20}]},
+            {"matcher": "mcp__.*create_pull_request",
+             "hooks": [{"type": "command", "command": hook + "pr-gate", "timeout": 90}]}],
+        "Stop": [{"hooks": [{"type": "command", "command": hook + "stop-verify", "timeout": 20}]}],
+    }
+    write_json(settings_path, settings)
+    # Cursor native hooks
+    cur = 'python3 .claude/aisdlc/hooks/aisdlc_hooks.py '
+    write_json(target / ".cursor" / "hooks.json", {"version": 1, "hooks": {
+        "sessionStart": [{"command": cur + "session-context --format cursor", "timeout": 20}],
+        "beforeShellExecution": [{"command": cur + "shell-guard --format cursor", "timeout": 90, "failClosed": True}],
+        "preToolUse": [{"command": cur + "edit-guard --format cursor", "matcher": "Write", "timeout": 20,
+                        "failClosed": True}],
+        "beforeMCPExecution": [{"command": cur + "pr-gate --format cursor", "timeout": 90}],
+        "stop": [{"command": cur + "stop-verify --format cursor", "timeout": 20, "loop_limit": 1}]}})
+    # Org connectors into project MCP config (data connectors from init are kept)
+    mcp = load_json(target / ".mcp.json")
+    mcp.setdefault("mcpServers", {}).update(load_json(PLUGINS / "sdlc-connectors/.mcp.json")["mcpServers"])
+    write_json(target / ".mcp.json", mcp)
+    cmcp = load_json(target / ".cursor" / "mcp.json")
+    cmcp.setdefault("mcpServers", {}).update(load_json(PLUGINS / "sdlc-connectors/mcp.json")["mcpServers"])
+    write_json(target / ".cursor" / "mcp.json", cmcp)
+    sha = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+    versions = {p: load_json(PLUGINS / p / ".claude-plugin/plugin.json").get("version") for p in STACK_PLUGINS[a.stack]}
+    write_json(aisdlc / "VERSION.json", {"source": a.marketplace, "commit": sha or None, "plugins": versions,
+                                         "vendored_at": dt.date.today().isoformat()})
+    print("\n".join(copied))
+    print(f"\nVendored {len(copied)} components into {target}/.claude (plugins for this repo disabled in "
+          f".claude/settings.json to avoid duplicates). Re-run to update; commit the result.")
+    return 0
+
+
+# ---------------------------------------------------------------- doctor
+
+def cmd_doctor(a) -> int:
+    t = Path(a.target).resolve()
+    results: list[tuple[str, str]] = []
+
+    def check(level_if_bad: str, ok: bool, message: str):
+        results.append(("ok" if ok else level_if_bad, message))
+
+    check("FAIL", (t / ".git").exists(), "git repository")
+    agents = t / "AGENTS.md"
+    text = agents.read_text(encoding="utf-8") if agents.is_file() else ""
+    check("FAIL", bool(text), "AGENTS.md present")
+    if text:
+        check("FAIL", "{{" not in text, "AGENTS.md has no unrendered {{placeholders}}")
+        check("WARN", "<!-- fill in" not in text, "AGENTS.md 'fill in' sections completed")
+        check("WARN", len(text.splitlines()) <= 200, f"AGENTS.md under 200 lines ({len(text.splitlines())})")
+    claude_md = t / "CLAUDE.md"
+    check("WARN", claude_md.is_file() and "@AGENTS.md" in claude_md.read_text(encoding="utf-8"),
+          "CLAUDE.md imports @AGENTS.md")
+    manifest = t / ".ai" / "repo.yaml"
+    data = None
+    if manifest.is_file():
+        try:
+            import yaml  # type: ignore
+            data = yaml.safe_load(manifest.read_text(encoding="utf-8")) or {}
+        except ImportError:
+            results.append(("WARN", "PyYAML missing: manifest only checked for presence (pip install pyyaml)"))
+        except Exception as exc:  # invalid YAML
+            results.append(("FAIL", f".ai/repo.yaml does not parse: {exc}"))
+    check("FAIL", manifest.is_file(), ".ai/repo.yaml present")
+    if isinstance(data, dict):
+        repo, tests = data.get("repo") or {}, data.get("tests") or {}
+        checks = data.get("checks") or []
+        check("FAIL", repo.get("stack") in STACKS + ("backend",), f"repo.stack is a known stack ({repo.get('stack')})")
+        check("FAIL", bool(checks) and all(isinstance(c, dict) and c.get("id") and c.get("run") for c in checks),
+              "checks: non-empty list of {id, run}")
+        check("FAIL", bool(tests.get("junit_glob")), "tests.junit_glob set (needed for AC coverage)")
+        check("FAIL", "{files}" in str(tests.get("run_files", "")), "tests.run_files contains {files} (fail-to-pass)")
+        check("FAIL", bool(tests.get("test_patterns")), "tests.test_patterns set")
+    gi = (t / ".gitignore").read_text(encoding="utf-8") if (t / ".gitignore").is_file() else ""
+    check("FAIL", ".ai/evidence/" in gi, ".gitignore excludes .ai/evidence/")
+    settings = load_json(t / ".claude" / "settings.json")
+    plugins_on = settings.get("enabledPlugins", {}).get("sdlc-core@ai-sdlc") is True
+    vendored = (t / ".claude" / "aisdlc" / "VERSION.json").is_file()
+    check("FAIL", plugins_on or vendored, "sdlc-core enabled (plugin mode) or vendored (.claude/aisdlc)")
+    check("WARN", (t / ".github" / "workflows" / "ai-evidence.yml").is_file(), "CI evidence workflow present")
+    check("WARN", (t / "specs").is_dir(), "specs/ directory present")
+    check("FAIL", sys.version_info >= (3, 9), f"python >= 3.9 ({sys.version.split()[0]})")
+    for tool, level in (("git", "FAIL"), ("gh", "WARN")):
+        check(level, shutil.which(tool) is not None, f"{tool} on PATH")
+    stack = (data or {}).get("repo", {}).get("stack") if isinstance(data, dict) else None
+    if stack in ("mfe", "frontend"):
+        check("WARN", shutil.which("node") is not None, "node on PATH")
+    width = max(len(m) for _, m in results)
+    for level, message in results:
+        print(f"{level:4}  {message}")
+    fails = sum(1 for lvl, _ in results if lvl == "FAIL")
+    warns = sum(1 for lvl, _ in results if lvl == "WARN")
+    print(f"\n{'-' * min(width, 60)}\n{fails} failure(s), {warns} warning(s)")
+    return 1 if fails else 0
+
+
+# ---------------------------------------------------------------- knowledge-audit
+
+REQUIRED_KB = ["id", "title", "scope", "type", "status", "owner", "provenance", "created", "review_by"]
+
+
+def front_matter(text: str) -> dict:
+    m = re.match(r"^---\s*\n(.*?)\n---", text, re.DOTALL)
+    meta = {}
+    for line in (m.group(1).splitlines() if m else []):
+        kv = re.match(r"^([A-Za-z_][\w-]*)\s*:\s*(.*?)\s*(?:#.*)?$", line)
+        if kv:
+            meta[kv.group(1)] = kv.group(2).strip().strip("'\"")
+    return meta
+
+
+def cmd_knowledge_audit(a) -> int:
+    today = dt.date.fromisoformat(a.today) if a.today else dt.date.today()
+    problems = 0
+    files = sorted(p for p in Path(a.dir).rglob("*.md") if p.name.lower() != "readme.md")
+    for path in files:
+        meta = front_matter(path.read_text(encoding="utf-8"))
+        missing = [k for k in REQUIRED_KB if not meta.get(k)]
+        issue = None
+        if missing:
+            issue = f"missing {', '.join(missing)}"
+        elif meta.get("status") == "active":
+            try:
+                if dt.date.fromisoformat(meta["review_by"]) < today:
+                    issue = f"stale: review_by {meta['review_by']} (owner {meta.get('owner')})"
+            except ValueError:
+                issue = f"bad review_by date {meta['review_by']!r}"
+        if issue:
+            problems += 1
+            print(f"{path}: {issue}")
+    print(f"{len(files)} entr{'y' if len(files) == 1 else 'ies'} checked, {problems} need attention")
+    return 1 if problems else 0
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    i = sub.add_parser("init")
+    i.add_argument("--target", required=True)
+    i.add_argument("--stack", required=True, choices=STACKS)
+    i.add_argument("--name")
+    i.add_argument("--jira", default="PROJ")
+    i.add_argument("--description")
+    i.add_argument("--marketplace", default="amarkum/prd-to-pr-rule-skills")
+    i.add_argument("--force", action="store_true")
+    v = sub.add_parser("vendor")
+    v.add_argument("--target", required=True)
+    v.add_argument("--stack", required=True, choices=STACKS)
+    v.add_argument("--marketplace", default="amarkum/prd-to-pr-rule-skills")
+    d = sub.add_parser("doctor")
+    d.add_argument("--target", default=".")
+    k = sub.add_parser("knowledge-audit")
+    k.add_argument("dir")
+    k.add_argument("--today", help="YYYY-MM-DD (default: today)")
+    a = ap.parse_args(argv)
+    return {"init": cmd_init, "vendor": cmd_vendor, "doctor": cmd_doctor, "knowledge-audit": cmd_knowledge_audit}[a.cmd](a)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

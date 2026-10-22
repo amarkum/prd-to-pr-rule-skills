@@ -1,0 +1,6 @@
+# ai-sdlc
+.ai/evidence/
+.ai/pr-body.md
+.ai-sdlc/
+reports/
+.claude/settings.local.json

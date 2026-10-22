@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.ai/evidence/
+reports/
+node_modules/
+plugins/*/evals/results/
+.claude/settings.local.json

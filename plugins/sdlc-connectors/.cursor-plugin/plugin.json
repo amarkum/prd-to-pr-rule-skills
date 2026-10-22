@@ -1,0 +1,8 @@
+{
+  "name": "sdlc-connectors",
+  "version": "1.0.0",
+  "description": "Atlassian Rovo and Sentry MCP connectors plus read-only schema and production-history lookup skills.",
+  "author": {"name": "Engineering Platform"},
+  "repository": "https://github.com/amarkum/prd-to-pr-rule-skills",
+  "keywords": ["mcp", "atlassian", "sentry", "schema", "incidents"]
+}

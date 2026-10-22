@@ -1,0 +1,12 @@
+# Replace the @org/... teams with your real GitHub teams. Changes to the standard need the owning team's review.
+*                                   @org/engineering-platform
+/plugins/sdlc-core/                 @org/engineering-platform
+/plugins/sdlc-connectors/           @org/engineering-platform @org/security
+/plugins/stack-airflow/             @org/data-eng
+/plugins/stack-frontend/            @org/web-platform
+/plugins/stack-mfe/                 @org/web-platform
+/knowledge/airflow/                 @org/data-eng
+/knowledge/frontend/                @org/web-platform
+/knowledge/process/                 @org/product-ops @org/engineering-platform
+/standards/prd-template.md          @org/product-ops
+/policy/                            @org/security @org/engineering-platform

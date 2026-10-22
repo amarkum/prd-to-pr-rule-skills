@@ -1,0 +1,44 @@
+# Repo manifest for the AI SDLC standard. Agents, hooks, evidence.py and CI read this file.
+# Schema: standards/repo-manifest.schema.json in the ai-sdlc repo.
+schema_version: 1
+repo:
+  name: {{name}}
+  stack: mfe
+  description: {{description}}
+  jira_project: {{jira_project}}
+  default_branch: main
+  related_repos: []
+  mfe:
+    role: remote             # host | remote
+    exposes: ["./StatusPanel"]
+    consumers: [web-shell]   # repos that load this remote; told about contract changes
+checks:
+  - id: lint
+    run: npm run lint
+  - id: typecheck
+    run: npx tsc --noEmit
+  - id: unit
+    run: npx vitest run --reporter=default --reporter=junit --outputFile.junit=reports/junit-unit.xml --coverage --coverage.reporter=cobertura --coverage.reportsDirectory=reports/coverage
+    artifacts: ["reports/junit-unit.xml"]
+  - id: build
+    run: npm run build
+  - id: e2e
+    run: npx playwright test
+    artifacts: ["reports/junit-e2e.xml", "reports/playwright-html/index.html"]
+    required: false          # required in CI where the app and browsers are available
+tests:
+  junit_glob: "reports/junit-*.xml"
+  run_files: "npx vitest run {files} --reporter=junit --outputFile.junit={junit}"
+  test_patterns: ["src/**/*.test.{ts,tsx}", "tests/**/*.test.{ts,tsx}"]
+  support_patterns: ["src/test/**", "tests/fixtures/**", "src/**/__fixtures__/**"]
+  link_paths: ["node_modules"]
+evidence:
+  require_fail_to_pass: true
+  min_changed_line_coverage: 80
+protected_paths: [".github/workflows/**"]
+data:
+  schema_snapshots: docs/schemas/
+context:
+  confluence_space: {{jira_project}}
+  sentry_project: {{name}}
+  incident_labels: [postmortem, incident]

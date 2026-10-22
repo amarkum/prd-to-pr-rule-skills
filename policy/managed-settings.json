@@ -1,0 +1,45 @@
+{
+  "extraKnownMarketplaces": {
+    "ai-sdlc": {
+      "source": {"source": "github", "repo": "amarkum/prd-to-pr-rule-skills"},
+      "autoUpdate": true
+    }
+  },
+  "enabledPlugins": {
+    "sdlc-core@ai-sdlc": true,
+    "sdlc-connectors@ai-sdlc": true
+  },
+  "strictKnownMarketplaces": [
+    {"source": "github", "repo": "amarkum/prd-to-pr-rule-skills"}
+  ],
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.local)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)"
+    ],
+    "disableBypassPermissionsMode": "disable"
+  },
+  "allowManagedMcpServersOnly": true,
+  "allowedMcpServers": [
+    {"serverUrl": "https://mcp.atlassian.com/*"},
+    {"serverUrl": "https://mcp.sentry.dev/*"},
+    {"serverCommand": ["npx", "-y", "mongodb-mcp-server@3.1.0", "--readOnly", "--indexCheck"]},
+    {"serverCommand": ["npx", "-y", "@bytebase/dbhub@1.5.0", "--transport", "stdio", "--config", ".ai/dbhub.toml"]},
+    {"serverCommand": ["uvx", "astro-airflow-mcp@0.9.1", "--transport", "stdio"]},
+    {"serverCommand": ["npx", "-y", "@playwright/mcp@0.0.83", "--headless", "--isolated", "--output-dir", "reports/playwright-mcp"]}
+  ],
+  "env": {
+    "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
+    "OTEL_METRICS_EXPORTER": "otlp",
+    "OTEL_LOGS_EXPORTER": "otlp",
+    "OTEL_EXPORTER_OTLP_PROTOCOL": "grpc",
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "https://otel-collector.example.internal:4317"
+  },
+  "companyAnnouncements": [
+    "AI SDLC standard v1: start a story with /sdlc-core:prd-to-pr <PRD link>. Specs need human approval; PRs need evidence."
+  ]
+}

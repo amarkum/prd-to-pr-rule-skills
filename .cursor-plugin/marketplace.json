@@ -1,0 +1,15 @@
+{
+  "name": "ai-sdlc",
+  "owner": {"name": "Engineering Platform"},
+  "metadata": {
+    "description": "The organisation's AI SDLC standard: PRD to verified pull request, with stack packs for Airflow, micro-frontends and the React frontend.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {"name": "sdlc-core", "source": "plugins/sdlc-core", "description": "Workflow skills, subagents, always-on rules and enforcing hooks."},
+    {"name": "sdlc-connectors", "source": "plugins/sdlc-connectors", "description": "Atlassian and Sentry MCP plus schema and production-history lookup skills."},
+    {"name": "stack-airflow", "source": "plugins/stack-airflow", "description": "Airflow DAG conventions and test patterns."},
+    {"name": "stack-frontend", "source": "plugins/stack-frontend", "description": "React/TypeScript conventions and Playwright evidence."},
+    {"name": "stack-mfe", "source": "plugins/stack-mfe", "description": "Module Federation contracts and isolation (use with stack-frontend)."}
+  ]
+}

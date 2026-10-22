@@ -1,0 +1,32 @@
+# AI first-pass review against the spec. Teams on Claude Team/Enterprise can use the managed Claude Code Review instead
+# (it reads REVIEW.md); keep one of the two, not both. The review never approves or blocks: humans do.
+name: ai-review
+on:
+  pull_request:
+    types: [opened, ready_for_review, synchronize]
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+jobs:
+  review:
+    if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0}
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          plugin_marketplaces: https://github.com/amarkum/prd-to-pr-rule-skills.git
+          plugins: |
+            sdlc-core@ai-sdlc
+          use_sticky_comment: true
+          prompt: |
+            Review PR #${{ github.event.pull_request.number }} with the sdlc-core pr-reviewer agent, against the spec in
+            specs/<KEY>/spec.md (the Jira key is in the branch name and the title). Post one comment with the findings
+            table (severity, file:line, issue, fix). Never approve, request changes or push commits.
+          claude_args: >-
+            --max-turns 40
+            --allowedTools "Read,Grep,Glob,Agent,Bash(git diff *),Bash(git log *),Bash(gh pr view *),Bash(gh pr diff *),Bash(gh pr comment *)"

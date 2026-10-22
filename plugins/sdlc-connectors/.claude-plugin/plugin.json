@@ -1,0 +1,10 @@
+{
+  "name": "sdlc-connectors",
+  "displayName": "AI SDLC connectors: Atlassian, Sentry, schemas, history",
+  "version": "1.0.0",
+  "description": "Org-wide MCP connectors (Atlassian Rovo for Confluence and Jira, Sentry) plus skills that look up data schemas and production history (bugs, incidents, failed pipeline runs) read-only and with citations.",
+  "author": {"name": "Engineering Platform"},
+  "repository": "https://github.com/amarkum/prd-to-pr-rule-skills",
+  "keywords": ["mcp", "atlassian", "jira", "confluence", "sentry", "mongodb", "schema", "incidents"],
+  "dependencies": ["sdlc-core"]
+}

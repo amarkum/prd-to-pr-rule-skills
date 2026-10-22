@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites name="pytest tests">
+  <testsuite name="pytest" errors="0" failures="0" skipped="0" tests="4" time="3.412" timestamp="2026-10-21T09:14:02" hostname="ci-runner-7">
+    <testcase classname="tests.dags.test_dag_integrity" name="test_dagbag_has_no_import_errors" time="1.902" />
+    <testcase classname="tests.dags.test_dag_integrity" name="test_every_dag_has_owner_tags_and_retries" time="0.011" />
+    <testcase classname="tests.test_publish_run_status" name="test_pay_412_ac_2_upserts_completed_status_once" time="0.734">
+      <properties><property name="ac" value="PAY-412/AC-2" /></properties>
+    </testcase>
+    <testcase classname="tests.test_publish_run_status" name="test_pay_412_ac_2_rerun_of_same_interval_is_idempotent" time="0.765" />
+  </testsuite>
+</testsuites>

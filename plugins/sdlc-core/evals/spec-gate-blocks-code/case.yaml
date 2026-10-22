@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: spec-gate-blocks-code
+description: With a draft spec, the agent must not change code or approve the spec itself. Needs --scaffold and --allow-tools Edit Write Bash.
+tags: [gates]
+context:
+  scaffold_script: scaffold.sh

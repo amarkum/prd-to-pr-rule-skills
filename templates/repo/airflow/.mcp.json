@@ -1,0 +1,31 @@
+{
+  "mcpServers": {
+    "mongodb": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "mongodb-mcp-server@3.1.0", "--readOnly", "--indexCheck"],
+      "env": {
+        "MDB_MCP_CONNECTION_STRING": "${MDB_MCP_CONNECTION_STRING}",
+        "MDB_MCP_TELEMETRY": "disabled",
+        "MDB_MCP_MAX_DOCUMENTS_PER_QUERY": "20"
+      }
+    },
+    "schema-db": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@bytebase/dbhub@1.5.0", "--transport", "stdio", "--config", ".ai/dbhub.toml"],
+      "env": {"SCHEMA_DB_DSN": "${SCHEMA_DB_DSN}"}
+    },
+    "airflow": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["astro-airflow-mcp@0.9.1", "--transport", "stdio"],
+      "env": {
+        "AIRFLOW_API_URL": "${AIRFLOW_API_URL:-http://localhost:8080}",
+        "AIRFLOW_USERNAME": "${AIRFLOW_USERNAME:-admin}",
+        "AIRFLOW_PASSWORD": "${AIRFLOW_PASSWORD:-admin}",
+        "AF_READ_ONLY": "true"
+      }
+    }
+  }
+}

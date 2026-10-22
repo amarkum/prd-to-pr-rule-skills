@@ -1,0 +1,36 @@
+# Repo manifest for the AI SDLC standard. Agents, hooks, evidence.py and CI read this file.
+# Schema: standards/repo-manifest.schema.json in the ai-sdlc repo.
+schema_version: 1
+repo:
+  name: {{name}}
+  stack: airflow
+  description: {{description}}
+  jira_project: {{jira_project}}
+  default_branch: main
+  related_repos: []        # e.g. [{name: payroll-mfe, relation: "reads payroll_run_status via Payroll API"}]
+checks:                    # run in order by evidence.py and CI; required unless `required: false`
+  - id: lint
+    run: ruff check dags include tests
+  - id: unit
+    run: mkdir -p reports && pytest tests -q -m "not integration" --junitxml=reports/junit-unit.xml --cov=include --cov-report=xml:reports/coverage.xml
+    artifacts: ["reports/junit-unit.xml", "reports/coverage.xml"]
+  - id: import-errors
+    run: airflow dags list-import-errors -l -o json
+    required: false
+tests:
+  junit_glob: "reports/junit-*.xml"
+  run_files: "pytest {files} -q -p no:cacheprovider --junitxml={junit}"
+  test_patterns: ["tests/**/test_*.py", "tests/**/*_test.py"]
+  support_patterns: ["tests/**/conftest.py", "tests/**/fixtures/**"]
+evidence:
+  require_fail_to_pass: true
+  min_changed_line_coverage: 80
+protected_paths: ["migrations/**", ".github/workflows/**"]
+data:
+  schema_snapshots: docs/schemas/
+  mongodb_env: MDB_MCP_CONNECTION_STRING     # local/dev, read-only user
+  schema_db_env: SCHEMA_DB_DSN               # local/dev, read-only user
+context:
+  confluence_space: {{jira_project}}
+  sentry_project: {{name}}
+  incident_labels: [postmortem, incident]

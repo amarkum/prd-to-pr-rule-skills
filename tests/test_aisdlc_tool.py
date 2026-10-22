@@ -71,7 +71,7 @@ class AisdlcToolTests(unittest.TestCase):
                     ".claude/skills/plan/templates/plan.md", ".claude/skills/triage/SKILL.md",
                     ".claude/aisdlc/scripts/agent_evals.py", ".claude/aisdlc/scripts/bands.py",
                     ".claude/agents/builder.md", ".claude/aisdlc/hooks/aisdlc_hooks.py",
-                    ".claude/aisdlc/scripts/schema_snapshot.py", ".claude/aisdlc/rules/10-security-and-data.md",
+                    ".claude/aisdlc/scripts/schema_snapshot.py", ".claude/rules/aisdlc-10-security-and-data.md",
                     ".claude/aisdlc/VERSION.json"]:
             self.assertTrue((self.repo / rel).is_file(), rel)
         settings = json.loads((self.repo / ".claude/settings.json").read_text())
@@ -87,7 +87,12 @@ class AisdlcToolTests(unittest.TestCase):
         self.assertEqual(json.loads(deny.stdout)["hookSpecificOutput"]["permissionDecision"], "deny")
         ctx = run([sys.executable, str(hook), "session-context"], cwd=self.repo, stdin="{}",
                   env={"CLAUDE_PROJECT_DIR": str(self.repo)})
-        self.assertIn("Security and data (always on)", json.loads(ctx.stdout)["hookSpecificOutput"]["additionalContext"])
+        context = json.loads(ctx.stdout)["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("The loop:", context)
+        self.assertNotIn("Security and data (always on)", context)     # loaded natively from .claude/rules/, not twice
+        rule = (self.repo / ".claude/rules/aisdlc-10-security-and-data.md").read_text()
+        self.assertIn("# Security and data (always on)", rule)
+        self.assertNotIn("description:", rule)
         self.assertEqual(tool("doctor", "--target", str(self.repo)).returncode, 0)
 
     def test_knowledge_audit(self):

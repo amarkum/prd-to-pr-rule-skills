@@ -407,8 +407,11 @@ def evidence_state(cwd: Path) -> str:
     return f"{rec.get('verdict')} for HEAD {head[:10]}"
 
 
-def core_rules() -> str:
-    """Bodies of the plugin's always-on rules (rules/*.md). Plugins can't ship CLAUDE.md, so they arrive here."""
+def core_rules(cwd: Path) -> str:
+    """Bodies of the plugin's always-on rules (rules/*.md). Plugins can't ship CLAUDE.md, so they arrive here,
+    unless the repo vendored them into .claude/rules/, where Claude Code loads them natively."""
+    if any((cwd / ".claude" / "rules").glob("aisdlc-*.md")):
+        return ""
     parts = []
     for path in sorted((PLUGIN_ROOT / "rules").glob("*.md")):
         text = path.read_text(encoding="utf-8", errors="replace")
@@ -442,7 +445,7 @@ def session_context(payload: dict) -> int:
         lines.append(f"Branch is for {key}: " + ", ".join(state) + (f" ({len(locks)} locked tests)" if locks else "")
                      + f"; evidence: {evidence_state(cwd)}.")
     text = "\n".join(lines)
-    rules = core_rules()
+    rules = core_rules(cwd)
     if rules:
         text += "\n\n" + rules
     return out({"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": text}})

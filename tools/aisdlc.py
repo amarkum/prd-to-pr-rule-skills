@@ -3,8 +3,9 @@
 
   init             scaffold a repo for its stack: CLAUDE.md, REVIEW.md, .ai/repo.yaml, .claude/settings.json
                    (marketplace, plugins, permissions), data connectors, CI workflows, PR template, specs/, docs/knowledge/
-  vendor           copy a pinned version of the plugins into the repo's .claude/ for environments that don't install
-                   marketplace plugins (some cloud sessions, air-gapped CI)
+  vendor           copy a pinned version of the plugins into the repo's .claude/ for surfaces that don't install
+                   repo-declared plugins: cloud sessions and scheduled tasks on the web, Claude in Slack, air-gapped CI.
+                   Always-on rules go to .claude/rules/ so they load even where hooks don't run.
   doctor           check a repo's setup; exit 1 on failures
   knowledge-audit  flag knowledge entries that are past review_by or missing fields; exit 1 if any
 
@@ -149,7 +150,9 @@ def cmd_vendor(a) -> int:
         shutil.rmtree(aisdlc)
     (aisdlc / "scripts").mkdir(parents=True)
     (aisdlc / "hooks").mkdir()
-    (aisdlc / "rules").mkdir()
+    rules_dir = claude / "rules"
+    for old in rules_dir.glob("aisdlc-*.md") if rules_dir.is_dir() else []:
+        old.unlink()
     sub = "${CLAUDE_PROJECT_DIR}/.claude/aisdlc"
     copied = []
     for plugin in STACK_PLUGINS[a.stack]:
@@ -169,7 +172,13 @@ def cmd_vendor(a) -> int:
         for script in sorted((root / "scripts").glob("*.py")) if (root / "scripts").is_dir() else []:
             shutil.copy2(script, aisdlc / "scripts" / script.name)
         for rule in sorted((root / "rules").glob("*.md")) if (root / "rules").is_dir() else []:
-            shutil.copy2(rule, aisdlc / "rules" / rule.name)
+            # native project rules: no `paths`, so they load at launch on every surface, hooks or not
+            body = re.sub(r"^---\s*\n.*?\n---\s*\n", "", rule.read_text(encoding="utf-8"), count=1, flags=re.DOTALL)
+            rules_dir.mkdir(parents=True, exist_ok=True)
+            (rules_dir / f"aisdlc-{rule.name}").write_text(
+                f"<!-- Vendored from the ai-sdlc standard ({plugin}) by tools/aisdlc.py vendor. "
+                f"Change the standard, then re-run vendor. -->\n{body}", encoding="utf-8")
+            copied.append(f"rule {rule.stem}")
     shutil.copy2(PLUGINS / "sdlc-core/hooks/aisdlc_hooks.py", aisdlc / "hooks" / "aisdlc_hooks.py")
 
     # Claude Code hooks (shell form: Claude Code exports $CLAUDE_PROJECT_DIR to hook processes)

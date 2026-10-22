@@ -25,6 +25,9 @@ Deploy, Maintain): each stage commits an artifact to `specs/<KEY>/` that the nex
 - Policy: `requiredMinimumVersion`; new regulated tier (`managed-settings.regulated.json`) with sandbox, credential
   isolation and managed-only permissions and hooks.
 
+- Vendored mode writes the always-on rules to `.claude/rules/aisdlc-*.md`, so cloud sessions, scheduled tasks and
+  Claude in Slack load them natively (Slack sessions don't run repo hooks); the SessionStart hook then skips them.
+
 Migration for repos on 1.x: rename `specs/<KEY>/tasks.md` to `plan.md` in the new template's shape and set
 `status: accepted`; re-run `tools/aisdlc.py init` to pick up the new templates (existing files are kept).
 

@@ -11,7 +11,7 @@ Output: `specs/<KEY>/plan.md` from `templates/plan.md`. The edit hook blocks cod
 
 ## 1. Draft it in plan mode
 
-Interactive sessions: ask the engineer to switch to plan mode (Shift+Tab, or start with `claude --permission-mode plan`)
+Interactive sessions: ask the engineer to switch to plan mode (Shift+Tab or `/plan`, or start with `claude --permission-mode plan`)
 so you can read the codebase without changing anything. Headless: research read-only, write only `plan.md`.
 Read `spec.md`, `intent.md` and `context.md`, then write:
 

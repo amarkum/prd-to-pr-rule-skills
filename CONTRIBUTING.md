@@ -11,7 +11,7 @@ The standard is code: every change goes through a PR, reviewed by the CODEOWNERS
    - `make details`: check the always-on token cost didn't jump.
 3. **Version** (semver, per plugin): bump `version` in the plugin's `.claude-plugin/plugin.json` and in its entry in
    `.claude-plugin/marketplace.json`. `tests/test_manifests.py` fails if they drift.
-   - patch: wording, references, examples;
+   - patch: wording, references, examples, and bug fixes that don't tighten a gate;
    - minor: a new skill, check or connector; anything that adds without changing a gate;
    - major: a changed gate, stricter enforcement, a renamed skill, a manifest schema change (product repos may need edits).
 4. **Changelog.** Add a line to `CHANGELOG.md`: what changed, who must do what.

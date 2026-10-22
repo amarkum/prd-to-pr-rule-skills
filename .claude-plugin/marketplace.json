@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "The organisation's AI SDLC standard for Claude Code: the AI-native loop from PRD to verified pull request, with stack packs for Airflow, micro-frontends and the React frontend.",
-    "version": "2.0.0"
+    "version": "2.0.1"
   },
   "plugins": [
     {
       "name": "sdlc-core",
       "source": "./plugins/sdlc-core",
       "description": "The six-stage AI-native SDLC loop (Plan, Design, Build, Test, Deploy, Maintain) from a Confluence PRD to a verified draft PR: PRD gate with product-owner feedback and intent.md, human-approved spec, accepted plan, test-first build, fail-to-pass and plan evidence, PR review loop, control bands and triage, learning. Hooks enforce the gates.",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "development"
     },
     {

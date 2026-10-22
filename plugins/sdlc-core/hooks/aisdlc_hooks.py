@@ -451,6 +451,19 @@ def session_context(payload: dict) -> int:
     return out({"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": text}})
 
 
+def is_code(path: str) -> bool:
+    return bool(path) and not SPEC_FREE_RE.search(path) and not path.startswith(".ai/")
+
+
+def branch_code_changes(cwd: Path) -> list[str] | None:
+    """Code files committed on this branch since it left the base branch; None if the base can't be found."""
+    for ref in (base_ref(cwd), "main", "master"):
+        mb = git(cwd, "merge-base", ref, "HEAD")
+        if mb:
+            return [p for p in git(cwd, "diff", "--name-only", mb, "HEAD").splitlines() if is_code(p)]
+    return None
+
+
 def stop_verify(payload: dict) -> int:
     cwd = project_dir(payload)
     if payload.get("stop_hook_active"):
@@ -459,11 +472,12 @@ def stop_verify(payload: dict) -> int:
     spec, status = spec_status(cwd, key)
     if spec is None or status != "approved":
         return 0
-    changed = [ln[3:] for ln in git(cwd, "status", "--porcelain").splitlines()
-               if ln[3:] and not SPEC_FREE_RE.search(ln[3:]) and not ln[3:].startswith(".ai/")]
+    changed = [ln[3:] for ln in git(cwd, "status", "--porcelain").splitlines() if is_code(ln[3:])]
     state = evidence_state(cwd)
     if not changed and state.startswith("pass"):
         return 0
+    if not changed and branch_code_changes(cwd) == []:
+        return 0  # nothing built yet (only specs, plans or docs changed), so there is nothing to verify
     msg = (f"[ai-sdlc] {key}: code changed but evidence is '{state}'"
            + (f" and {len(changed)} file(s) are uncommitted" if changed else "")
            + ". Before finishing: commit, run the verify skill, and report the evidence verdict. "

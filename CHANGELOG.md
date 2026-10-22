@@ -1,5 +1,13 @@
 # Changelog
 
+## sdlc-core 2.0.1 (2026-10-22)
+
+- Fixed: the stop-verify hook asked for verification ("code changed but evidence is 'none'") when only specs, plans or
+  docs had changed. It now asks only when code changed: uncommitted, or committed on the branch since it left the base
+  branch. The behavioural evals surfaced it: a session that rightly stopped at the plan gate was told code had changed.
+  The fix is deterministic, so unit tests cover it (`tests/test_hooks.py`) rather than a new eval case. No action
+  needed in product repos; plugin-mode repos pick it up on update, vendored repos on the next `vendor`.
+
 ## 2.0.0 (2026-10-22)
 
 Breaking. The workflow follows the six-stage loop of Anthropic's AI-native SDLC playbook (Plan, Design, Build, Test,

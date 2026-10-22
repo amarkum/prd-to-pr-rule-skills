@@ -227,6 +227,16 @@ class ContextAndStopTests(unittest.TestCase):
         self.assertIn("verify", resp["reason"])
         self.assertIsNone(hook("stop-verify", {"stop_hook_active": True}, self.root))
 
+    def test_stop_asks_for_committed_code_without_evidence(self):
+        resp = hook("stop-verify", {}, self.root)   # add_feature committed code on the branch
+        self.assertEqual(resp["decision"], "block")
+        self.assertIn("evidence is 'none'", resp["reason"])
+
+    def test_stop_stays_quiet_before_any_code(self):
+        git(self.root, "checkout", "-q", "-b", "feat/PAY-412-plan", "main")
+        write(self.root, "specs/PAY-412/plan.md", "---\nstatus: draft\n---\n")   # only the plan is written
+        self.assertIsNone(hook("stop-verify", {}, self.root))
+
     def test_pr_gate_for_mcp(self):
         resp = hook("pr-gate", {"tool_name": "mcp__github__create_pull_request",
                                 "tool_input": {"title": "x", "head": "feat/PAY-412-status", "base": "main"}}, self.root)

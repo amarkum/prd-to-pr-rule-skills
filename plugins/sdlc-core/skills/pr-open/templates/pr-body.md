@@ -1,6 +1,8 @@
 ## <KEY>: <title>
 
-**Jira:** <link> · **PRD:** <link> (version <N>) · **Spec:** `specs/<KEY>/spec.md` (approved by <name>) · **Risk:** <tier>
+**Jira:** <link> · **PRD:** <link> (version <N>) · **Risk:** <tier>
+**Intent:** `specs/<KEY>/intent.md` (accepted by <name>) · **Spec:** `specs/<KEY>/spec.md` (approved by <name>) ·
+**Plan:** `specs/<KEY>/plan.md` (accepted by <name>)
 
 ### What changed
 
@@ -14,6 +16,10 @@
 
 <!-- paste .ai/evidence/summary.md: verdict, SHA, checks, fail-to-pass -->
 CI re-runs this on a clean runner. Trust the CI comment over this section if they differ.
+
+### Departures from the plan
+
+<None, or each file added to the plan during the build and why.>
 
 ### Review focus
 

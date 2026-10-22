@@ -1,13 +1,17 @@
 ---
 name: spec-write
-description: Writes the technical spec for a story from a READY PRD and its context pack - traceable requirements, Given/When/Then acceptance criteria with IDs, data and contract design, repo impact and sequencing, test plan, rollout and rollback - and leaves it as a draft for human approval. Use after context-gather, or when asked to "write the spec", "design this story" or "turn this PRD into a tech spec".
+description: The Design stage: writes spec.md from an accepted intent, the PRD and the context pack (traceable requirements, Given/When/Then ACs with IDs, design, repo impact and sequencing, test plan, rollout, flagged policy concerns) as a draft for human approval. Use after context-gather, or for "write the spec" or "design this story".
 argument-hint: "<JIRA-KEY>"
 ---
 
 # Spec write
 
+Inputs: `specs/<KEY>/intent.md` (accepted), `prd.md` when the intent came from a PRD, and `context.md`.
 Output: `specs/<KEY>/spec.md` from `templates/spec.md`, with front matter `status: draft`. The spec is the contract that
-build, verify and review are checked against, so make it precise rather than long.
+plan, build, verify and review are checked against, so make it precise rather than long.
+
+Apply the organisation's policy skills while you write (security, data, brand, accessibility, compliance, whichever are
+installed), so policy is applied now rather than discovered in review.
 
 ## Rules for a good spec
 
@@ -27,19 +31,25 @@ build, verify and review are checked against, so make it precise rather than lon
    - `medium`: new data or contract, or more than one repo.
    - `high`: auth, PII, migrations, money, or anything irreversible.
    High-risk specs list the extra approvals they need (security, data owner).
-7. **No open questions.** The "Open questions" section must say `None.` before the spec can be approved. Unresolved
-   product questions go back through `prd-review`; design questions go to the tech lead.
+7. **Flagged concerns.** Where the intent conflicts with a policy, or two policies conflict, say so in "Flagged
+   concerns" with the policy, its owner and the decision needed. The product owner resolves each one with its policy
+   owner before engineering sees the spec. Never resolve a policy conflict by quietly picking a side.
+8. **No open questions.** The "Open questions" section must say `None.` before the spec can be approved. Unresolved
+   product questions go back to the product owner; design questions go to the tech lead. Carry the intent's open
+   questions forward or answer them.
 
 ## Fast lane for small, low-risk changes
 
 A `risk: low` change (one repo, no data, contract or auth change, roughly under 100 lines, e.g. a bug with a clear
-reproduction) needs only sections 1, 3, 6 and 7: summary, ACs, repo impact and test plan. Ceremony scales with risk;
+reproduction) needs only the summary, ACs, repo impact and test plan sections. Ceremony scales with risk;
 the gates (human approval, evidence) do not.
 
 ## Hand-off
 
 1. Commit the spec on `spec/<KEY>-<slug>` or the feature branch, and open a draft PR or share it with the tech lead
    (CODEOWNERS of `specs/` review it).
-2. **Do not approve it yourself.** A human sets `status: approved`, `approved_by` and `approved_at`; the edit hook blocks
-   agents from doing so. Until then the hook also blocks code changes on the branch.
-3. Report the spec path, the risk tier, the number of ACs per repo, and anything the reviewer should challenge.
+2. **Do not approve it yourself.** The product owner checks it solves the intent; a human sets `status: approved`,
+   `approved_by` and `approved_at` (the tech lead for risk: medium or high). The edit hook blocks agents from doing so,
+   and blocks code changes on the branch until then.
+3. Report the spec path, the risk tier, the number of ACs per repo, the flagged concerns with their owners, and
+   anything the reviewer should challenge.

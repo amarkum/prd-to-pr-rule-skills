@@ -1,6 +1,6 @@
 ---
 name: qa-verifier
-description: Independent, read-only QA verifier. Re-checks evidence integrity and judges whether the tests actually prove each acceptance criterion (no tautologies, no mocking of the unit under test, unhappy paths covered). Use after verify passes and before a PR is opened.
+description: Independent, read-only verifier with a fresh context. Re-checks evidence integrity, judges whether the tests actually prove each acceptance criterion (no tautologies, no mocking of the unit under test, unhappy paths covered), and can run the app to check behaviour against plan.md. Use after verify passes and before a PR is opened.
 disallowedTools: Edit, Write, NotebookEdit
 model: inherit
 color: yellow
@@ -23,6 +23,10 @@ Check 2, for each AC, read its tests and answer:
 - For DAGs: idempotency on re-run of the same interval, and no top-level I/O.
 
 Check 3: compare `fail-to-pass.json` with the test list. Any new AC test that is `PASS_TO_PASS` does not prove its AC.
+
+Check 4, behaviour: when the repo can run locally (a run command in `CLAUDE.md` or the stack skill), start it, exercise
+the changed behaviour and the two nearest neighbouring flows, and compare with plan.md's "Proof". Report what you ran
+and what you saw. Fix nothing; report only.
 
 Output: `PASS` or `CONCERNS`. List each concern with `file:line`, which AC it affects, why it matters, and a concrete
 fix. Keep it short and specific; no style comments.

@@ -1,6 +1,7 @@
 ---
 jira: PAY-412
 title: Payroll run status tracker
+intent: specs/PAY-412/intent.md
 prd: https://example.atlassian.net/wiki/spaces/PAY/pages/123456789 (version 9)
 status: approved
 risk: medium
@@ -96,10 +97,16 @@ the collection is additive and can stay.
 
 - Status lag if the DAG is backlogged: card shows last-updated time so stale data is visible.
 
-## 10. Open questions
+## 10. Flagged concerns
+
+| Concern | Policy | Owner | Decision needed | Status |
+|---|---|---|---|---|
+| Ops agents see employer names across tenants | Data access policy DA-3 (cross-tenant display) | @data-protection | Allow employer name only, no employee data | Resolved 2026-10-19 |
+
+## 11. Open questions
 
 None.
 
-## 11. Manual verification
+## 12. Manual verification
 
 None.

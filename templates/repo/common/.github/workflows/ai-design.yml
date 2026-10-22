@@ -1,0 +1,67 @@
+# Stage 2, Design. An accepted intent.md reaching the default branch starts the requirements and design pass:
+# context-gather and spec-write run headless and open the spec as a draft PR. The product owner reviews it, routes
+# flagged concerns to their policy owners, and a human approves it (status: approved). Intents that come from a
+# Confluence PRD skip this workflow: ai-prd-intake writes intent.md and the spec in one PR.
+# Runs only when the repository variable AISDLC_AUTOMATION is "on".
+name: ai-design
+on:
+  push:
+    branches: [main]
+    paths: ["specs/*/intent.md"]
+  workflow_dispatch:
+    inputs:
+      key: {description: "Jira key with an accepted specs/<KEY>/intent.md", required: true}
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+jobs:
+  find:
+    if: vars.AISDLC_AUTOMATION == 'on'
+    runs-on: ubuntu-latest
+    outputs:
+      keys: ${{ steps.keys.outputs.keys }}
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0}
+      - id: keys
+        run: |
+          if [ -n "$INPUT_KEY" ]; then candidates="$INPUT_KEY"
+          else candidates=$(git diff --name-only "$BEFORE" "$GITHUB_SHA" -- 'specs/*/intent.md' 2>/dev/null | cut -d/ -f2); fi
+          ready=()
+          for k in $candidates; do
+            [[ "$k" =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ]] || continue
+            grep -qE '^status:[[:space:]]*accepted' "specs/$k/intent.md" 2>/dev/null || continue
+            [ -f "specs/$k/spec.md" ] && continue
+            ready+=("\"$k\"")
+          done
+          echo "keys=[$(IFS=,; echo "${ready[*]}")]" >> "$GITHUB_OUTPUT"
+        env:
+          INPUT_KEY: ${{ inputs.key }}
+          BEFORE: ${{ github.event.before }}
+  design:
+    needs: find
+    if: needs.find.outputs.keys != '[]'
+    strategy:
+      matrix:
+        key: ${{ fromJSON(needs.find.outputs.keys) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0}
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}   # or workload identity federation
+          plugin_marketplaces: https://github.com/amarkum/prd-to-pr-rule-skills.git
+          plugins: |
+            sdlc-core@ai-sdlc
+            sdlc-connectors@ai-sdlc
+          prompt: |
+            /sdlc-core:prd-to-pr ${{ matrix.key }} design
+            CI mode: specs/${{ matrix.key }}/intent.md is accepted. Run context-gather and spec-write, commit to branch
+            spec/${{ matrix.key }}, and open a DRAFT pull request with context.md and spec.md (status: draft). List the
+            flagged concerns and their policy owners in the PR body. Stop after opening the PR.
+          claude_args: >-
+            --max-turns 80
+            --allowedTools "Read,Grep,Glob,Write,Edit,Agent,Skill,Bash(git *),Bash(gh pr create *),Bash(python3 *),Bash(rg *)"

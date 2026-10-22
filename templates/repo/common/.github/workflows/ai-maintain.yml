@@ -1,0 +1,79 @@
+# Stage 6, Maintain: closing the loop. A deterministic check watches a metric (default: the CI test failure rate of
+# ai-evidence) and invokes Claude only when a control band in .ai/bands.yaml is breached: 1 sigma logs, 2 sigma
+# diagnoses read-only and files the finding as an intent for triage, 3 sigma may also propose a fix as a PR (or run a
+# pre-approved runbook). Nothing is merged or deployed by the agent. Runs only when AISDLC_AUTOMATION is "on".
+name: ai-maintain
+on:
+  schedule:
+    - cron: "23 6 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: read
+  id-token: write
+env:
+  AISDLC_REPO: amarkum/prd-to-pr-rule-skills
+  AISDLC_REF: main
+jobs:
+  detect:
+    if: vars.AISDLC_AUTOMATION == 'on'
+    runs-on: ubuntu-latest
+    outputs:
+      tier: ${{ steps.bands.outputs.tier }}
+      tools: ${{ steps.tools.outputs.allowed }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
+        with: {repository: "${{ env.AISDLC_REPO }}", ref: "${{ env.AISDLC_REF }}", path: .ai-sdlc}
+      - run: pip install pyyaml
+      - name: Collect the metric
+        run: |
+          gh run list --workflow ai-evidence.yml --json conclusion,createdAt --limit 500 > runs.json
+          python3 .ai-sdlc/plugins/sdlc-core/scripts/bands.py series-gh-runs --runs runs.json --out series.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - id: bands
+        name: Check the bands (deterministic, no model)
+        run: python3 .ai-sdlc/plugins/sdlc-core/scripts/bands.py check --config .ai/bands.yaml --series series.json --json bands.json --github-output "$GITHUB_OUTPUT"
+      - id: tools
+        name: Tools allowed at this tier
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          b = json.load(open("bands.json"))
+          tools = [t for t in (b.get("tools") or "Read,Grep,Glob").split(",") if t] + ["Bash(gh issue create *)"]
+          if b["tier"] == "3sigma":
+              tools += ["Write", "Edit", "Skill", "Bash(git *)", "Bash(gh pr create *)"]
+              tools += [f"Bash(gh workflow run {r.split(':', 1)[1]}.yml *)" for r in b.get("routes", []) if r.startswith("runbook:")]
+          print("allowed=" + ",".join(tools))
+          PY
+      - run: '{ echo "### Control bands"; echo "\`\`\`json"; cat bands.json; echo "\`\`\`"; } >> "$GITHUB_STEP_SUMMARY"'
+      - uses: actions/upload-artifact@v7
+        with: {name: bands, path: "bands.json\nseries.json", retention-days: 30}
+  respond:
+    needs: detect
+    if: needs.detect.outputs.tier == '2sigma' || needs.detect.outputs.tier == '3sigma'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0}
+      - uses: actions/download-artifact@v7
+        with: {name: bands}
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          plugin_marketplaces: https://github.com/amarkum/prd-to-pr-rule-skills.git
+          plugins: |
+            sdlc-core@ai-sdlc
+          prompt: |
+            /sdlc-core:triage bands.json
+            CI mode. A control band was breached at tier ${{ needs.detect.outputs.tier }} (details in bands.json and
+            series.json). Diagnose read-only first. Write the finding in the intent.md format and file it with
+            `gh issue create --label ai-intent`. At 3sigma you may also open a draft PR for a small, well-bounded fix
+            (a revert or a quarantine with a ticket) or run a runbook listed in bands.json routes; nothing else.
+          claude_args: >-
+            --max-turns 60
+            --allowedTools "${{ needs.detect.outputs.tools }}"

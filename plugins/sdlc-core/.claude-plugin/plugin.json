@@ -1,9 +1,20 @@
 {
   "name": "sdlc-core",
   "displayName": "AI SDLC core: PRD to verified PR",
-  "version": "1.0.0",
-  "description": "Spec-first, evidence-gated workflow from a Confluence PRD to a verified draft pull request: PRD gate with product-owner feedback, context pack, spec, tasks, test-first build, fail-to-pass evidence, draft PR and a learning loop. Hooks enforce the gates.",
-  "author": {"name": "Engineering Platform"},
+  "version": "2.0.0",
+  "description": "The six-stage AI-native SDLC loop (Plan, Design, Build, Test, Deploy, Maintain) from a Confluence PRD to a verified draft PR: PRD gate with product-owner feedback and intent.md, human-approved spec, accepted plan, test-first build, fail-to-pass and plan evidence, PR review loop, control bands and triage, learning. Hooks enforce the gates.",
+  "author": {
+    "name": "Engineering Platform"
+  },
   "repository": "https://github.com/amarkum/prd-to-pr-rule-skills",
-  "keywords": ["sdlc", "prd", "spec-driven", "tdd", "evidence", "jira", "confluence", "guardrails"]
+  "keywords": [
+    "sdlc",
+    "prd",
+    "spec-driven",
+    "tdd",
+    "evidence",
+    "jira",
+    "confluence",
+    "guardrails"
+  ]
 }

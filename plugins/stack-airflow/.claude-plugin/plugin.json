@@ -1,10 +1,20 @@
 {
   "name": "stack-airflow",
   "displayName": "Stack pack: Airflow data pipelines",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Airflow DAG conventions, data-contract rules and test patterns (DagBag integrity, idempotent re-runs, dag.test, data-quality checks) that the builder loads automatically when working on DAG code.",
-  "author": {"name": "Data Engineering Guild"},
+  "author": {
+    "name": "Data Engineering Guild"
+  },
   "repository": "https://github.com/amarkum/prd-to-pr-rule-skills",
-  "keywords": ["airflow", "dags", "data-pipelines", "mongodb", "testing"],
-  "dependencies": ["sdlc-core"]
+  "keywords": [
+    "airflow",
+    "dags",
+    "data-pipelines",
+    "mongodb",
+    "testing"
+  ],
+  "dependencies": [
+    "sdlc-core"
+  ]
 }

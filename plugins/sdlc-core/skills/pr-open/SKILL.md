@@ -1,6 +1,6 @@
 ---
 name: pr-open
-description: Opens a draft pull request whose description carries the traceability and evidence reviewers need - Jira and PRD links, spec, AC coverage, evidence verdict at the commit SHA, risks, rollout and rollback - then links it back to Jira. Use when verify has passed and the user asks to open, raise or create the PR.
+description: The Deploy stage: opens a draft PR carrying what reviewers need (Jira and PRD links, intent, spec, plan, AC coverage, evidence at the SHA, risks, rollback) and links it back to Jira. Use when verify has passed and the user asks to open the PR.
 argument-hint: "<JIRA-KEY>"
 allowed-tools: Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/evidence.py check *), Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/evidence.py summary *)
 ---
@@ -20,7 +20,7 @@ If it fails, stop and run `verify`. The hooks will refuse `gh pr create` anyway;
 Fill `templates/pr-body.md` into `.ai/pr-body.md` (gitignored), using:
 - `specs/<KEY>/spec.md`: summary, ACs, risk tier, rollout and rollback;
 - `.ai/evidence/summary.md`: paste it whole;
-- `specs/<KEY>/tasks.md`: what was built;
+- `specs/<KEY>/plan.md`: what was built, and where the work departed from the plan (and why);
 - the things a reviewer should look at first (risky files, contract changes, anything you were unsure about).
 
 No secrets, internal hostnames, customer data or raw logs.
@@ -40,4 +40,4 @@ CODEOWNERS adds the reviewers. For multi-repo stories, add "Part N of M" and lin
   and transition the issue to "In Review" if the workflow has that status.
 - Tell the user the PR URL. CI will now re-run evidence on a clean runner and post the attested result.
 
-Humans review and merge. After review comments arrive or the PR merges, run `learn`.
+Humans review and merge. When review comments or failing checks arrive, run `pr-babysit`; after the merge, `learn`.

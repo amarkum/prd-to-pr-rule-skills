@@ -1,18 +1,31 @@
-# AI first-pass review against the spec. Teams on Claude Team/Enterprise can use the managed Claude Code Review instead
-# (it reads REVIEW.md); keep one of the two, not both. The review never approves or blocks: humans do.
+# Stage 5, Deploy: AI in the PR review loop. One review per ready PR against REVIEW.md, and a fix loop when someone
+# tags @claude on a PR comment. Teams on Claude Team or Enterprise can switch the review job off and enable the
+# managed Claude Code Review instead (it also reads REVIEW.md); keep the @claude job either way. Findings never
+# approve or block: branch protection requires a code owner. Runs only when AISDLC_AUTOMATION is "on".
 name: ai-review
 on:
   pull_request:
     types: [opened, ready_for_review, synchronize]
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
+  issues: write
   id-token: write
 jobs:
   review:
-    if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository
+    if: >-
+      vars.AISDLC_AUTOMATION == 'on' && github.event_name == 'pull_request' &&
+      github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
     steps:
       - uses: actions/checkout@v7
         with: {fetch-depth: 0}
@@ -24,9 +37,30 @@ jobs:
             sdlc-core@ai-sdlc
           use_sticky_comment: true
           prompt: |
-            Review PR #${{ github.event.pull_request.number }} with the sdlc-core pr-reviewer agent, against the spec in
-            specs/<KEY>/spec.md (the Jira key is in the branch name and the title). Post one comment with the findings
-            table (severity, file:line, issue, fix). Never approve, request changes or push commits.
+            Review PR #${{ github.event.pull_request.number }} with the sdlc-core pr-reviewer agent, following REVIEW.md:
+            the Bugs, Security and Compliance passes, Compliance checked against specs/<KEY>/spec.md and plan.md (the Jira
+            key is in the branch name and the title). Post one comment: Important findings first (pass, file:line, issue,
+            fix), at most five nits, then the count of nits not shown. Never approve, request changes or push commits.
           claude_args: >-
             --max-turns 40
             --allowedTools "Read,Grep,Glob,Agent,Bash(git diff *),Bash(git log *),Bash(gh pr view *),Bash(gh pr diff *),Bash(gh pr comment *)"
+  respond:
+    # "@claude fix the null check" on a PR: Claude addresses the comment and pushes to the PR branch.
+    if: >-
+      vars.AISDLC_AUTOMATION == 'on' && github.event_name != 'pull_request' &&
+      contains(github.event.comment.body, '@claude') &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0}
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          plugin_marketplaces: https://github.com/amarkum/prd-to-pr-rule-skills.git
+          plugins: |
+            sdlc-core@ai-sdlc
+          claude_args: >-
+            --max-turns 60
+            --allowedTools "Read,Grep,Glob,Write,Edit,Agent,Skill,Bash(git *),Bash(gh pr view *),Bash(gh pr diff *),Bash(python3 *),Bash(pytest *),Bash(npm *),Bash(npx *)"

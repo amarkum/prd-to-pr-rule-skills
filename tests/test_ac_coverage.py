@@ -86,8 +86,8 @@ class AcCoverageTests(unittest.TestCase):
     def test_manual_verification_counts_unless_disabled(self):
         with tempfile.TemporaryDirectory() as d:
             spec = write(Path(d), "spec.md", SPEC.read_text().replace(
-                "## 11. Manual verification\n\nNone.",
-                "## 11. Manual verification\n\n- AC-4: checked in staging with an ops account by @qa on 2026-10-21"))
+                "## 12. Manual verification\n\nNone.",
+                "## 12. Manual verification\n\n- AC-4: checked in staging with an ops account by @qa on 2026-10-21"))
             j = write(Path(d), "j.xml", junit('<testcase name="unrelated" classname="a"/>'))
             r = cover("--spec", str(spec), "--junit", str(j), "--only", "AC-4")
             strict = cover("--spec", str(spec), "--junit", str(j), "--only", "AC-4", "--no-manual")

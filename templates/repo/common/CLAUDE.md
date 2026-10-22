@@ -39,6 +39,6 @@ run the verify skill: it records evidence in `.ai/evidence/`. If a test fails, f
 
 ## How work flows here
 
-PRD (Confluence) -> `prd-review` -> `specs/<KEY>/spec.md` (approved by a human) -> `tasks.md` -> build
-(test-first) -> `verify` (`.ai/evidence/`) -> draft PR -> human review -> `learn`.
-Start with `/sdlc-core:prd-to-pr <PRD link or Jira key>`.
+Plan (`prd-review` -> `intent.md`) -> Design (`spec.md`, approved by a human) -> Build (`plan.md` accepted, then
+test-first code) -> Test (`verify`) -> Deploy (draft PR, review, human merge) -> Maintain (`learn`, `triage`).
+Artifacts live in `specs/<KEY>/`. Start with `/sdlc-core:prd-to-pr <PRD link or Jira key>`.

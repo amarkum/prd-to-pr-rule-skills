@@ -1,6 +1,6 @@
 ---
 name: learn
-description: Compounds what a delivered story taught the team - review comments, CI failures, rework, PRD clarifications, incidents - into reviewed knowledge entries, rules, PRD-template fixes or new automated checks, so the next story starts smarter. Use after a PR gets review feedback or merges, after an incident, or when asked to "capture lessons", "run a retro" or "update our AI rules".
+description: Turns what a story taught the team (review comments, CI failures, rework, PRD clarifications, incidents) into reviewed knowledge entries, CLAUDE.md lines, rules, checks or evals. Use after review feedback or a merge, after an incident, or for "capture lessons" or "run a retro".
 argument-hint: "<PR-number | JIRA-KEY>"
 ---
 
@@ -28,8 +28,10 @@ Knowledge enters the standard only through a reviewed PR. Never edit rules or sk
 | Repeated mistake | promote it (below) | |
 
 **Promotion ladder.** Each recurrence moves the lesson up one rung, and each rung is enforced more strictly:
-knowledge entry (found when relevant) -> rule or skill text (always or path-loaded) -> hook, lint or test (deterministic).
-If a reviewer has had to say the same thing twice, it belongs in a check, not in prose.
+knowledge entry (found when relevant) -> `CLAUDE.md` "Things Claude gets wrong" (the second time Claude makes the
+mistake) -> rule or skill text (always or path-loaded) -> hook, lint or test (deterministic). A skill makes a violation
+rare; a hook makes it close to impossible. If a reviewer has had to say the same thing twice, it belongs in a check.
+Every production incident also gets an agent eval (`evals/`), so the configuration can't regress on it.
 
 ## 3. Write
 

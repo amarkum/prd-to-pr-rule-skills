@@ -6,9 +6,9 @@ vendored mode (`tools/aisdlc.py vendor`).
 
 ## Layout
 
-- `plugins/<name>/`: one plugin each, with `.claude-plugin/plugin.json`. Components: `skills/`, `agents/`, `rules/`
-  (always-on text, injected by the SessionStart hook because plugins can't ship a CLAUDE.md), `hooks/hooks.json`,
-  `scripts/`, `evals/`.
+- `plugins/<name>/`: one plugin each, with `.claude-plugin/plugin.json`. Components: `skills/` (one or more per stage of
+  the loop), `agents/`, `rules/` (always-on text, injected by the SessionStart hook because plugins can't ship a
+  CLAUDE.md), `hooks/hooks.json`, `scripts/`, `evals/`.
 - `.claude-plugin/marketplace.json`: the catalog.
 - `templates/repo/`: files `tools/aisdlc.py init` writes into product repos (common plus per-stack overlays).
 - `tools/aisdlc.py`: init, vendor, doctor and knowledge-audit.

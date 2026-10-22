@@ -74,6 +74,18 @@ class ShellGuardTests(unittest.TestCase):
         self.assertEqual(verdict(resp), "deny")
         self.assertIn("No passing evidence", resp["hookSpecificOutput"]["permissionDecisionReason"])
 
+    def test_release_gate(self):
+        for cmd in ["npm run deploy:prod", "make deploy ENV=production", "./scripts/deploy.sh prod",
+                    "gh workflow run deploy.yml -f environment=production", "vercel deploy --prod"]:
+            self.check(cmd, "deny")
+        for cmd in ["npm run build:prod", "git log --grep 'deploy to prod'", "echo deploy production",
+                    "npm run deploy:staging", "gh release list", 'git add -A && git commit -m "ship the prod fix"',
+                    "git commit -F - <<'EOF'\nRelease notes: deploy to production next week\nEOF"]:
+            self.check(cmd, None)
+        approved = hook("shell-guard", bash("npm run deploy:prod"), self.root, env={"RELEASE_APPROVAL": "CHG-1042"})
+        self.assertEqual(verdict(approved), "ask")
+        self.assertIn("CHG-1042", approved["hookSpecificOutput"]["permissionDecisionReason"])
+
     def test_bare_push_on_protected_branch(self):
         git(self.root, "checkout", "-q", "main")
         try:
@@ -125,11 +137,52 @@ class EditGuardTests(unittest.TestCase):
         self.assertIsNone(verdict(self.edit("tests/test_status.py", "@pytest.mark.skip\ndef test_y(): pass",
                                             old="@pytest.mark.skip\ndef test_x(): pass")))
 
-    def test_spec_gate(self):
+    def test_spec_and_plan_gates(self):
         write(self.root, "specs/PAY-412/spec.md", "---\njira: PAY-412\nstatus: draft\n---\n# spec\n")
         self.assertEqual(verdict(self.edit("app/status.py", "X = 1")), "deny")
         self.assertIsNone(verdict(self.edit("specs/PAY-412/spec.md", "---\nstatus: draft\n---\n")))
+        self.assertIsNone(verdict(self.edit("CLAUDE.md", "# repo")))
         write(self.root, "specs/PAY-412/spec.md", "---\njira: PAY-412\nstatus: approved\n---\n# spec\n")
+        resp = self.edit("app/status.py", "X = 1")                       # approved spec, but no plan yet
+        self.assertEqual(verdict(resp), "deny")
+        self.assertIn("plan.md is missing", resp["hookSpecificOutput"]["permissionDecisionReason"])
+        write(self.root, "specs/PAY-412/plan.md", "---\nstatus: draft\n---\n# plan\n")
+        self.assertEqual(verdict(self.edit("app/status.py", "X = 1")), "deny")
+        self.assertIsNone(verdict(self.edit("specs/PAY-412/plan.md", "status: accepted", old="status: draft")))
+        write(self.root, "specs/PAY-412/plan.md", "---\nstatus: accepted\naccepted_by: dev\n---\n# plan\n")
+        self.assertIsNone(verdict(self.edit("app/status.py", "X = 1")))
+        self.assertIsNone(verdict(hook("edit-guard", {"tool_name": "Write", "tool_input": {
+            "file_path": str(self.root / "app/status.py"), "content": "X = 1"}}, self.root, env={"AISDLC_SPEC_GATE": "off"})))
+
+    def test_high_risk_plan_needs_the_tech_lead(self):
+        write(self.root, "specs/PAY-412/spec.md", "---\njira: PAY-412\nstatus: approved\nrisk: high\n---\n")
+        write(self.root, "specs/PAY-412/plan.md", "---\nstatus: draft\n---\n# plan\n")
+        resp = self.edit("specs/PAY-412/plan.md", "status: accepted", old="status: draft")
+        self.assertEqual(verdict(resp), "deny")
+        self.assertIn("risk: high", resp["hookSpecificOutput"]["permissionDecisionReason"])
+        self.assertIsNone(verdict(self.edit("specs/PAY-412/plan.md", "## Risks\nCache.", old="# plan")))
+
+    def test_locked_tests(self):
+        write(self.root, "specs/PAY-412/spec.md", "---\nstatus: approved\n---\n")
+        plan = "---\nstatus: accepted\n---\n## Files that change\n- `app/status.py`\n## Locked tests\n\n- `tests/test_status.py` @ `445a709938e3`\n"
+        write(self.root, "specs/PAY-412/plan.md", plan)
+        resp = self.edit("tests/test_status.py", "assert True", old="def test_upper")
+        self.assertEqual(verdict(resp), "deny")
+        self.assertIn("locked test", resp["hookSpecificOutput"]["permissionDecisionReason"])
+        self.assertIsNone(verdict(self.edit("app/status.py", "X = 1")))
+        # the lock list can grow but not shrink or move
+        self.assertEqual(verdict(self.edit("specs/PAY-412/plan.md", "", old="- `tests/test_status.py` @ `445a709938e3`\n")), "deny")
+        self.assertEqual(verdict(self.edit("specs/PAY-412/plan.md", "`0000000aaaaa`", old="`445a709938e3`")), "deny")
+        self.assertIsNone(verdict(self.edit("specs/PAY-412/plan.md",
+                                            "`445a709938e3`\n- `tests/test_more.py` @ `1234567abcde`", old="`445a709938e3`")))
+        shell = lambda cmd: verdict(hook("shell-guard", bash(cmd), self.root))
+        self.assertEqual(shell("sed -i 's/COMPLETED/X/' tests/test_status.py"), "deny")
+        self.assertEqual(shell("echo 'pass' > tests/test_status.py"), "deny")
+        self.assertEqual(shell("git checkout main -- tests/test_status.py"), "deny")
+        self.assertIsNone(shell("python3 -m pytest tests/test_status.py > reports/out.log"))
+        self.assertIsNone(shell("cp tests/test_status.py /tmp/copy.py"))
+
+    def test_gates_ignore_branches_without_a_spec(self):
         self.assertIsNone(verdict(self.edit("app/status.py", "X = 1")))
 
     def test_agent_cannot_approve_a_spec(self):
@@ -163,6 +216,7 @@ class ContextAndStopTests(unittest.TestCase):
         self.assertIn("stack: airflow", text)
         self.assertIn("PAY-412", text)
         self.assertIn("evidence: none", text)
+        self.assertIn("intent.md missing, spec.md approved, plan.md missing", text)
         self.assertIn("Security and data (always on)", text)   # plugin rules are injected
         self.assertNotIn("description:", text)                 # without their front matter
 

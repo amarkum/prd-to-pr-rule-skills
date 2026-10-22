@@ -1,6 +1,7 @@
 ---
 jira: <KEY>
 title: <title>
+intent: specs/<KEY>/intent.md
 prd: <confluence url> (version <N>)
 status: draft            # draft | approved  (only a human sets approved)
 risk: <low|medium|high>
@@ -61,10 +62,14 @@ repos: [<repo-a>, <repo-b>]
 
 ## 9. Risks
 
-## 10. Open questions
+## 10. Flagged concerns
+
+None. <!-- or a table: | Concern | Policy | Owner | Decision needed | Status | -->
+
+## 11. Open questions
 
 None.
 
-## 11. Manual verification
+## 12. Manual verification
 
 None.

@@ -32,7 +32,10 @@ class AisdlcToolTests(unittest.TestCase):
                    "--description", "Payroll pipelines")
         self.assertEqual(res.returncode, 0, res.stderr)
         for rel in ["CLAUDE.md", "REVIEW.md", ".ai/repo.yaml", ".ai/dbhub.toml", ".mcp.json", ".github/workflows/ai-evidence.yml",
-                    ".github/workflows/ai-prd-intake.yml", ".github/pull_request_template.md", "specs/README.md",
+                    ".github/workflows/ai-prd-intake.yml", ".github/workflows/ai-design.yml", ".github/workflows/ai-build.yml",
+                    ".github/workflows/ai-review.yml", ".github/workflows/ai-agent-evals.yml",
+                    ".github/workflows/ai-maintain.yml", ".ai/bands.yaml", "evals/README.md",
+                    ".github/pull_request_template.md", "specs/README.md",
                     "docs/knowledge/README.md", "tests/dags/test_dag_integrity.py"]:
             self.assertTrue((self.repo / rel).is_file(), rel)
         self.assertIn("# data-airflow", (self.repo / "CLAUDE.md").read_text())
@@ -65,6 +68,8 @@ class AisdlcToolTests(unittest.TestCase):
         self.assertIn("${CLAUDE_PROJECT_DIR}/.claude/aisdlc/scripts/evidence.py", skill)
         self.assertNotIn("${CLAUDE_PLUGIN_ROOT}", skill)
         for rel in [".claude/skills/mfe-remote/SKILL.md", ".claude/skills/frontend-feature/SKILL.md",
+                    ".claude/skills/plan/templates/plan.md", ".claude/skills/triage/SKILL.md",
+                    ".claude/aisdlc/scripts/agent_evals.py", ".claude/aisdlc/scripts/bands.py",
                     ".claude/agents/builder.md", ".claude/aisdlc/hooks/aisdlc_hooks.py",
                     ".claude/aisdlc/scripts/schema_snapshot.py", ".claude/aisdlc/rules/10-security-and-data.md",
                     ".claude/aisdlc/VERSION.json"]:

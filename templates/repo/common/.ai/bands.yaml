@@ -1,0 +1,10 @@
+# Control bands for the Maintain stage (ai-maintain.yml). Detection is deterministic: bands.py computes a rolling
+# baseline and applies the Western Electric rules. The tier decides what Claude may do; nothing else invokes it.
+metric: ci_test_failure_rate     # daily failure rate of the ai-evidence workflow, collected by ai-maintain.yml
+direction: up                    # a rising failure rate is bad; a falling one is not an alert
+baseline: rolling_30d
+min_sd: 0.02                     # a very stable baseline shouldn't turn one red run into a 3-sigma breach
+tiers:
+  1sigma: {action: log}
+  2sigma: {action: diagnose, tools: "Read,Grep,Glob,Bash(gh run view *),Bash(gh run list *)"}
+  3sigma: {action: propose, routes: [pull_request]}   # add "runbook:<workflow>" for a pre-approved runbook

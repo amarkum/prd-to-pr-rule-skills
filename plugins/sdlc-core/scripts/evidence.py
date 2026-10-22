@@ -2,19 +2,24 @@
 """evidence.py - run a repo's checks and record verifiable evidence for a PR.
 
 Subcommands:
-  run      run `checks` from .ai/repo.yaml, then AC coverage and fail-to-pass;
+  run      run `checks` from .ai/repo.yaml, then AC coverage, fail-to-pass and the plan checks
+           (plan accepted, every changed file listed in plan.md, locked tests untouched);
            write <out>/manifest.json, <out>/summary.md and <out>/logs/*
   check    exit 0 only if <out>/manifest.json is a PASS for the current HEAD on a
            clean tree (docs/spec-only branches pass with --docs-only-ok)
   summary  print <out>/summary.md (PR body section / sticky comment)
+  lock     record committed test files in plan.md "## Locked tests" with their git blob ids,
+           so `run` fails if they change afterwards (the proof of a bug fix can't be weakened)
 
 Usage:
   evidence.py run --manifest .ai/repo.yaml [--spec specs/KEY/spec.md] [--acs AC-1,AC-2]
                   [--base origin/main] [--out .ai/evidence] [--only lint,unit] [--skip-f2p]
   evidence.py check [--out .ai/evidence] [--base origin/main --docs-only-ok]
   evidence.py summary [--out .ai/evidence]
+  evidence.py lock tests/test_x.py [...] [--plan specs/KEY/plan.md]
 
-Exit codes: 0 pass, 1 fail/incomplete, 2 usage or input error.
+Exit codes: 0 pass, 1 fail/incomplete, 2 usage or input error (lock: 2 also when a file is
+uncommitted or already locked at a different blob; only a human edits an existing lock).
 Requires PyYAML for `run` (pip install pyyaml). `check` and `summary` are stdlib only.
 """
 from __future__ import annotations
@@ -38,6 +43,11 @@ SCHEMA = "ai-sdlc/evidence@1"
 HERE = Path(__file__).resolve().parent
 KEY_RE = re.compile(r"(?<![A-Za-z0-9])([A-Za-z][A-Za-z0-9]+-\d+)(?![0-9])")
 DOCS_ONLY = re.compile(r"^(?:specs/|docs/)|\.md$")
+# Changed files that never need a line in plan.md "Files that change".
+PLAN_IGNORE = ["specs/**", ".ai/**", "CHANGELOG.md", "**/package-lock.json", "**/pnpm-lock.yaml", "**/yarn.lock",
+               "**/poetry.lock", "**/uv.lock", "**/Pipfile.lock"]
+LOCK_LINE = re.compile(r"^\s*[-*]\s+`?([^`\s]+)`?\s+@\s+`?([0-9a-f]{7,40})`?", re.MULTILINE)
+PATH_TOKEN = re.compile(r"(?<![\w`/.-])((?:[\w.@{},*-]+/)+[\w.@{},*-]*)")
 
 
 def sh(*args: str, cwd=None, check=True) -> str:
@@ -108,6 +118,102 @@ def spec_meta(spec: Path) -> dict:
             if m:
                 meta[m.group(1).lower()] = m.group(2).strip().strip("'\"")
     return meta
+
+
+def section(text: str, title: str) -> str | None:
+    """Body of the first `## <title>` section (case-insensitive), up to the next `## ` heading."""
+    m = re.search(rf"^##\s+{re.escape(title)}\s*$", text, re.IGNORECASE | re.MULTILINE)
+    if not m:
+        return None
+    rest = text[m.end():]
+    nxt = re.search(r"^##\s", rest, re.MULTILINE)
+    return rest[:nxt.start()] if nxt else rest
+
+
+def glob_to_regex(pattern: str) -> str:
+    out, i = "", 0
+    while i < len(pattern):
+        c = pattern[i]
+        if pattern.startswith("**/", i):
+            out, i = out + "(?:.*/)?", i + 3
+        elif pattern.startswith("**", i):
+            out, i = out + ".*", i + 2
+        elif c == "*":
+            out, i = out + "[^/]*", i + 1
+        elif c == "?":
+            out, i = out + "[^/]", i + 1
+        elif c == "{" and "}" in pattern[i:]:
+            j = pattern.index("}", i)
+            out, i = out + "(?:" + "|".join(re.escape(x) for x in pattern[i + 1:j].split(",")) + ")", j + 1
+        else:
+            out, i = out + re.escape(c), i + 1
+    return out
+
+
+def covered(path: str, patterns: list[str]) -> bool:
+    for pat in patterns:
+        if any(ch in pat for ch in "*?{"):
+            if re.fullmatch(glob_to_regex(pat), path):
+                return True
+        elif path == pat or path.startswith(pat.rstrip("/") + "/"):
+            return True
+    return False
+
+
+def plan_patterns(body: str, repo_name: str) -> list[str]:
+    """Paths and globs listed under "Files that change". `### <repo>` subsections scope entries to one repo."""
+    pats: list[str] = []
+    in_scope = True
+    for line in body.splitlines():
+        heading = re.match(r"^###\s+(.+?)\s*$", line)
+        if heading:
+            in_scope = not repo_name or bool(re.search(rf"(?<![\w-]){re.escape(repo_name)}(?![\w-])", heading.group(1)))
+            continue
+        if not in_scope:
+            continue
+        tokens = re.findall(r"`([^`\s]+)`", line) or PATH_TOKEN.findall(line)
+        for tok in tokens:
+            tok = tok.rstrip(",;:.")
+            for prefix in (f"{repo_name}/", f"{repo_name}:"):
+                if repo_name and tok.startswith(prefix):
+                    tok = tok[len(prefix):]
+            if "/" in tok or re.fullmatch(r"[\w.-]+\.\w+", tok) or any(ch in tok for ch in "*?{"):
+                pats.append(tok)
+    return pats
+
+
+def locked_tests(plan_text: str) -> list[tuple[str, str]]:
+    body = section(plan_text, "Locked tests")
+    return LOCK_LINE.findall(body) if body else []
+
+
+def plan_check(root: Path, plan: Path, repo_name: str, merge_base: str | None, ignore: list[str]) -> tuple[dict, list, list]:
+    """(record, failures, gaps) for plan.md: accepted, lists every changed file, locked tests untouched."""
+    text = plan.read_text(encoding="utf-8")
+    meta = spec_meta(plan)
+    rec = {"path": str(plan.relative_to(root)), "sha256": sha256_file(plan), "status": meta.get("status"),
+           "unplanned": [], "locked_tests": []}
+    failures, gaps = [], []
+    if meta.get("status") != "accepted":
+        failures.append(f"plan status is '{meta.get('status')}', not 'accepted'")
+    pats = plan_patterns(section(text, "Files that change") or "", repo_name)
+    changed = sh("git", "diff", "--name-only", merge_base, "HEAD", cwd=root, check=False).splitlines() if merge_base else []
+    rec["unplanned"] = [f for f in changed if not covered(f, pats) and not covered(f, ignore)]
+    if not pats:
+        gaps.append("plan.md has no 'Files that change' list")
+    elif rec["unplanned"]:
+        shown = ", ".join(rec["unplanned"][:8]) + (" ..." if len(rec["unplanned"]) > 8 else "")
+        gaps.append(f"plan.md does not list {len(rec['unplanned'])} changed file(s): {shown}; "
+                    "update plan.md in the same commit when the work departs from the plan")
+    for path, blob in locked_tests(text):
+        fp = root / path
+        current = sh("git", "hash-object", str(fp), cwd=root) if fp.is_file() else None
+        ok = bool(current) and current.startswith(blob)
+        rec["locked_tests"].append({"path": path, "locked_blob": blob, "current_blob": current, "unchanged": ok})
+        if not ok:
+            failures.append(f"locked test {path} " + ("is missing" if current is None else
+                            f"changed since it was locked ({blob[:7]} -> {current[:7]}); fix the code, not the test"))
+    return rec, failures, gaps
 
 
 def repo_acs(spec: Path, repo_name: str) -> list[str]:
@@ -184,7 +290,7 @@ def cmd_run(a) -> int:
     record = {"schema": SCHEMA, "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
               "runner": runner_info(),
               "repo": {"name": repo.get("name"), "stack": repo.get("stack"), **info},
-              "jira": key, "spec": None, "checks": results, "ac_coverage": None, "fail_to_pass": None}
+              "jira": key, "spec": None, "plan": None, "checks": results, "ac_coverage": None, "fail_to_pass": None}
 
     tests_cfg = manifest.get("tests") or {}
     evidence_cfg = manifest.get("evidence") or {}
@@ -210,6 +316,14 @@ def cmd_run(a) -> int:
                 failures.append(f"AC coverage: not covered {cov.get('gaps')}" if cov else "AC coverage could not run")
         else:
             gaps.append("tests.junit_glob is not set in the manifest; AC coverage cannot be computed")
+        plan = spec.parent / "plan.md"
+        if plan.is_file():
+            ignore = PLAN_IGNORE + list(evidence_cfg.get("plan_ignore") or [])
+            record["plan"], f_, g_ = plan_check(root, plan, repo.get("name", ""), info.get("merge_base"), ignore)
+            failures += f_
+            gaps += g_
+        elif evidence_cfg.get("require_plan", True):
+            gaps.append(f"no plan.md next to the spec ({plan.relative_to(root)}): run the plan skill")
     else:
         gaps.append("no spec found (pass --spec or use a branch named after the Jira key)")
 
@@ -248,7 +362,11 @@ def render_summary(r: dict, out: Path) -> str:
              + (f" (base `{repo['merge_base'][:12]}`)" if repo.get("merge_base") else ""),
              f"- Runner: {r['runner']['kind']}" + (f" ([run]({r['runner']['ci_run_url']}))" if r['runner']['ci_run_url'] else ""),
              f"- Spec: `{r['spec']['path']}` (status: {r['spec']['status']}, sha256 `{r['spec']['sha256'][:12]}`)"
-             if r.get("spec") else "- Spec: none", "",
+             if r.get("spec") else "- Spec: none",
+             (f"- Plan: `{r['plan']['path']}` (status: {r['plan']['status']}; "
+              f"{len(r['plan']['unplanned'])} unplanned file(s); "
+              f"{sum(1 for t in r['plan']['locked_tests'] if t['unchanged'])}/{len(r['plan']['locked_tests'])} locked tests unchanged)")
+             if r.get("plan") else "- Plan: none", "",
              "| Check | Result | Time | Log sha256 |", "|---|---|---|---|"]
     for c in r["checks"]:
         res = "pass" if c["exit"] == 0 else ("FAIL" if c["required"] else "fail (optional)")
@@ -294,6 +412,53 @@ def cmd_check(a) -> int:
     return 0
 
 
+def cmd_lock(a) -> int:
+    root = Path(sh("git", "rev-parse", "--show-toplevel"))
+    if a.plan:
+        plan = (root / a.plan) if not Path(a.plan).is_absolute() else Path(a.plan)
+    else:
+        key = KEY_RE.search(sh("git", "rev-parse", "--abbrev-ref", "HEAD", cwd=root))
+        plan = root / "specs" / key.group(1).upper() / "plan.md" if key else Path("")
+    if not plan.is_file():
+        print(f"lock: plan.md not found ({plan}); pass --plan specs/<KEY>/plan.md", file=sys.stderr)
+        return 2
+    text = plan.read_text(encoding="utf-8")
+    existing = dict(locked_tests(text))
+    new_lines = []
+    for f in a.files:
+        rel = Path(os.path.relpath(Path(f).resolve(), root.resolve())).as_posix()
+        if sh("git", "status", "--porcelain", "--", rel, cwd=root):
+            print(f"lock: {rel} has uncommitted changes. Commit the failing test first, then lock it.", file=sys.stderr)
+            return 2
+        blob = sh("git", "rev-parse", f"HEAD:{rel}", cwd=root, check=False)
+        if not blob:
+            print(f"lock: {rel} is not committed", file=sys.stderr)
+            return 2
+        if rel in existing:
+            if blob.startswith(existing[rel]):
+                print(f"lock: {rel} already locked at {existing[rel]}")
+                continue
+            print(f"lock: {rel} is already locked at {existing[rel]} (now {blob[:12]}). Only a human changes an "
+                  f"existing lock, by editing plan.md.", file=sys.stderr)
+            return 2
+        new_lines.append(f"- `{rel}` @ `{blob[:12]}`")
+    if new_lines:
+        m = re.search(r"^##\s+Locked tests\s*$", text, re.IGNORECASE | re.MULTILINE)
+        if m:
+            nxt = re.search(r"^##\s", text[m.end():], re.MULTILINE)
+            end = m.end() + nxt.start() if nxt else len(text)
+            body = text[m.end():end].rstrip("\n")
+            body = re.sub(r"\n\s*None\.?\s*$", "", body)
+            body = body if body.strip() else "\n"
+            text = text[:m.end()] + body + "\n" + "\n".join(new_lines) + "\n" + ("\n" + text[end:] if nxt else "")
+        else:
+            text = text.rstrip("\n") + "\n\n## Locked tests\n\n" + "\n".join(new_lines) + "\n"
+        plan.write_text(text, encoding="utf-8")
+        print("\n".join(new_lines))
+        print(f"lock: recorded in {plan.relative_to(root)}; commit plan.md")
+    return 0
+
+
 def cmd_summary(a) -> int:
     root = Path(sh("git", "rev-parse", "--show-toplevel"))
     path = root / a.out / "summary.md"
@@ -321,9 +486,12 @@ def main(argv=None) -> int:
     c.add_argument("--docs-only-ok", action="store_true")
     s = sub.add_parser("summary")
     s.add_argument("--out", default=".ai/evidence")
+    lk = sub.add_parser("lock")
+    lk.add_argument("files", nargs="+")
+    lk.add_argument("--plan", help="default: specs/<KEY>/plan.md for the branch's Jira key")
     a = ap.parse_args(argv)
     try:
-        return {"run": cmd_run, "check": cmd_check, "summary": cmd_summary}[a.cmd](a)
+        return {"run": cmd_run, "check": cmd_check, "summary": cmd_summary, "lock": cmd_lock}[a.cmd](a)
     except (RuntimeError, OSError, ValueError) as exc:
         print(f"evidence: {exc}", file=sys.stderr)
         return 2

@@ -1,4 +1,5 @@
-# Re-runs the evidence on a clean runner for the exact PR head commit, attests it and gates the PR.
+# Re-runs the evidence on a clean runner for the exact PR head commit, attests it and gates the PR. When the gate
+# fails and AISDLC_AUTOMATION is "on", Claude triages the failure read-only and comments on the PR.
 name: ai-evidence
 on:
   pull_request:
@@ -84,3 +85,15 @@ jobs:
         env:
           BASE_REF: ${{ github.base_ref }}
           COVERAGE: ${{ steps.coverage.outcome }}
+      - name: Triage the failure (read-only)
+        if: failure() && vars.AISDLC_AUTOMATION == 'on' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            The evidence gate failed for PR #${{ github.event.pull_request.number }}. Read .ai/evidence/summary.md and the
+            logs in .ai/evidence/logs/. Identify the most likely cause, say whether it looks flaky or real, and post a
+            three-line summary on the PR with `gh pr comment`. Read-only: change nothing, re-run nothing.
+          claude_args: >-
+            --max-turns 15
+            --allowedTools "Read,Grep,Glob,Bash(gh pr comment *)"

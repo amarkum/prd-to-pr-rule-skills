@@ -32,6 +32,10 @@ tests:
 evidence:
   require_fail_to_pass: true
   min_changed_line_coverage: 80
+  require_plan: true          # plan.md must be accepted and list every changed file
+  plan_ignore: []             # extra globs that never need a plan.md line (generated code, snapshots)
+release:                       # production commands the release gate blocks without RELEASE_APPROVAL
+  production_patterns: ['npm\s+run\s+release\b']   # added to the built-in deploy+prod rule (regexes)
 protected_paths: [".github/workflows/**"]
 data:
   schema_snapshots: docs/schemas/

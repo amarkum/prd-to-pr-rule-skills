@@ -1,7 +1,10 @@
 {
   "extraKnownMarketplaces": {
     "ai-sdlc": {
-      "source": {"source": "github", "repo": "amarkum/prd-to-pr-rule-skills"},
+      "source": {
+        "source": "github",
+        "repo": "amarkum/prd-to-pr-rule-skills"
+      },
       "autoUpdate": true
     }
   },
@@ -10,7 +13,10 @@
     "sdlc-connectors@ai-sdlc": true
   },
   "strictKnownMarketplaces": [
-    {"source": "github", "repo": "amarkum/prd-to-pr-rule-skills"}
+    {
+      "source": "github",
+      "repo": "amarkum/prd-to-pr-rule-skills"
+    }
   ],
   "permissions": {
     "deny": [
@@ -25,12 +31,51 @@
   },
   "allowManagedMcpServersOnly": true,
   "allowedMcpServers": [
-    {"serverUrl": "https://mcp.atlassian.com/*"},
-    {"serverUrl": "https://mcp.sentry.dev/*"},
-    {"serverCommand": ["npx", "-y", "mongodb-mcp-server@3.1.0", "--readOnly", "--indexCheck"]},
-    {"serverCommand": ["npx", "-y", "@bytebase/dbhub@1.5.0", "--transport", "stdio", "--config", ".ai/dbhub.toml"]},
-    {"serverCommand": ["uvx", "astro-airflow-mcp@0.9.1", "--transport", "stdio"]},
-    {"serverCommand": ["npx", "-y", "@playwright/mcp@0.0.83", "--headless", "--isolated", "--output-dir", "reports/playwright-mcp"]}
+    {
+      "serverUrl": "https://mcp.atlassian.com/*"
+    },
+    {
+      "serverUrl": "https://mcp.sentry.dev/*"
+    },
+    {
+      "serverCommand": [
+        "npx",
+        "-y",
+        "mongodb-mcp-server@3.1.0",
+        "--readOnly",
+        "--indexCheck"
+      ]
+    },
+    {
+      "serverCommand": [
+        "npx",
+        "-y",
+        "@bytebase/dbhub@1.5.0",
+        "--transport",
+        "stdio",
+        "--config",
+        ".ai/dbhub.toml"
+      ]
+    },
+    {
+      "serverCommand": [
+        "uvx",
+        "astro-airflow-mcp@0.9.1",
+        "--transport",
+        "stdio"
+      ]
+    },
+    {
+      "serverCommand": [
+        "npx",
+        "-y",
+        "@playwright/mcp@0.0.83",
+        "--headless",
+        "--isolated",
+        "--output-dir",
+        "reports/playwright-mcp"
+      ]
+    }
   ],
   "env": {
     "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
@@ -40,6 +85,7 @@
     "OTEL_EXPORTER_OTLP_ENDPOINT": "https://otel-collector.example.internal:4317"
   },
   "companyAnnouncements": [
-    "AI SDLC standard v1: start a story with /sdlc-core:prd-to-pr <PRD link>. Specs need human approval; PRs need evidence."
-  ]
+    "AI SDLC standard v2: start with /sdlc-core:prd-to-pr <PRD link>. intent.md, an approved spec.md and an accepted plan.md come before code; PRs need evidence; humans merge and release."
+  ],
+  "requiredMinimumVersion": "2.1.308"
 }

@@ -9,7 +9,7 @@ description: Test and evidence standard for AI-built changes
 - A new test must fail on the base commit; `fail_to_pass.py` checks this. A test that passes before and after
   does not prove the change.
 - Never skip, delete, xfail, `.only`, or loosen assertions to get to green. If a test is wrong, fix it and
-  justify the change in the PR.
+  justify the change in the PR. Locked tests (plan.md) are never edited: fix the code, not the test.
 - Tests are deterministic: frozen time, no real network, no shared state, seeded randomness.
 - Evidence is what `evidence.py run` records for a committed HEAD, not a summary. Re-run it after every commit
   you intend to ship.

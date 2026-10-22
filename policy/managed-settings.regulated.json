@@ -1,0 +1,151 @@
+{
+  "extraKnownMarketplaces": {
+    "ai-sdlc": {
+      "source": {
+        "source": "github",
+        "repo": "amarkum/prd-to-pr-rule-skills"
+      },
+      "autoUpdate": true
+    }
+  },
+  "enabledPlugins": {
+    "sdlc-core@ai-sdlc": true,
+    "sdlc-connectors@ai-sdlc": true
+  },
+  "strictKnownMarketplaces": [
+    {
+      "source": "github",
+      "repo": "amarkum/prd-to-pr-rule-skills"
+    }
+  ],
+  "permissions": {
+    "deny": [
+      "Read(./.env*)",
+      "Read(./secrets/**)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)",
+      "WebFetch",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)"
+    ],
+    "allow": [
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)",
+      "Bash(rg *)",
+      "Bash(pytest *)",
+      "Bash(ruff *)",
+      "Bash(airflow dags test *)",
+      "Bash(airflow dags list-import-errors *)",
+      "Bash(npm test *)",
+      "Bash(npm run lint *)",
+      "Bash(npm run build *)",
+      "Bash(npx vitest *)",
+      "Bash(npx playwright test *)",
+      "Bash(npx tsc *)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr checks *)"
+    ],
+    "disableBypassPermissionsMode": "disable"
+  },
+  "allowManagedPermissionRulesOnly": true,
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true,
+    "allowUnsandboxedCommands": false,
+    "network": {
+      "allowedDomains": [
+        "github.com",
+        "api.github.com",
+        "registry.npmjs.org",
+        "pypi.org",
+        "files.pythonhosted.org",
+        "your-site.atlassian.net",
+        "mcp.atlassian.com",
+        "mcp.sentry.dev"
+      ]
+    },
+    "credentials": {
+      "files": [
+        {
+          "path": "~/.ssh",
+          "mode": "deny"
+        },
+        {
+          "path": "~/.aws/credentials",
+          "mode": "deny"
+        }
+      ],
+      "envVars": [
+        {
+          "name": "GITHUB_TOKEN",
+          "mode": "deny"
+        }
+      ]
+    }
+  },
+  "allowManagedHooksOnly": true,
+  "disableSideloadFlags": true,
+  "allowManagedMcpServersOnly": true,
+  "allowedMcpServers": [
+    {
+      "serverUrl": "https://mcp.atlassian.com/*"
+    },
+    {
+      "serverUrl": "https://mcp.sentry.dev/*"
+    },
+    {
+      "serverCommand": [
+        "npx",
+        "-y",
+        "mongodb-mcp-server@3.1.0",
+        "--readOnly",
+        "--indexCheck"
+      ]
+    },
+    {
+      "serverCommand": [
+        "npx",
+        "-y",
+        "@bytebase/dbhub@1.5.0",
+        "--transport",
+        "stdio",
+        "--config",
+        ".ai/dbhub.toml"
+      ]
+    },
+    {
+      "serverCommand": [
+        "uvx",
+        "astro-airflow-mcp@0.9.1",
+        "--transport",
+        "stdio"
+      ]
+    },
+    {
+      "serverCommand": [
+        "npx",
+        "-y",
+        "@playwright/mcp@0.0.83",
+        "--headless",
+        "--isolated",
+        "--output-dir",
+        "reports/playwright-mcp"
+      ]
+    }
+  ],
+  "requiredMinimumVersion": "2.1.308",
+  "env": {
+    "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
+    "OTEL_METRICS_EXPORTER": "otlp",
+    "OTEL_LOGS_EXPORTER": "otlp",
+    "OTEL_EXPORTER_OTLP_PROTOCOL": "grpc",
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "https://otel-collector.example.internal:4317"
+  },
+  "companyAnnouncements": [
+    "AI SDLC standard v2: start with /sdlc-core:prd-to-pr <PRD link>. intent.md, an approved spec.md and an accepted plan.md come before code; PRs need evidence; humans merge and release."
+  ]
+}

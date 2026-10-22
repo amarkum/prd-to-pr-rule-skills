@@ -1,11 +1,11 @@
 ---
 name: prd-review
-description: Checks a PRD (Confluence page or Markdown file) for completeness, testability and ambiguity before engineering starts, returns READY or NEEDS_CLARIFICATION, and reports gaps back to the product owner as concrete questions. Use when asked to review, validate, triage or score a PRD, requirements doc or Confluence spec page, and as the first stage of prd-to-pr.
+description: The Plan-stage gate: checks a PRD (Confluence page or Markdown) for completeness, testability and ambiguity, returns READY or NEEDS_CLARIFICATION with questions for the product owner, and on READY writes intent.md. Use to review, validate or score a PRD, and as the first stage of prd-to-pr.
 argument-hint: "<confluence-url | page-id | path/to/prd.md> [--post]"
 allowed-tools: Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/prd_lint.py *), Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian.py page-md *)
 ---
 
-# PRD review (the PRD gate)
+# PRD review (Stage 1: Plan)
 
 Goal: a READY / NEEDS_CLARIFICATION verdict with reasons the product owner can resolve in one pass.
 Never rewrite the PRD and never quietly "assume a reasonable default" for a blocking gap; offer the default as a question.
@@ -43,7 +43,15 @@ It returns findings, each with a severity, a question for the product owner, and
   `{key, page_id, page_version, verdict, blocking: [...], advisory: [...], reviewed_at}`.
 - If a previous `prd-review.json` exists, add a "Resolved since version N" section.
 
-## 5. NEEDS_CLARIFICATION: report back to the product owner
+## 5. READY: write the intent
+
+Write `specs/<KEY>/intent.md` from `templates/intent.md`: problem, proposed outcome, affected users and systems,
+constraints and open questions, distilled from the PRD in its own terms (the PRD stays the detailed source; Confluence
+is the source of truth and `source:` links the exact version). Set `status: accepted` only when the product owner has
+accepted it: they marked the PRD ready (the label or status that triggered this run; name it in `accepted_by`), or they
+say so in this session. Otherwise leave `status: draft` and ask them. Commit it with `prd.md` and `prd-review.md`.
+
+## 6. NEEDS_CLARIFICATION: report back to the product owner
 
 Draft the message from `templates/po-feedback.md`. **Interactive**: show it and post only after the user confirms.
 **CI or `--post`**: post it without asking.

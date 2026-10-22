@@ -3,51 +3,213 @@
   "$id": "https://github.com/amarkum/prd-to-pr-rule-skills/standards/repo-manifest.schema.json",
   "title": "AI SDLC repo manifest (.ai/repo.yaml)",
   "type": "object",
-  "required": ["schema_version", "repo", "checks", "tests"],
+  "required": [
+    "schema_version",
+    "repo",
+    "checks",
+    "tests"
+  ],
   "properties": {
-    "schema_version": {"const": 1},
+    "schema_version": {
+      "const": 1
+    },
     "repo": {
       "type": "object",
-      "required": ["name", "stack"],
+      "required": [
+        "name",
+        "stack"
+      ],
       "properties": {
-        "name": {"type": "string", "description": "Repo name as used in specs' repo-impact tables"},
-        "stack": {"enum": ["airflow", "mfe", "frontend", "backend"]},
-        "description": {"type": "string"},
-        "jira_project": {"type": "string"},
-        "default_branch": {"type": "string", "default": "main"},
-        "related_repos": {"type": "array", "items": {"type": "object", "required": ["name"],
-          "properties": {"name": {"type": "string"}, "relation": {"type": "string"}}}},
-        "mfe": {"type": ["object", "null"], "properties": {
-          "role": {"enum": ["host", "remote"]},
-          "exposes": {"type": "array", "items": {"type": "string"}},
-          "consumers": {"type": "array", "items": {"type": "string"}}}}
+        "name": {
+          "type": "string",
+          "description": "Repo name as used in specs' repo-impact tables"
+        },
+        "stack": {
+          "enum": [
+            "airflow",
+            "mfe",
+            "frontend",
+            "backend"
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "jira_project": {
+          "type": "string"
+        },
+        "default_branch": {
+          "type": "string",
+          "default": "main"
+        },
+        "related_repos": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "relation": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "mfe": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "role": {
+              "enum": [
+                "host",
+                "remote"
+              ]
+            },
+            "exposes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "consumers": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
       }
     },
     "checks": {
-      "type": "array", "minItems": 1,
-      "items": {"type": "object", "required": ["id", "run"], "properties": {
-        "id": {"type": "string"},
-        "run": {"type": "string", "description": "Shell command run from the repo root"},
-        "required": {"type": "boolean", "default": true},
-        "timeout": {"type": "integer", "default": 1800},
-        "artifacts": {"type": "array", "items": {"type": "string"}, "description": "Globs hashed into the evidence"}}}
-    },
-    "tests": {
-      "type": "object", "required": ["junit_glob", "run_files", "test_patterns"],
-      "properties": {
-        "junit_glob": {"type": "string"},
-        "run_files": {"type": "string", "pattern": "\\{files\\}", "description": "Runs given test files; {junit} enables per-test fail-to-pass"},
-        "test_patterns": {"type": "array", "items": {"type": "string"}},
-        "support_patterns": {"type": "array", "items": {"type": "string"}},
-        "link_paths": {"type": "array", "items": {"type": "string"}, "description": "e.g. node_modules, symlinked into the base worktree"}
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "run"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "run": {
+            "type": "string",
+            "description": "Shell command run from the repo root"
+          },
+          "required": {
+            "type": "boolean",
+            "default": true
+          },
+          "timeout": {
+            "type": "integer",
+            "default": 1800
+          },
+          "artifacts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Globs hashed into the evidence"
+          }
+        }
       }
     },
-    "evidence": {"type": "object", "properties": {
-      "require_fail_to_pass": {"type": "boolean", "default": true},
-      "allow_p2p_only": {"type": "boolean", "default": false},
-      "min_changed_line_coverage": {"type": "number"}}},
-    "protected_paths": {"type": "array", "items": {"type": "string"}},
-    "data": {"type": "object"},
-    "context": {"type": "object"}
+    "tests": {
+      "type": "object",
+      "required": [
+        "junit_glob",
+        "run_files",
+        "test_patterns"
+      ],
+      "properties": {
+        "junit_glob": {
+          "type": "string"
+        },
+        "run_files": {
+          "type": "string",
+          "pattern": "\\{files\\}",
+          "description": "Runs given test files; {junit} enables per-test fail-to-pass"
+        },
+        "test_patterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "support_patterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "link_paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "e.g. node_modules, symlinked into the base worktree"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "require_fail_to_pass": {
+          "type": "boolean",
+          "default": true
+        },
+        "allow_p2p_only": {
+          "type": "boolean",
+          "default": false
+        },
+        "min_changed_line_coverage": {
+          "type": "number"
+        },
+        "require_plan": {
+          "type": "boolean",
+          "default": true,
+          "description": "Fail unless specs/<KEY>/plan.md is accepted and lists every changed file"
+        },
+        "plan_ignore": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Globs that never need a line in plan.md"
+        }
+      }
+    },
+    "protected_paths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "data": {
+      "type": "object"
+    },
+    "context": {
+      "type": "object"
+    },
+    "release": {
+      "type": "object",
+      "properties": {
+        "production_patterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Regexes for production release commands; the shell guard blocks them without RELEASE_APPROVAL"
+        }
+      }
+    }
   }
 }

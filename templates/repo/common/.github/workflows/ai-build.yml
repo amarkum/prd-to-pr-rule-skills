@@ -1,25 +1,56 @@
-# Builds an approved spec headlessly and opens a draft PR with evidence. Trigger: Jira Automation when a story moves to
-# "Ready for Build" (repository_dispatch spec-approved), or manually. The plugin hooks still enforce every gate in CI.
+# Stage 3 and 4, Build and Test, headless. An approved spec (or an accepted plan) reaching the default branch, a Jira
+# Automation dispatch, or a manual run starts it. Claude writes plan.md; for a risk: high spec it opens the plan as a
+# draft PR for the tech lead and stops. Otherwise the plan is accepted as routine work (auto mode), and Claude builds
+# test-first, runs verify and opens a draft PR with evidence. The plugin hooks enforce every gate in CI too.
+# Runs only when the repository variable AISDLC_AUTOMATION is "on".
 name: ai-build
 on:
+  push:
+    branches: [main]
+    paths: ["specs/*/spec.md", "specs/*/plan.md"]
   repository_dispatch:
     types: [spec-approved]
   workflow_dispatch:
     inputs:
-      key: {description: "Jira key with an approved spec in specs/<KEY>/spec.md", required: true}
+      key: {description: "Jira key with an approved specs/<KEY>/spec.md", required: true}
 permissions:
   contents: write
   pull-requests: write
   id-token: write
-env:
-  KEY: ${{ github.event.client_payload.key || inputs.key }}
 jobs:
+  find:
+    if: vars.AISDLC_AUTOMATION == 'on'
+    runs-on: ubuntu-latest
+    outputs:
+      keys: ${{ steps.keys.outputs.keys }}
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0}
+      - id: keys
+        run: |
+          if [ -n "$INPUT_KEY" ]; then candidates="$INPUT_KEY"
+          else candidates=$(git diff --name-only "$BEFORE" "$GITHUB_SHA" -- 'specs/*/spec.md' 'specs/*/plan.md' 2>/dev/null | cut -d/ -f2 | sort -u); fi
+          ready=()
+          for k in $candidates; do
+            [[ "$k" =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ]] || continue
+            grep -qE '^status:[[:space:]]*approved' "specs/$k/spec.md" 2>/dev/null || continue
+            if [ -f "specs/$k/plan.md" ] && ! grep -qE '^status:[[:space:]]*accepted' "specs/$k/plan.md"; then continue; fi
+            git ls-remote --exit-code --heads origin "feat/$k-*" >/dev/null 2>&1 && continue   # already being built
+            ready+=("\"$k\"")
+          done
+          echo "keys=[$(IFS=,; echo "${ready[*]}")]" >> "$GITHUB_OUTPUT"
+        env:
+          INPUT_KEY: ${{ github.event.client_payload.key || inputs.key }}
+          BEFORE: ${{ github.event.before }}
   build:
+    needs: find
+    if: needs.find.outputs.keys != '[]'
+    strategy:
+      matrix:
+        key: ${{ fromJSON(needs.find.outputs.keys) }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
-      - name: Validate input
-        run: '[[ "$KEY" =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ]] || { echo "invalid Jira key"; exit 1; }'
       - uses: actions/checkout@v7
         with: {fetch-depth: 0}
       # Toolchain for the repo's checks: copy the setup and install steps from this repo's ai-evidence.yml.
@@ -35,8 +66,11 @@ jobs:
             sdlc-connectors@ai-sdlc
             stack-airflow@ai-sdlc
           prompt: |
-            /sdlc-core:prd-to-pr ${{ env.KEY }} plan
-            CI mode: the spec is approved. Run task-breakdown, build, verify and pr-open. Open the PR as a draft.
+            /sdlc-core:prd-to-pr ${{ matrix.key }} plan
+            CI mode: the spec is approved. If specs/${{ matrix.key }}/plan.md is missing, run the plan skill. When the
+            spec is risk: high, commit plan.md (status: draft) to branch plan/${{ matrix.key }}, open it as a draft PR for
+            the tech lead to accept, and stop. Otherwise record status: accepted with accepted_by: "auto (CI, risk <tier>)".
+            Then run build, verify and pr-open on branch feat/${{ matrix.key }}-<slug>. Open the PR as a draft.
             If verify still fails after two repair rounds, open no PR; report the failures instead.
           claude_args: >-
             --max-turns 200

@@ -1,5 +1,7 @@
-# PRD gate in CI. Triggered by Confluence/Jira Automation ("Send web request" -> repository_dispatch prd-ready)
-# or manually. NEEDS_CLARIFICATION -> comment on the PRD page + Jira clarification task. READY -> draft spec PR.
+# Stage 1, Plan: the PRD gate in CI. Triggered by Confluence or Jira Automation when the product owner labels the PRD
+# ready ("Send web request" -> repository_dispatch prd-ready), or manually. NEEDS_CLARIFICATION -> comment on the PRD
+# page + Jira clarification task. READY -> intent.md (linked to the PRD version) plus the Stage 2 design pass, in one
+# draft PR: the product owner already accepted the intent by labelling the page.
 name: ai-prd-intake
 on:
   repository_dispatch:
@@ -74,10 +76,12 @@ jobs:
             sdlc-core@ai-sdlc
             sdlc-connectors@ai-sdlc
           prompt: |
-            /sdlc-core:prd-to-pr ${{ env.KEY }}
-            CI mode: the PRD gate passed (specs/${{ env.KEY }}/prd-review.md). Run context-gather and spec-write, commit to
-            branch spec/${{ env.KEY }}, and open a DRAFT pull request for the spec so the tech lead can review and approve it.
-            Stop after opening the PR.
+            /sdlc-core:prd-to-pr ${{ env.KEY }} intent
+            CI mode: the PRD gate passed (specs/${{ env.KEY }}/prd-review.md) and the product owner labelled the page ready,
+            so write specs/${{ env.KEY }}/intent.md with status: accepted (source: the Confluence page and version). Then run
+            context-gather and spec-write, commit to branch spec/${{ env.KEY }}, and open a DRAFT pull request with intent.md,
+            context.md and spec.md so the product owner and tech lead can review and approve the spec. List the flagged
+            concerns and their policy owners in the PR body. Stop after opening the PR.
           claude_args: >-
             --max-turns 80
             --allowedTools "Read,Grep,Glob,Write,Edit,Agent,Skill,Bash(git *),Bash(gh pr create *),Bash(python3 *),Bash(rg *)"

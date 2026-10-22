@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """aisdlc.py - onboard product repos to the AI SDLC standard and keep them healthy.
 
-  init             scaffold a repo for its stack: AGENTS.md, CLAUDE.md, REVIEW.md, .ai/repo.yaml, .claude/settings.json
+  init             scaffold a repo for its stack: CLAUDE.md, REVIEW.md, .ai/repo.yaml, .claude/settings.json
                    (marketplace, plugins, permissions), data connectors, CI workflows, PR template, specs/, docs/knowledge/
-  vendor           copy a pinned version of the plugins into the repo's .claude/ and .cursor/ for places that don't load
-                   marketplace plugins (Claude Code cloud sessions, Cursor cloud agents, air-gapped CI)
+  vendor           copy a pinned version of the plugins into the repo's .claude/ for environments that don't install
+                   marketplace plugins (some cloud sessions, air-gapped CI)
   doctor           check a repo's setup; exit 1 on failures
   knowledge-audit  flag knowledge entries that are past review_by or missing fields; exit 1 if any
 
@@ -135,7 +135,7 @@ def cmd_init(a) -> int:
             report.append(("write", "tests/dags/test_dag_integrity.py"))
     for action, rel in report:
         print(f"{action:7} {rel}")
-    print(f"\nNext: fill the <!-- fill in --> parts of AGENTS.md, check `checks:` in .ai/repo.yaml, then run\n"
+    print(f"\nNext: fill the <!-- fill in --> parts of CLAUDE.md, check `checks:` in .ai/repo.yaml, then run\n"
           f"  python3 {Path(__file__).resolve()} doctor --target {a.target}")
     return 0
 
@@ -168,13 +168,11 @@ def cmd_vendor(a) -> int:
             copied.append(f"agent {agent.stem}")
         for script in sorted((root / "scripts").glob("*.py")) if (root / "scripts").is_dir() else []:
             shutil.copy2(script, aisdlc / "scripts" / script.name)
-        for rule in sorted((root / "rules").glob("*.mdc")) if (root / "rules").is_dir() else []:
+        for rule in sorted((root / "rules").glob("*.md")) if (root / "rules").is_dir() else []:
             shutil.copy2(rule, aisdlc / "rules" / rule.name)
-            (target / ".cursor" / "rules").mkdir(parents=True, exist_ok=True)
-            shutil.copy2(rule, target / ".cursor" / "rules" / f"aisdlc-{rule.name}")
     shutil.copy2(PLUGINS / "sdlc-core/hooks/aisdlc_hooks.py", aisdlc / "hooks" / "aisdlc_hooks.py")
 
-    # Claude Code hooks (shell form: $CLAUDE_PROJECT_DIR is exported to hooks by Claude Code and Cursor alike)
+    # Claude Code hooks (shell form: Claude Code exports $CLAUDE_PROJECT_DIR to hook processes)
     hook = 'python3 "$CLAUDE_PROJECT_DIR/.claude/aisdlc/hooks/aisdlc_hooks.py" '
     settings_path = claude / "settings.json"
     settings = plugin_settings(load_json(settings_path), a.stack, a.marketplace, enabled=False)
@@ -190,22 +188,10 @@ def cmd_vendor(a) -> int:
         "Stop": [{"hooks": [{"type": "command", "command": hook + "stop-verify", "timeout": 20}]}],
     }
     write_json(settings_path, settings)
-    # Cursor native hooks
-    cur = 'python3 .claude/aisdlc/hooks/aisdlc_hooks.py '
-    write_json(target / ".cursor" / "hooks.json", {"version": 1, "hooks": {
-        "sessionStart": [{"command": cur + "session-context --format cursor", "timeout": 20}],
-        "beforeShellExecution": [{"command": cur + "shell-guard --format cursor", "timeout": 90, "failClosed": True}],
-        "preToolUse": [{"command": cur + "edit-guard --format cursor", "matcher": "Write", "timeout": 20,
-                        "failClosed": True}],
-        "beforeMCPExecution": [{"command": cur + "pr-gate --format cursor", "timeout": 90}],
-        "stop": [{"command": cur + "stop-verify --format cursor", "timeout": 20, "loop_limit": 1}]}})
     # Org connectors into project MCP config (data connectors from init are kept)
     mcp = load_json(target / ".mcp.json")
     mcp.setdefault("mcpServers", {}).update(load_json(PLUGINS / "sdlc-connectors/.mcp.json")["mcpServers"])
     write_json(target / ".mcp.json", mcp)
-    cmcp = load_json(target / ".cursor" / "mcp.json")
-    cmcp.setdefault("mcpServers", {}).update(load_json(PLUGINS / "sdlc-connectors/mcp.json")["mcpServers"])
-    write_json(target / ".cursor" / "mcp.json", cmcp)
     sha = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
     versions = {p: load_json(PLUGINS / p / ".claude-plugin/plugin.json").get("version") for p in STACK_PLUGINS[a.stack]}
     write_json(aisdlc / "VERSION.json", {"source": a.marketplace, "commit": sha or None, "plugins": versions,
@@ -226,16 +212,13 @@ def cmd_doctor(a) -> int:
         results.append(("ok" if ok else level_if_bad, message))
 
     check("FAIL", (t / ".git").exists(), "git repository")
-    agents = t / "AGENTS.md"
-    text = agents.read_text(encoding="utf-8") if agents.is_file() else ""
-    check("FAIL", bool(text), "AGENTS.md present")
-    if text:
-        check("FAIL", "{{" not in text, "AGENTS.md has no unrendered {{placeholders}}")
-        check("WARN", "<!-- fill in" not in text, "AGENTS.md 'fill in' sections completed")
-        check("WARN", len(text.splitlines()) <= 200, f"AGENTS.md under 200 lines ({len(text.splitlines())})")
     claude_md = t / "CLAUDE.md"
-    check("WARN", claude_md.is_file() and "@AGENTS.md" in claude_md.read_text(encoding="utf-8"),
-          "CLAUDE.md imports @AGENTS.md")
+    text = claude_md.read_text(encoding="utf-8") if claude_md.is_file() else ""
+    check("FAIL", bool(text), "CLAUDE.md present")
+    if text:
+        check("FAIL", "{{" not in text, "CLAUDE.md has no unrendered {{placeholders}}")
+        check("WARN", "<!-- fill in" not in text, "CLAUDE.md 'fill in' sections completed")
+        check("WARN", len(text.splitlines()) <= 100, f"CLAUDE.md fits on a page (<=100 lines; {len(text.splitlines())})")
     manifest = t / ".ai" / "repo.yaml"
     data = None
     if manifest.is_file():

@@ -8,17 +8,14 @@ a draft PR and a learning step. Deterministic hooks enforce the gates, so they h
 |---|---|
 | `skills/` | `prd-to-pr` (orchestrator, run it with `/sdlc-core:prd-to-pr <PRD link or KEY>`), `prd-review`, `context-gather`, `spec-write`, `task-breakdown`, `build`, `verify`, `pr-open`, `learn` |
 | `agents/` | `prd-analyst`, `repo-investigator`, `qa-verifier`, `pr-reviewer` (all read-only) and `builder` |
-| `rules/` | Always-on rules. Cursor loads them natively; Claude Code gets them from the SessionStart hook |
-| `hooks/` | `hooks.json` (Claude Code) and `cursor-hooks.json` (Cursor), both calling `aisdlc_hooks.py` |
+| `rules/` | Always-on rules, injected at session start by the SessionStart hook (plugins can't ship a CLAUDE.md) |
+| `hooks/` | `hooks.json` wiring Claude Code events to `aisdlc_hooks.py` |
 | `scripts/` | `prd_lint.py`, `ac_coverage.py`, `fail_to_pass.py`, `evidence.py`, `atlassian.py`: standard library only, also used by CI |
 
 ## Install
 
 Claude Code: `/plugin marketplace add amarkum/prd-to-pr-rule-skills`, then `/plugin install sdlc-core@ai-sdlc`.
-Teams usually enable it per repo from `.claude/settings.json`; see `templates/repo/common/.claude/settings.json`.
-
-Cursor: import the repository as a team marketplace (Dashboard → Plugins), or in the CLI run
-`/plugin marketplace add <git-url>`.
+Teams usually enable it per repo from `.claude/settings.json`, which `tools/aisdlc.py init` writes.
 
 ## Requirements
 
@@ -28,7 +25,7 @@ Cursor: import the repository as a team marketplace (Dashboard → Plugins), or 
 
 - `AISDLC_HOOKS=off` turns every hook off (to repair the hooks themselves). `AISDLC_SPEC_GATE=off` turns off only the
   "no code before the spec is approved" gate.
-- Guard hooks are fail-closed in Claude Code (`onFailure: block`) and Cursor (`failClosed: true`).
+- Guard hooks are fail-closed (`onFailure: block`): if the hook can't run, the tool call is blocked.
 
 Privacy: the plugin itself sends nothing anywhere. Data leaves only through the connectors you configure
 (see `sdlc-connectors`) and through `git push` or `gh`.

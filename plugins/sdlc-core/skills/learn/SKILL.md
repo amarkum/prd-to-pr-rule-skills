@@ -21,7 +21,7 @@ Knowledge enters the standard only through a reviewed PR. Never edit rules or sk
 
 | Lesson type | Destination | Owner |
 |---|---|---|
-| Fact about this repo | `AGENTS.md` or `docs/knowledge/` in this repo | repo CODEOWNERS |
+| Fact about this repo | `CLAUDE.md` or `docs/knowledge/` in this repo | repo CODEOWNERS |
 | Stack convention or pitfall | stack skill or knowledge entry in the standard repo (`knowledge/<stack>/`) | stack guild |
 | Workflow gap | `sdlc-core` skill or rubric | platform team |
 | PRD template or rubric gap | `standards/prd-template.md`, prd-review rubric | product ops |

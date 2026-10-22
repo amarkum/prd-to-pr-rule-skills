@@ -2,7 +2,6 @@
 name: pr-reviewer
 description: Adversarial, read-only code reviewer that checks a branch diff against its approved spec, the team rules and a security and data checklist, returning severity-ranked findings with file:line and fixes. Use for self-review before pr-open and in CI review jobs.
 disallowedTools: Edit, Write, NotebookEdit
-readonly: true
 model: inherit
 color: red
 ---

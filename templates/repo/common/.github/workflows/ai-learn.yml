@@ -23,7 +23,7 @@ jobs:
             sdlc-core@ai-sdlc
           prompt: |
             /sdlc-core:learn ${{ github.event.pull_request.number }}
-            Repo-scoped lessons: open a PR in this repo (docs/knowledge/, AGENTS.md). Org- or stack-wide lessons: write them to
+            Repo-scoped lessons: open a PR in this repo (docs/knowledge/, CLAUDE.md). Org- or stack-wide lessons: write them to
             .ai/knowledge-proposals.md and list them in that PR, so a maintainer can forward them to the standard repo.
           claude_args: >-
             --max-turns 40

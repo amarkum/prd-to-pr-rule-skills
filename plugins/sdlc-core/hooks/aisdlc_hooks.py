@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """aisdlc_hooks.py - deterministic guardrails for the PRD-to-PR workflow.
 
-One script, both tools. Claude Code and Cursor call it with a subcommand and
---format; it reads the hook payload from stdin and answers in that tool's format.
+Claude Code calls it with a subcommand (see hooks/hooks.json); it reads the hook payload
+from stdin and answers with Claude Code's hook JSON.
 
   shell-guard      block irreversible / outward / secret-reading shell commands; gate PR creation
   edit-guard       block secrets, hand-edited evidence, weakened tests, code before an approved spec
@@ -96,8 +96,7 @@ DENY_PATHS = [
     (r"\.(?:pem|p12|pfx|key)$|(?:^|/)id_(?:rsa|ed25519)", "Do not write key material."),
 ]
 ASK_PATHS = [
-    (r"(?:^|/)\.claude/settings(?:\.local)?\.json$|(?:^|/)\.cursor/(?:hooks\.json|hooks/|cli\.json)",
-     "This file controls the agent's own guardrails."),
+    (r"(?:^|/)\.claude/settings(?:\.local)?\.json$|(?:^|/)\.claude/aisdlc/", "This file controls the agent's own guardrails."),
     (r"(?:^|/)\.github/workflows/|(?:^|/)CODEOWNERS$|(?:^|/)\.github/CODEOWNERS$", "CI and ownership changes need a human."),
     (r"(?:^|/)(?:migrations|alembic/versions|db/migrate)/", "Database migrations need explicit approval."),
 ]
@@ -115,11 +114,9 @@ def read_payload() -> dict:
 
 
 def project_dir(payload: dict) -> Path:
-    for var in ("CLAUDE_PROJECT_DIR", "CURSOR_PROJECT_DIR"):
-        if os.environ.get(var):
-            return Path(os.environ[var])
-    roots = payload.get("workspace_roots") or []
-    return Path(payload.get("cwd") or (roots[0] if roots else os.getcwd()))
+    if os.environ.get("CLAUDE_PROJECT_DIR"):
+        return Path(os.environ["CLAUDE_PROJECT_DIR"])
+    return Path(payload.get("cwd") or os.getcwd())
 
 
 def out(obj: dict | None) -> int:
@@ -128,16 +125,8 @@ def out(obj: dict | None) -> int:
     return 0
 
 
-def decision(fmt: str, event: str, verdict: str | None, reason: str = "") -> int:
+def decision(verdict: str | None, reason: str = "") -> int:
     """verdict: None (no opinion), 'deny' or 'ask'."""
-    if fmt == "cursor":
-        if verdict is None:
-            return out({"permission": "allow"})
-        # Cursor does not enforce 'ask' on preToolUse; deny there with an explanation instead.
-        if verdict == "ask" and event == "preToolUse":
-            verdict, reason = "deny", reason + " Ask the developer to run or approve this step."
-        msg = f"[ai-sdlc] {reason}"
-        return out({"permission": verdict, "user_message": msg, "agent_message": msg})
     if verdict is None:
         return 0  # no output: Claude Code's normal permission flow continues
     return out({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": verdict,
@@ -195,31 +184,26 @@ def rel(path: str, cwd: Path) -> str:
 
 # ---------------------------------------------------------------- guards
 
-def shell_guard(payload: dict, fmt: str) -> int:
-    event = "beforeShellExecution" if fmt == "cursor" else "PreToolUse"
-    cmd = payload.get("command") or (payload.get("tool_input") or {}).get("command") or ""
+def shell_guard(payload: dict) -> int:
+    cmd = (payload.get("tool_input") or {}).get("command") or ""
     cwd = project_dir(payload)
     for pattern, verdict, reason in SHELL_RULES:
         if re.search(pattern, cmd):
-            return decision(fmt, event, verdict, reason)
+            return decision(verdict, reason)
     if re.search(r"\bgit\s+push\b", cmd) and re.fullmatch(
             r"main|master|develop|production|release/[\w.-]+", git(cwd, "rev-parse", "--abbrev-ref", "HEAD")):
-        return decision(fmt, event, "deny", "You are on a protected branch. Create a feature branch named after the Jira key.")
+        return decision("deny", "You are on a protected branch. Create a feature branch named after the Jira key.")
     if re.search(r"\bgh\s+pr\s+create\b", cmd):
         if not re.search(r"\s(?:--draft|-d)\b", cmd):
-            return decision(fmt, event, "deny", "Agents open draft PRs only: add --draft.")
+            return decision("deny", "Agents open draft PRs only: add --draft.")
         ok, detail = evidence_check(cwd)
         if not ok:
-            return decision(fmt, event, "deny", "No passing evidence for this commit. Run the verify skill "
+            return decision("deny", "No passing evidence for this commit. Run the verify skill "
                                                 f"(evidence.py run) and commit first.\n{detail}")
-    return decision(fmt, event, None)
+    return decision(None)
 
 
-def pr_gate(payload: dict, fmt: str) -> int:
-    event = "beforeMCPExecution" if fmt == "cursor" else "PreToolUse"
-    tool = str(payload.get("tool_name", ""))
-    if fmt == "cursor" and not re.search(r"create_pull_request", tool):
-        return decision(fmt, event, None)
+def pr_gate(payload: dict) -> int:
     params = payload.get("tool_input") or {}
     if isinstance(params, str):
         try:
@@ -227,20 +211,20 @@ def pr_gate(payload: dict, fmt: str) -> int:
         except ValueError:
             params = {}
     if params.get("draft") is not True:
-        return decision(fmt, event, "deny", "Agents open draft PRs only: set draft: true.")
+        return decision("deny", "Agents open draft PRs only: set draft: true.")
     ok, detail = evidence_check(project_dir(payload))
     if not ok:
-        return decision(fmt, event, "deny", f"No passing evidence for this commit. Run the verify skill first.\n{detail}")
-    return decision(fmt, event, None)
+        return decision("deny", f"No passing evidence for this commit. Run the verify skill first.\n{detail}")
+    return decision(None)
 
 
 def edit_texts(tool_input: dict) -> tuple[str, str]:
-    """(old_text, new_text) across Claude Write/Edit/MultiEdit/NotebookEdit and Cursor Write shapes."""
+    """(old_text, new_text) across the Write, Edit, MultiEdit and NotebookEdit input shapes."""
     old_parts, new_parts = [], []
     for k in ("old_string",):
         if isinstance(tool_input.get(k), str):
             old_parts.append(tool_input[k])
-    for k in ("content", "contents", "new_string", "new_source", "code_edit", "text"):
+    for k in ("content", "new_string", "new_source"):
         if isinstance(tool_input.get(k), str):
             new_parts.append(tool_input[k])
     for e in tool_input.get("edits") or []:
@@ -250,8 +234,7 @@ def edit_texts(tool_input: dict) -> tuple[str, str]:
     return "\n".join(old_parts), "\n".join(new_parts)
 
 
-def edit_guard(payload: dict, fmt: str) -> int:
-    event = "preToolUse" if fmt == "cursor" else "PreToolUse"
+def edit_guard(payload: dict) -> int:
     ti = payload.get("tool_input") or {}
     if isinstance(ti, str):
         try:
@@ -259,24 +242,24 @@ def edit_guard(payload: dict, fmt: str) -> int:
         except ValueError:
             ti = {}
     cwd = project_dir(payload)
-    raw_path = ti.get("file_path") or ti.get("path") or ti.get("notebook_path") or ti.get("target_file") or ""
+    raw_path = ti.get("file_path") or ti.get("notebook_path") or ""
     path = rel(str(raw_path), cwd) if raw_path else ""
     old, new = edit_texts(ti)
 
     for pattern, reason in DENY_PATHS:
         if path and re.search(pattern, path):
-            return decision(fmt, event, "deny", f"{path}: {reason}")
+            return decision("deny", f"{path}: {reason}")
     for name, pattern in SECRET_PATTERNS:
         if re.search(pattern, new):
-            return decision(fmt, event, "deny", f"The new content contains what looks like a {name}. "
+            return decision("deny", f"The new content contains what looks like a {name}. "
                                                 "Use an environment variable or secret manager reference.")
     if path and TEST_FILE_RE.search(path):
         before = old
-        if not old and (cwd / path).is_file() and any(k in ti for k in ("content", "contents")):
+        if not old and (cwd / path).is_file() and "content" in ti:
             before = (cwd / path).read_text(encoding="utf-8", errors="replace")
         added = len(SKIP_RE.findall(new)) - len(SKIP_RE.findall(before))
         if added > 0 and not ALLOW_SKIP_RE.search(new):
-            return decision(fmt, event, "deny",
+            return decision("deny",
                             "This edit adds skip/only/xfail markers to tests. Fix the code or the test instead; "
                             "if a skip is genuinely required, put `aisdlc: allow-skip <reason + ticket>` on that line "
                             "and call it out in the PR.")
@@ -284,18 +267,18 @@ def edit_guard(payload: dict, fmt: str) -> int:
         approve = re.compile(r"^status:\s*['\"]?approved", re.MULTILINE)
         before = old or ((cwd / path).read_text(encoding="utf-8", errors="replace") if (cwd / path).is_file() else "")
         if approve.search(new) and not approve.search(before):
-            return decision(fmt, event, "deny", "Approving a spec is a human decision. Ask the tech lead to set "
+            return decision("deny", "Approving a spec is a human decision. Ask the tech lead to set "
                                                 "`status: approved` / `approved_by` themselves (or approve the spec PR).")
     if path and os.environ.get("AISDLC_SPEC_GATE", "on") != "off" and not SPEC_FREE_RE.search(path):
         spec, status = spec_status(cwd, branch_key(cwd))
         if spec is not None and status != "approved":
-            return decision(fmt, event, "deny",
+            return decision("deny",
                             f"{spec.relative_to(cwd)} is '{status}', not 'approved'. No code before the spec is approved: "
                             "get the spec reviewed (set status: approved with approved_by), or work only in specs/.")
     for pattern, reason in ASK_PATHS:
         if path and re.search(pattern, path):
-            return decision(fmt, event, "ask", f"{path}: {reason}")
-    return decision(fmt, event, None)
+            return decision("ask", f"{path}: {reason}")
+    return decision(None)
 
 
 # ---------------------------------------------------------------- context & stop
@@ -329,17 +312,16 @@ def evidence_state(cwd: Path) -> str:
 
 
 def core_rules() -> str:
-    """Bodies of the plugin's alwaysApply rules. Cursor loads rules/ natively; Claude Code gets them here."""
+    """Bodies of the plugin's always-on rules (rules/*.md). Plugins can't ship CLAUDE.md, so they arrive here."""
     parts = []
-    for path in sorted((PLUGIN_ROOT / "rules").glob("*.mdc")):
+    for path in sorted((PLUGIN_ROOT / "rules").glob("*.md")):
         text = path.read_text(encoding="utf-8", errors="replace")
-        fm = re.match(r"^---\s*\n(.*?)\n---\s*\n", text, re.DOTALL)
-        if fm and re.search(r"^alwaysApply:\s*true\s*$", fm.group(1), re.MULTILINE):
-            parts.append(text[fm.end():].strip())
+        fm = re.match(r"^---\s*\n.*?\n---\s*\n", text, re.DOTALL)
+        parts.append(text[fm.end() if fm else 0:].strip())
     return "\n\n".join(parts)
 
 
-def session_context(payload: dict, fmt: str) -> int:
+def session_context(payload: dict) -> int:
     cwd = project_dir(payload)
     m = manifest_summary(cwd)
     repo = m.get("repo") or {}
@@ -358,52 +340,46 @@ def session_context(payload: dict, fmt: str) -> int:
         lines.append(f"Branch is for {key}; spec: {spec.relative_to(cwd) if spec else 'not found'}"
                      + (f" (status: {status})" if status else "") + f"; evidence: {evidence_state(cwd)}.")
     text = "\n".join(lines)
-    if fmt == "claude" and not os.environ.get("CURSOR_VERSION"):
-        rules = core_rules()
-        if rules:
-            text += "\n\n" + rules
-    if fmt == "cursor":
-        return out({"additional_context": text})
+    rules = core_rules()
+    if rules:
+        text += "\n\n" + rules
     return out({"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": text}})
 
 
-def stop_verify(payload: dict, fmt: str) -> int:
+def stop_verify(payload: dict) -> int:
     cwd = project_dir(payload)
-    if payload.get("stop_hook_active") or int(payload.get("loop_count") or 0) >= 1:
-        return 0 if fmt != "cursor" else out({})
+    if payload.get("stop_hook_active"):
+        return 0
     key = branch_key(cwd)
     spec, status = spec_status(cwd, key)
     if spec is None or status != "approved":
-        return 0 if fmt != "cursor" else out({})
+        return 0
     changed = [ln[3:] for ln in git(cwd, "status", "--porcelain").splitlines()
                if ln[3:] and not SPEC_FREE_RE.search(ln[3:]) and not ln[3:].startswith(".ai/")]
     state = evidence_state(cwd)
     if not changed and state.startswith("pass"):
-        return 0 if fmt != "cursor" else out({})
+        return 0
     msg = (f"[ai-sdlc] {key}: code changed but evidence is '{state}'"
            + (f" and {len(changed)} file(s) are uncommitted" if changed else "")
            + ". Before finishing: commit, run the verify skill, and report the evidence verdict. "
              "If you are intentionally stopping mid-task, say so explicitly.")
-    if fmt == "cursor":
-        return out({"followup_message": msg})
     return out({"decision": "block", "reason": msg})
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("command", choices=["shell-guard", "edit-guard", "pr-gate", "session-context", "stop-verify"])
-    ap.add_argument("--format", choices=["claude", "cursor"], default="claude")
     args = ap.parse_args()
     if os.environ.get("AISDLC_HOOKS", "on") == "off":
-        return out({"permission": "allow"}) if args.format == "cursor" and "guard" in args.command else 0
+        return 0
     payload = read_payload()
     handler = {"shell-guard": shell_guard, "edit-guard": edit_guard, "pr-gate": pr_gate,
                "session-context": session_context, "stop-verify": stop_verify}[args.command]
     try:
-        return handler(payload, args.format)
+        return handler(payload)
     except Exception as exc:  # a crashing guard must not wedge the session; report and fail open
         print(f"[ai-sdlc] hook {args.command} error: {exc}", file=sys.stderr)
-        return out({"permission": "allow"}) if args.format == "cursor" and "guard" in args.command else 0
+        return 0
 
 
 if __name__ == "__main__":

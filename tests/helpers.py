@@ -66,8 +66,8 @@ def script(name: str, *args: str, cwd: Path | None = None, env: dict | None = No
     return run([sys.executable, str(SCRIPTS / name), *args], cwd=cwd, env=env)
 
 
-def hook(command: str, payload: dict, cwd: Path, fmt: str = "claude", env: dict | None = None):
-    res = run([sys.executable, str(HOOKS), command, "--format", fmt], cwd=cwd, stdin=json.dumps(payload),
+def hook(command: str, payload: dict, cwd: Path, env: dict | None = None):
+    res = run([sys.executable, str(HOOKS), command], cwd=cwd, stdin=json.dumps(payload),
               env={"CLAUDE_PROJECT_DIR": str(cwd), **(env or {})})
     return json.loads(res.stdout) if res.stdout.strip() else None
 

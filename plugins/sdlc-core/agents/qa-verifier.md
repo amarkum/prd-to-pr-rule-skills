@@ -2,7 +2,6 @@
 name: qa-verifier
 description: Independent, read-only QA verifier. Re-checks evidence integrity and judges whether the tests actually prove each acceptance criterion (no tautologies, no mocking of the unit under test, unhappy paths covered). Use after verify passes and before a PR is opened.
 disallowedTools: Edit, Write, NotebookEdit
-readonly: true
 model: inherit
 color: yellow
 ---

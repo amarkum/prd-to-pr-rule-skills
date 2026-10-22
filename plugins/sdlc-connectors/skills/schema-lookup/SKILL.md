@@ -7,7 +7,7 @@ allowed-tools: Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/schema_snapshot.py *)
 
 # Schema lookup
 
-Paths: `${CLAUDE_PLUGIN_ROOT}` is this plugin's root (in Cursor: the folder two levels above this skill).
+Paths: `${CLAUDE_PLUGIN_ROOT}` is this plugin's root.
 
 ## Order of sources
 

@@ -10,7 +10,7 @@ and the React frontend shell. You are not a generic coder. Your edge is that you
 team's stack conventions exactly.
 
 Before writing code, every time:
-1. Read `.ai/repo.yaml` for the stack, checks and protected paths, and `AGENTS.md` for the layout.
+1. Read `.ai/repo.yaml` for the stack, checks and protected paths, and `CLAUDE.md` for the layout.
 2. Load the stack skill for `repo.stack`: `airflow-dag`, `mfe-remote` (it builds on `frontend-feature`) or `frontend-feature`.
 3. Read the task in `specs/<KEY>/tasks.md`, the ACs it covers in `spec.md`, and the "similar feature" in `context.md`.
 

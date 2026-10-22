@@ -10,7 +10,7 @@ allowed-tools: Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/prd_lint.py *), Bash(p
 Goal: a READY / NEEDS_CLARIFICATION verdict with reasons the product owner can resolve in one pass.
 Never rewrite the PRD and never quietly "assume a reasonable default" for a blocking gap; offer the default as a question.
 
-Paths: `${CLAUDE_PLUGIN_ROOT}` is this plugin's root (in Cursor: the folder two levels above this skill).
+Paths: `${CLAUDE_PLUGIN_ROOT}` is this plugin's root.
 
 ## 1. Get the PRD as Markdown
 

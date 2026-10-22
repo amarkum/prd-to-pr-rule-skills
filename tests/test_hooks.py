@@ -11,11 +11,7 @@ def bash(cmd: str):
 
 
 def verdict(resp):
-    if resp is None:
-        return None
-    if "hookSpecificOutput" in resp:
-        return resp["hookSpecificOutput"].get("permissionDecision")
-    return resp.get("permission")
+    return None if resp is None else resp["hookSpecificOutput"].get("permissionDecision")
 
 
 class ShellGuardTests(unittest.TestCase):
@@ -78,13 +74,6 @@ class ShellGuardTests(unittest.TestCase):
         self.assertEqual(verdict(resp), "deny")
         self.assertIn("No passing evidence", resp["hookSpecificOutput"]["permissionDecisionReason"])
 
-    def test_cursor_format(self):
-        resp = hook("shell-guard", {"command": "git push origin main", "cwd": str(self.root)}, self.root, fmt="cursor")
-        self.assertEqual(resp["permission"], "deny")
-        self.assertIn("agent_message", resp)
-        ok = hook("shell-guard", {"command": "ls", "cwd": str(self.root)}, self.root, fmt="cursor")
-        self.assertEqual(ok, {"permission": "allow"})
-
     def test_bare_push_on_protected_branch(self):
         git(self.root, "checkout", "-q", "main")
         try:
@@ -105,13 +94,13 @@ class EditGuardTests(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def edit(self, path, new, old=None, fmt="claude"):
+    def edit(self, path, new, old=None):
         ti = {"file_path": str(self.root / path)}
         if old is None:
             ti["content"] = new
         else:
             ti.update(old_string=old, new_string=new)
-        return hook("edit-guard", {"tool_name": "Write" if old is None else "Edit", "tool_input": ti}, self.root, fmt)
+        return hook("edit-guard", {"tool_name": "Write" if old is None else "Edit", "tool_input": ti}, self.root)
 
     def test_evidence_and_secrets_denied(self):
         self.assertEqual(verdict(self.edit(".ai/evidence/manifest.json", "{}")), "deny")
@@ -150,12 +139,10 @@ class EditGuardTests(unittest.TestCase):
         self.assertIsNone(verdict(self.edit("specs/PAY-412/spec.md", "## 10. Open questions\nNone.",
                                             old="## 10. Open questions")))
 
-    def test_guardrail_files_ask_and_cursor_turns_ask_into_deny(self):
+    def test_guardrail_files_ask(self):
         self.assertEqual(verdict(self.edit(".github/workflows/ci.yml", "on: push")), "ask")
         self.assertEqual(verdict(self.edit(".claude/settings.json", "{}")), "ask")
-        resp = self.edit(".github/workflows/ci.yml", "on: push", fmt="cursor")
-        self.assertEqual(resp["permission"], "deny")
-        self.assertIn("Ask the developer", resp["agent_message"])
+        self.assertEqual(verdict(self.edit(".claude/aisdlc/hooks/aisdlc_hooks.py", "pass")), "ask")
 
 
 class ContextAndStopTests(unittest.TestCase):
@@ -170,14 +157,14 @@ class ContextAndStopTests(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def test_session_context_both_formats(self):
-        claude = hook("session-context", {"source": "startup"}, self.root)
-        text = claude["hookSpecificOutput"]["additionalContext"]
+    def test_session_context(self):
+        resp = hook("session-context", {"source": "startup"}, self.root)
+        text = resp["hookSpecificOutput"]["additionalContext"]
         self.assertIn("stack: airflow", text)
         self.assertIn("PAY-412", text)
         self.assertIn("evidence: none", text)
-        cursor = hook("session-context", {"session_id": "s"}, self.root, fmt="cursor")
-        self.assertIn("stack: airflow", cursor["additional_context"])
+        self.assertIn("Security and data (always on)", text)   # plugin rules are injected
+        self.assertNotIn("description:", text)                 # without their front matter
 
     def test_stop_asks_for_verification_once(self):
         write(self.root, "app/status.py", "X = 2\n")
@@ -185,8 +172,6 @@ class ContextAndStopTests(unittest.TestCase):
         self.assertEqual(resp["decision"], "block")
         self.assertIn("verify", resp["reason"])
         self.assertIsNone(hook("stop-verify", {"stop_hook_active": True}, self.root))
-        cursor = hook("stop-verify", {"status": "completed", "loop_count": 0}, self.root, fmt="cursor")
-        self.assertIn("followup_message", cursor)
 
     def test_pr_gate_for_mcp(self):
         resp = hook("pr-gate", {"tool_name": "mcp__github__create_pull_request",

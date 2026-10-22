@@ -1,6 +1,5 @@
 ---
 description: Security and data handling rules for coding agents
-alwaysApply: true
 ---
 # Security and data (always on)
 

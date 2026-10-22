@@ -236,20 +236,20 @@ footer { border-top: 1px solid var(--line); padding-top: 18px; font-size: 13.5px
 <header class="masthead">
   <div class="eyebrow">AI SDLC STANDARD · VERSION 1.0 · 22 OCTOBER 2026</div>
   <h1>PRD to PR Playbook</h1>
-  <p class="lede">How a Confluence PRD becomes a reviewed pull request with test evidence, using Claude Code or Cursor,
+  <p class="lede">How a Confluence PRD becomes a reviewed pull request with test evidence, using Claude Code,
   across the Airflow data repo, the micro-frontends and the frontend shell. Everything described here exists in the
-  <code>prd-to-pr-rule-skills</code> repository and was tested. Section 18 lists what still needs checking in your environment.</p>
+  <code>prd-to-pr-rule-skills</code> repository and was tested. Section 17 lists what still needs checking in your environment.</p>
   <div class="meta">
     <span><b>Owner</b> Engineering Platform</span>
     <span><b>Source</b> <a href="https://github.com/amarkum/prd-to-pr-rule-skills">github.com/amarkum/prd-to-pr-rule-skills</a></span>
     <span><b>Supersedes</b> the draft "AI-Native Engineering Implementation Plan" (see section 2)</span>
   </div>
   <div class="stats" aria-label="What the repository contains">
-    <span class="stat"><strong>5</strong> plugins, one repo for Claude Code and Cursor</span>
+    <span class="stat"><strong>5</strong> plugins in one Claude Code marketplace</span>
     <span class="stat"><strong>14</strong> skills</span>
     <span class="stat"><strong>5</strong> subagents</span>
     <span class="stat"><strong>5</strong> enforcing hooks</span>
-    <span class="stat"><strong>77</strong> unit tests, Python 3.9 and 3.13</span>
+    <span class="stat"><strong>76</strong> unit tests, Python 3.9 and 3.13</span>
     <span class="stat"><strong>3</strong> behavioural evals, all passing</span>
   </div>
 </header>
@@ -270,12 +270,11 @@ footer { border-top: 1px solid var(--line); padding-top: 18px; font-size: 13.5px
     <li><a href="#knowledge"><span>10</span>Compounding knowledge</a></li>
     <li><a href="#setups"><span>11</span>Setups to try</a></li>
     <li><a href="#claude-code"><span>12</span>Claude Code features</a></li>
-    <li><a href="#cursor"><span>13</span>Cursor features</a></li>
-    <li><a href="#enterprise"><span>14</span>Running it in an enterprise</a></li>
-    <li><a href="#rollout"><span>15</span>Rollout and metrics</a></li>
-    <li><a href="#others"><span>16</span>What others do</a></li>
-    <li><a href="#antipatterns"><span>17</span>What doesn't work</a></li>
-    <li><a href="#verified"><span>18</span>What was verified</a></li>
+    <li><a href="#enterprise"><span>13</span>Running it in an enterprise</a></li>
+    <li><a href="#rollout"><span>14</span>Rollout and metrics</a></li>
+    <li><a href="#others"><span>15</span>What others do</a></li>
+    <li><a href="#antipatterns"><span>16</span>What doesn't work</a></li>
+    <li><a href="#verified"><span>17</span>What was verified</a></li>
   </ol>
 </nav>
 
@@ -285,9 +284,9 @@ footer { border-top: 1px solid var(--line); padding-top: 18px; font-size: 13.5px
   <div class="secno">1</div>
   <h2>The recommendation</h2>
   <ol class="decisions">
-    <li><div><strong>Use the agent runtimes you already have as the platform.</strong> Claude Code and Cursor already provide
+    <li><div><strong>Use the agent runtimes you already have as the platform.</strong> Claude Code already provides
       sandboxing, permissions, subagents, hooks, MCP connectors and headless CI. Package the process as one versioned plugin
-      repository that both tools install. Build a custom orchestrator later, and only if volume or cross-repo coordination demands it.</div></li>
+      marketplace that every repo enables. Build a custom orchestrator later, and only if volume or cross-repo coordination demands it.</div></li>
     <li><div><strong>Three human gates, enforced by code.</strong> The PRD is ready (the product owner has answered the
       questions), the spec is approved (by the tech lead), and the PR is merged (by code owners). Agents do the work between
       the gates. Hooks stop them from skipping a gate or approving their own spec.</div></li>
@@ -299,7 +298,7 @@ footer { border-top: 1px solid var(--line); padding-top: 18px; font-size: 13.5px
       artifacts, and posts the verdict on the PR.</div></li>
     <li><div><strong>Knowledge compounds through pull requests.</strong> Every lesson becomes a reviewed entry with an
       owner and an expiry date. A lesson that recurs becomes a rule, and then an automated check.</div></li>
-    <li><div><strong>Start small and measure.</strong> Spend two weeks on Setup B (section 11) with one repo per stack.
+    <li><div><strong>Start small and measure.</strong> Spend two weeks on Setup A (section 11) with one repo per stack.
       Compare lead time, rework and escaped defects with the last 20 comparable tickets before automating any triggers.</div></li>
   </ol>
 </section>
@@ -314,9 +313,9 @@ footer { border-top: 1px solid var(--line); padding-top: 18px; font-size: 13.5px
   <div class="tw"><table class="wide">
     <thead><tr><th>Topic</th><th>Draft plan</th><th>This playbook</th><th>Why</th></tr></thead>
     <tbody>
-      <tr><td>Build path</td><td class="plain">16 weeks; orchestrator, durable workflow engine and six agent services before scaling</td><td class="plain">A plugin on Claude Code and Cursor from week 1; Jira statuses hold the workflow state; an orchestrator later, if needed</td><td class="plain">The runtimes already do sandboxing, permissions, subagents, hooks and headless CI. The first real PR arrives in weeks, not months.</td></tr>
+      <tr><td>Build path</td><td class="plain">16 weeks; orchestrator, durable workflow engine and six agent services before scaling</td><td class="plain">A Claude Code plugin from week 1; Jira statuses hold the workflow state; an orchestrator later, if needed</td><td class="plain">The runtimes already do sandboxing, permissions, subagents, hooks and headless CI. The first real PR arrives in weeks, not months.</td></tr>
       <tr><td>PRD validation</td><td class="plain">"Completeness validator"</td><td class="plain">Deterministic lint (15 sections, placeholders, Given/When/Then, vague terms, numbers, open questions) plus a rubric-based LLM review; questions go to the product owner with suggested defaults; the gate re-runs on each new page version</td><td class="plain">The product owner gets consistent feedback they can act on in one pass.</td></tr>
-      <tr><td>Repo knowledge</td><td class="plain">Repository manifests, architecture map</td><td class="plain"><code>.ai/repo.yaml</code> read by hooks, scripts, agents and CI; <code>AGENTS.md</code> for human-readable facts; schema snapshots in git</td><td class="plain">One file answers "how do I build, test and verify this repo" for people and machines.</td></tr>
+      <tr><td>Repo knowledge</td><td class="plain">Repository manifests, architecture map</td><td class="plain"><code>.ai/repo.yaml</code> read by hooks, scripts, agents and CI; <code>CLAUDE.md</code> for human-readable facts; schema snapshots in git</td><td class="plain">One file answers "how do I build, test and verify this repo" for people and machines.</td></tr>
       <tr><td>Agents</td><td class="plain">Six agent services</td><td class="plain">Five subagents and fourteen skills inside one runtime; the analysts are read-only through tool restrictions</td><td class="plain">Cheaper to change, and separation of duties without new infrastructure.</td></tr>
       <tr><td>Evidence</td><td class="plain">Evidence bundle in the PR</td><td class="plain">Evidence protocol: AC-named tests, fail-to-pass against the merge-base, changed-line coverage, a hashed manifest, a CI re-run at the head SHA, attestation</td><td class="plain">Green CI can hide weak tests: 15–28% of "passing" patches in public benchmarks were wrong (UTBoost).</td></tr>
       <tr><td>Learning loop</td><td class="plain">"Curated reusable solution library"</td><td class="plain">Knowledge entries with an owner and a review date, a promotion ladder to rules and checks, a weekly staleness audit</td><td class="plain">Repeated review comments turn into checks instead of wiki pages.</td></tr>
@@ -434,31 +433,31 @@ footer { border-top: 1px solid var(--line); padding-top: 18px; font-size: 13.5px
   that, from the organisation down to a single developer.</p>
   <div class="layers">
     <div class="layer"><h4>Enterprise policy<small>managed settings · MDM · team settings</small></h4><p>Which marketplaces and MCP servers are allowed, org-wide deny rules, no bypass mode, telemetry. Developers can't override it. <code>policy/managed-settings.json</code></p></div>
-    <div class="layer"><h4>The standard<small>plugin marketplace · this repo</small></h4><p>Always-on rules, skills, subagents, hooks, scripts and org connectors, versioned and installed into Claude Code and Cursor from one source. <code>plugins/</code></p></div>
-    <div class="layer"><h4>The repo<small>committed with the code</small></h4><p>Facts and wiring for one codebase: <code>AGENTS.md</code>, <code>.ai/repo.yaml</code>, data connectors in <code>.mcp.json</code>, <code>specs/</code>, schema snapshots, CI workflows. Written by <code>tools/aisdlc.py init</code>.</p></div>
+    <div class="layer"><h4>The standard<small>plugin marketplace · this repo</small></h4><p>Always-on rules, skills, subagents, hooks, scripts and org connectors, versioned and installed into Claude Code from one marketplace. <code>plugins/</code></p></div>
+    <div class="layer"><h4>The repo<small>committed with the code</small></h4><p>Facts and wiring for one codebase: <code>CLAUDE.md</code>, <code>REVIEW.md</code>, <code>.ai/repo.yaml</code>, data connectors in <code>.mcp.json</code>, <code>specs/</code>, schema snapshots, CI workflows. Written by <code>tools/aisdlc.py init</code>.</p></div>
     <div class="layer"><h4>The developer<small>personal, never committed</small></h4><p>Credentials in environment variables, local services (Docker Mongo, a local Airflow), personal preferences in user settings.</p></div>
   </div>
   <div class="tw"><table class="wide">
-    <thead><tr><th>Mechanism</th><th>Put here</th><th>Keep out</th><th>Claude Code</th><th>Cursor</th><th>Loaded</th></tr></thead>
+    <thead><tr><th>Mechanism</th><th>Put here</th><th>Keep out</th><th>Claude Code</th><th>Loaded</th></tr></thead>
     <tbody>
-      <tr><td>Repo facts</td><td class="plain">What the repo is, its layout, commands, local conventions</td><td class="plain">Org rules, procedures, secrets</td><td class="plain"><code>CLAUDE.md</code> containing <code>@AGENTS.md</code></td><td class="plain"><code>AGENTS.md</code> (also reads <code>CLAUDE.md</code>)</td><td class="plain">Every session</td></tr>
-      <tr><td>Repo manifest</td><td class="plain">Stack, check commands, test runner for given files, JUnit paths, protected paths, data env vars</td><td class="plain">Prose</td><td class="plain" colspan="2"><code>.ai/repo.yaml</code>: read by hooks, <code>evidence.py</code>, agents and CI</td><td class="plain">On demand</td></tr>
-      <tr><td>Rules</td><td class="plain">Short non-negotiables for every task: workflow contract, security, test standard (about 50 lines in total)</td><td class="plain">Procedures and examples</td><td class="plain">Plugins have no rules folder, so the SessionStart hook injects <code>rules/*.mdc</code>; repo-local rules go in <code>.claude/rules/</code> with <code>paths:</code></td><td class="plain">Plugin <code>rules/*.mdc</code> (<code>alwaysApply</code>, <code>globs</code>); Team Rules</td><td class="plain">Every session, or on matching paths</td></tr>
-      <tr><td>Skills</td><td class="plain">Procedures and know-how for one kind of task: PRD review, spec, verify, Airflow conventions</td><td class="plain">Always-on rules, secrets</td><td class="plain"><code>skills/&lt;name&gt;/SKILL.md</code>, <code>/plugin:skill</code>, <code>paths:</code>, <code>allowed-tools</code></td><td class="plain">Same <code>SKILL.md</code> (Agent Skills), <code>/skill</code>, <code>paths</code></td><td class="plain">Description always; body on use</td></tr>
-      <tr><td>Subagents</td><td class="plain">Work that needs its own context and tool limits: analyst, investigator, builder, QA, reviewer</td><td class="plain">Work needing the main conversation</td><td class="plain"><code>agents/*.md</code>: <code>disallowedTools</code>, <code>model</code>, <code>memory</code>, <code>isolation</code></td><td class="plain"><code>agents/*.md</code>: <code>readonly</code>, <code>model</code></td><td class="plain">When delegated</td></tr>
-      <tr><td>Hooks</td><td class="plain">What must always or never happen: no secrets, no force-push or merge, no code before spec approval, no PR without evidence; context injection</td><td class="plain">Advice; slow work</td><td class="plain"><code>hooks/hooks.json</code>: PreToolUse, SessionStart, Stop; exec form; <code>onFailure: block</code></td><td class="plain"><code>hooks.json</code>: beforeShellExecution, preToolUse, beforeMCPExecution, stop; <code>failClosed</code></td><td class="plain">Every matching event</td></tr>
-      <tr><td>Scripts</td><td class="plain">Deterministic logic shared by skills, hooks and CI</td><td class="plain">Judgement calls</td><td class="plain"><code>${CLAUDE_PLUGIN_ROOT}/scripts/</code></td><td class="plain">Plugin <code>scripts/</code></td><td class="plain">When called</td></tr>
-      <tr><td>Connectors (MCP)</td><td class="plain">Live systems: Confluence and Jira, Sentry, MongoDB, the schema DB, Airflow, a browser</td><td class="plain">What a CLI does better: <code>git</code>, <code>gh</code>, test runners</td><td class="plain"><code>.mcp.json</code> (org SaaS in the plugin, data in the repo)</td><td class="plain"><code>mcp.json</code>, <code>.cursor/mcp.json</code></td><td class="plain">Server at start; tools on demand</td></tr>
-      <tr><td>Plugins</td><td class="plain">Distribution and versioning of everything above the repo layer</td><td class="plain">Per-repo facts</td><td class="plain"><code>.claude-plugin/</code>, marketplace, <code>enabledPlugins</code>, <code>dependencies</code></td><td class="plain"><code>.cursor-plugin/</code>, team marketplace set to Required</td><td class="plain">Install and update</td></tr>
-      <tr><td>Settings and policy</td><td class="plain">Permissions, sandbox, allowed marketplaces and MCP servers, telemetry</td><td class="plain">Workflow logic</td><td class="plain"><code>.claude/settings.json</code>, managed settings</td><td class="plain">Team settings, MDM hooks, MCP allowlist</td><td class="plain">Always</td></tr>
-      <tr><td>CI workflows</td><td class="plain">Independent verification; automation triggers</td><td class="plain">The only copy of a rule (rules also run locally)</td><td class="plain"><code>claude-code-action@v1</code> with <code>plugins</code></td><td class="plain"><code>agent -p</code> CLI</td><td class="plain">On GitHub events</td></tr>
+      <tr><td>Repo facts</td><td class="plain">What the repo is, its layout, commands, local conventions</td><td class="plain">Org rules, procedures, secrets</td><td class="plain"><code>CLAUDE.md</code> (under a page; <code>/init</code> drafts it)</td><td class="plain">Every session</td></tr>
+      <tr><td>Repo manifest</td><td class="plain">Stack, check commands, test runner for given files, JUnit paths, protected paths, data env vars</td><td class="plain">Prose</td><td class="plain"><code>.ai/repo.yaml</code>: read by hooks, <code>evidence.py</code>, agents and CI</td><td class="plain">On demand</td></tr>
+      <tr><td>Rules</td><td class="plain">Short non-negotiables for every task: workflow contract, security, test standard (about 50 lines in total)</td><td class="plain">Procedures and examples</td><td class="plain">Plugins have no rules folder, so the SessionStart hook injects <code>rules/*.md</code>; repo-local rules go in <code>.claude/rules/</code> with <code>paths:</code></td><td class="plain">Every session, or on matching paths</td></tr>
+      <tr><td>Skills</td><td class="plain">Procedures and know-how for one kind of task: PRD review, spec, verify, Airflow conventions</td><td class="plain">Always-on rules, secrets</td><td class="plain"><code>skills/&lt;name&gt;/SKILL.md</code>, <code>/plugin:skill</code>, <code>paths:</code>, <code>allowed-tools</code></td><td class="plain">Description always; body on use</td></tr>
+      <tr><td>Subagents</td><td class="plain">Work that needs its own context and tool limits: analyst, investigator, builder, QA, reviewer</td><td class="plain">Work needing the main conversation</td><td class="plain"><code>agents/*.md</code>: <code>disallowedTools</code>, <code>model</code>, <code>memory</code>, <code>isolation</code></td><td class="plain">When delegated</td></tr>
+      <tr><td>Hooks</td><td class="plain">What must always or never happen: no secrets, no force-push or merge, no code before spec approval, no PR without evidence; context injection</td><td class="plain">Advice; slow work</td><td class="plain"><code>hooks/hooks.json</code>: PreToolUse, SessionStart, Stop; exec form; <code>onFailure: block</code></td><td class="plain">Every matching event</td></tr>
+      <tr><td>Scripts</td><td class="plain">Deterministic logic shared by skills, hooks and CI</td><td class="plain">Judgement calls</td><td class="plain"><code>${CLAUDE_PLUGIN_ROOT}/scripts/</code></td><td class="plain">When called</td></tr>
+      <tr><td>Connectors (MCP)</td><td class="plain">Live systems: Confluence and Jira, Sentry, MongoDB, the schema DB, Airflow, a browser</td><td class="plain">What a CLI does better: <code>git</code>, <code>gh</code>, test runners</td><td class="plain"><code>.mcp.json</code> (org SaaS in the plugin, data in the repo)</td><td class="plain">Server at start; tools on demand</td></tr>
+      <tr><td>Plugins</td><td class="plain">Distribution and versioning of everything above the repo layer</td><td class="plain">Per-repo facts</td><td class="plain"><code>.claude-plugin/</code>, marketplace, <code>enabledPlugins</code>, <code>dependencies</code></td><td class="plain">Install and update</td></tr>
+      <tr><td>Settings and policy</td><td class="plain">Permissions, sandbox, allowed marketplaces and MCP servers, telemetry</td><td class="plain">Workflow logic</td><td class="plain"><code>.claude/settings.json</code>, managed settings</td><td class="plain">Always</td></tr>
+      <tr><td>CI workflows</td><td class="plain">Independent verification; automation triggers</td><td class="plain">The only copy of a rule (rules also run locally)</td><td class="plain"><code>claude-code-action@v1</code> with <code>plugins</code></td><td class="plain">On GitHub events</td></tr>
     </tbody>
   </table></div>
   <h3>Rules of thumb</h3>
   <ul>
     <li>Must always hold: a <strong>hook</strong> or a <strong>CI check</strong>. Prose is advice; hooks are enforcement.</li>
     <li>Needed for some tasks: a <strong>skill</strong>, with <code>paths</code> if it concerns certain files.</li>
-    <li>A fact about this repo: <code>AGENTS.md</code> for people, <code>.ai/repo.yaml</code> for machines.</li>
+    <li>A fact about this repo: <code>CLAUDE.md</code> for people, <code>.ai/repo.yaml</code> for machines.</li>
     <li>Live data: a <strong>connector</strong>, read-only, local or dev only.</li>
     <li>Must reach every developer and stay current: put it in the <strong>plugin</strong> and version it.</li>
     <li>A judgement call: a <strong>subagent</strong> with the right tools, then a human gate.</li>
@@ -488,7 +487,7 @@ footer { border-top: 1px solid var(--line); padding-top: 18px; font-size: 13.5px
     <li><strong>Session context.</strong> At start, resume and after compaction, the sdlc-core SessionStart hook injects the
       stack, the checks, the branch's Jira key, the spec status and the evidence status, plus the always-on rules.</li>
     <li><strong>Path-activated stack skills.</strong> <code>airflow-dag</code> declares <code>paths: dags/**, include/**</code>,
-      so it loads when the builder touches DAG code, in Claude Code and in Cursor alike. <code>stack-mfe</code> depends on
+      so it loads when the builder touches DAG code. <code>stack-mfe</code> depends on
       <code>stack-frontend</code>, so an MFE repo gets both.</li>
     <li><strong>The builder subagent</strong> reads the manifest and loads the stack skill before every task. To make the
       builder the main session, start Claude Code with <code>claude --agent sdlc-core:builder</code>.</li>
@@ -684,7 +683,7 @@ footer { border-top: 1px solid var(--line); padding-top: 18px; font-size: 13.5px
   <div class="tw"><table class="mid">
     <thead><tr><th>Lesson type</th><th>Destination</th><th>Owner</th></tr></thead>
     <tbody>
-      <tr><td>Fact about one repo</td><td class="plain"><code>AGENTS.md</code> or <code>docs/knowledge/</code> in that repo</td><td class="plain">Repo CODEOWNERS</td></tr>
+      <tr><td>Fact about one repo</td><td class="plain"><code>CLAUDE.md</code> or <code>docs/knowledge/</code> in that repo</td><td class="plain">Repo CODEOWNERS</td></tr>
       <tr><td>Stack pitfall or pattern</td><td class="plain"><code>knowledge/&lt;stack&gt;/</code>, then the stack skill</td><td class="plain">Stack guild</td></tr>
       <tr><td>Workflow gap</td><td class="plain"><code>sdlc-core</code> skills or rubric</td><td class="plain">Platform team</td></tr>
       <tr><td>PRD gap</td><td class="plain"><code>standards/prd-template.md</code>, the rubric, <code>prd_lint.py</code></td><td class="plain">Product ops</td></tr>
@@ -703,44 +702,32 @@ footer { border-top: 1px solid var(--line); padding-top: 18px; font-size: 13.5px
 <section id="setups" class="pb">
   <div class="secno">11</div>
   <h2>Setups to try</h2>
-  <p>Six setups, from the cheapest to the most automated. They share the same plugin, scripts and repo files, so moving
+  <p>Four setups, from the cheapest to the most automated. They share the same plugin, scripts and repo files, so moving
   from one to the next adds automation without changing the process.</p>
   <div class="cards">
-    <article class="card"><header><span class="letter">A</span><h3>Cursor, team marketplace</h3></header>
-      <dl><dt>Best for</dt><dd>Teams that live in Cursor; the first two weeks</dd>
-      <dt>Set up</dt><dd>Import this repo as a Cursor team marketplace and set <code>sdlc-core</code> and <code>sdlc-connectors</code> to Required; run <code>aisdlc.py init</code> in each repo</dd>
-      <dt>You get</dt><dd>Always-on rules, <code>/prd-review</code> to <code>/verify</code>, read-only subagents, shell, edit and PR hooks, Atlassian and Sentry MCP</dd>
-      <dt>Watch for</dt><dd><code>preToolUse</code> can't ask, so it denies with a note; confirm plugin hook paths on your version</dd>
-      <dt>Move on</dt><dd>When the PRD gate and evidence flow have run on 3 stories</dd></dl></article>
-    <article class="card rec"><header><span class="letter">B</span><h3>Claude Code with the plugin <span class="chip gate">START HERE</span></h3></header>
+    <article class="card rec"><header><span class="letter">A</span><h3>Claude Code with the plugin <span class="chip gate">START HERE</span></h3></header>
       <dl><dt>Best for</dt><dd>The pilot; anyone on Claude Code (CLI, desktop or IDE extension)</dd>
       <dt>Set up</dt><dd><code>aisdlc.py init</code> writes the marketplace and plugins into <code>.claude/settings.json</code>; developers trust the folder and the plugins install; <code>/mcp</code> authenticates Atlassian and Sentry</dd>
       <dt>You get</dt><dd><code>/sdlc-core:prd-to-pr</code> end to end, every hook including session context and the verify reminder, and evals</dd>
       <dt>Watch for</dt><dd><code>python3</code> and <code>gh</code> on PATH; PyYAML for <code>evidence.py</code></dd>
       <dt>Move on</dt><dd>After 10 to 20 stories, with metrics compared against the baseline</dd></dl></article>
-    <article class="card"><header><span class="letter">C</span><h3>Hybrid: Cursor plus Claude Code</h3></header>
-      <dl><dt>Best for</dt><dd>Teams split between the tools</dd>
-      <dt>Set up</dt><dd>A and B together on the same repo files; run Claude Code in Cursor's terminal or as the IDE extension</dd>
-      <dt>You get</dt><dd>The same skills, rules, hooks and evidence whichever tool a developer opens</dd>
-      <dt>Watch for</dt><dd>With Cursor's third-party import on and Claude plugins installed, some hooks run twice (harmless)</dd>
-      <dt>Move on</dt><dd>This is a steady state for mixed teams</dd></dl></article>
-    <article class="card"><header><span class="letter">D</span><h3>CI-driven intake, build and evidence</h3></header>
+    <article class="card"><header><span class="letter">B</span><h3>CI-driven intake, build and evidence</h3></header>
       <dl><dt>Best for</dt><dd>Making the flow team-wide and auditable</dd>
       <dt>Set up</dt><dd>The <code>ai-prd-intake</code>, <code>ai-build</code>, <code>ai-evidence</code>, <code>ai-review</code> and <code>ai-learn</code> workflows (init adds them); secrets for Anthropic (or OIDC federation) and Atlassian; Confluence Automation "Page labeled" → <code>repository_dispatch</code>; make <code>ai-evidence</code> a required check</dd>
       <dt>You get</dt><dd>The PRD gate on a label, draft spec PRs, headless builds to draft PRs, attested evidence on every PR, learning PRs after merge</dd>
       <dt>Watch for</dt><dd>A private marketplace needs a read token in CI (<code>gh auth setup-git</code>)</dd>
       <dt>Move on</dt><dd>When the required check is stable and review time per PR isn't rising</dd></dl></article>
-    <article class="card"><header><span class="letter">E</span><h3>Parallel cloud agents</h3></header>
+    <article class="card"><header><span class="letter">C</span><h3>Parallel cloud agents</h3></header>
       <dl><dt>Best for</dt><dd>Running several stories at once from the web, phone or Slack</dd>
-      <dt>Set up</dt><dd><code>aisdlc.py vendor</code>, because Claude Code cloud sessions don't install repo-declared plugins and Cursor cloud agents run only <code>.cursor/hooks.json</code>; a setup script or <code>.cursor/environment.json</code> installs the toolchain</dd>
+      <dt>Set up</dt><dd><code>aisdlc.py vendor</code>, because Claude Code cloud sessions don't install repo-declared plugins; the environment's setup script installs the toolchain</dd>
       <dt>You get</dt><dd>The same skills and hooks inside the cloud sandbox; draft PRs with evidence</dd>
       <dt>Watch for</dt><dd>Data connectors need reachable dev databases, or snapshots only; re-run <code>vendor</code> when the standard updates</dd>
       <dt>Move on</dt><dd>When review capacity, not agent capacity, becomes the limit</dd></dl></article>
-    <article class="card"><header><span class="letter">F</span><h3>Orchestrated at scale</h3></header>
+    <article class="card"><header><span class="letter">D</span><h3>Orchestrated at scale</h3></header>
       <dl><dt>Best for</dt><dd>Dozens of stories a week, cross-repo releases, a custom approval UI</dd>
       <dt>Set up</dt><dd>Claude Agent SDK (<code>plugins</code>, <code>setting_sources</code>) driven by a durable workflow engine, or Claude Code workflows; reuse the same plugin and scripts</dd>
       <dt>You get</dt><dd>The draft plan's target architecture, built from proven parts</dd>
-      <dt>Watch for</dt><dd>Building it before A to E have proved the process</dd>
+      <dt>Watch for</dt><dd>Building it before A to C have proved the process</dd>
       <dt>Move on</dt><dd>This is the end state</dd></dl></article>
   </div>
 <pre><code># one-time per repo (from a checkout of the standard)
@@ -758,7 +745,7 @@ python3 tools/aisdlc.py doctor --target ../data-airflow
   <div class="tw"><table class="wide">
     <thead><tr><th>Feature</th><th>How the standard uses it</th><th>Where</th></tr></thead>
     <tbody>
-      <tr><td>Memory files</td><td class="plain"><code>CLAUDE.md</code> imports <code>@AGENTS.md</code> so both tools share one file; path-scoped <code>.claude/rules/</code> for repo-local rules</td><td class="plain"><code>templates/repo/common/</code></td></tr>
+      <tr><td>Memory files</td><td class="plain"><code>CLAUDE.md</code> per repo, under a page; path-scoped <code>.claude/rules/</code> for repo-local rules</td><td class="plain"><code>templates/repo/common/</code></td></tr>
       <tr><td>Skills</td><td class="plain">14 skills; <code>paths</code> loads stack skills automatically; <code>${CLAUDE_PLUGIN_ROOT}</code> in both the body and <code>allowed-tools</code> runs bundled scripts without prompts; <code>disable-model-invocation</code> on the orchestrator</td><td class="plain"><code>plugins/*/skills/</code></td></tr>
       <tr><td>Subagents</td><td class="plain">Five agents; <code>disallowedTools</code> makes four of them read-only (plugin agents ignore <code>permissionMode</code> and <code>hooks</code>, so tool lists do the enforcing); optional <code>memory: project</code> and <code>isolation: worktree</code></td><td class="plain"><code>plugins/sdlc-core/agents/</code></td></tr>
       <tr><td>Hooks</td><td class="plain">SessionStart for context and rules; PreToolUse for the shell, edit and MCP PR guards; Stop for the verify reminder (loop-guarded); exec form; <code>onFailure: block</code> fails closed</td><td class="plain"><code>hooks/hooks.json</code></td></tr>
@@ -769,56 +756,33 @@ python3 tools/aisdlc.py doctor --target ../data-airflow
       <tr><td>Managed settings</td><td class="plain">Force-enable the core plugins, <code>strictKnownMarketplaces</code>, <code>allowManagedMcpServersOnly</code>, OpenTelemetry env, <code>companyAnnouncements</code>; optionally <code>strictPluginOnlyCustomization</code></td><td class="plain"><code>policy/managed-settings.json</code></td></tr>
       <tr><td>Headless mode</td><td class="plain"><code>claude -p</code> with <code>--json-schema</code> for typed verdicts, <code>--max-turns</code>, <code>--allowedTools</code>, <code>--plugin-dir</code></td><td class="plain">CI workflows</td></tr>
       <tr><td>GitHub Action</td><td class="plain"><code>anthropics/claude-code-action@v1</code> with the <code>plugins</code> and <code>plugin_marketplaces</code> inputs, the <code>structured_output</code> output, and workload identity federation (no long-lived key)</td><td class="plain"><code>templates/repo/common/.github/</code></td></tr>
-      <tr><td>Plugin seeding</td><td class="plain"><code>CLAUDE_CODE_PLUGIN_SEED_DIR</code> bakes plugins into CI images that can't clone at runtime</td><td class="plain">Setup D and F</td></tr>
-      <tr><td>Agent SDK</td><td class="plain">Python <code>claude-agent-sdk</code>, TypeScript <code>@anthropic-ai/claude-agent-sdk</code>; <code>plugins</code> and <code>setting_sources</code> reuse the same standard</td><td class="plain">Setup F</td></tr>
-      <tr><td>Cloud sessions, Remote Control</td><td class="plain">Parallel stories in Anthropic-hosted sandboxes; they load the repo's <code>.claude/</code>, so use vendored mode</td><td class="plain">Setup E</td></tr>
+      <tr><td>Plugin seeding</td><td class="plain"><code>CLAUDE_CODE_PLUGIN_SEED_DIR</code> bakes plugins into CI images that can't clone at runtime</td><td class="plain">Setups B and D</td></tr>
+      <tr><td>Agent SDK</td><td class="plain">Python <code>claude-agent-sdk</code>, TypeScript <code>@anthropic-ai/claude-agent-sdk</code>; <code>plugins</code> and <code>setting_sources</code> reuse the same standard</td><td class="plain">Setup D</td></tr>
+      <tr><td>Cloud sessions, Remote Control</td><td class="plain">Parallel stories in Anthropic-hosted sandboxes; they load the repo's <code>.claude/</code>, so use vendored mode</td><td class="plain">Setup C</td></tr>
       <tr><td>Scheduled tasks, <code>/loop</code></td><td class="plain">Nightly knowledge audit, flaky-test triage, re-vendoring checks (cloud scheduling is a research preview)</td><td class="plain">Optional</td></tr>
       <tr><td>Review and security</td><td class="plain"><code>/code-review</code>, <code>/security-review</code>; the managed Claude Code Review reads <code>REVIEW.md</code> and never approves; the Claude Security plugin writes SARIF</td><td class="plain"><code>REVIEW.md</code> template</td></tr>
       <tr><td>Plan mode, checkpoints</td><td class="plain">Plan mode for spec work without edits; <code>/rewind</code> undoes a bad build attempt (file edits only, not Bash side effects)</td><td class="plain">Interactive use</td></tr>
       <tr><td>Telemetry and analytics</td><td class="plain">OTel metrics <code>claude_code.cost.usage</code>, <code>token.usage</code>, <code>session.count</code>; <code>plugin_loaded</code> events; the plugin analytics API shows adoption</td><td class="plain">Managed settings</td></tr>
-      <tr><td>Workflows</td><td class="plain">Script-orchestrated subagents can make <code>prd-to-pr</code> a deterministic "blueprint" (the Stripe pattern) once the skills are stable</td><td class="plain">Setup F candidate</td></tr>
+      <tr><td>Workflows</td><td class="plain">Script-orchestrated subagents can make <code>prd-to-pr</code> a deterministic "blueprint" (the Stripe pattern) once the skills are stable</td><td class="plain">Setup D candidate</td></tr>
       <tr><td>Auto memory</td><td class="plain">Personal notes per developer; team knowledge stays in git where it's reviewed</td><td class="plain">Default on</td></tr>
     </tbody>
   </table></div>
 </section>
 
-<section id="cursor" class="pb">
-  <div class="secno">13</div>
-  <h2>Cursor features and how the standard uses them</h2>
-  <div class="tw"><table class="wide">
-    <thead><tr><th>Feature</th><th>How the standard uses it</th><th>Where</th></tr></thead>
-    <tbody>
-      <tr><td>Rules</td><td class="plain"><code>.mdc</code> with <code>alwaysApply</code> or <code>globs</code> from the plugin's <code>rules/</code>; Team Rules can enforce them org-wide</td><td class="plain"><code>plugins/sdlc-core/rules/</code></td></tr>
-      <tr><td>Agent Skills (2.4+)</td><td class="plain">The same <code>SKILL.md</code> files; <code>paths</code> scoping; <code>/skill-name</code>; also read from <code>.claude/skills/</code> in vendored repos</td><td class="plain"><code>plugins/*/skills/</code></td></tr>
-      <tr><td>Subagents</td><td class="plain">The same <code>agents/*.md</code>; <code>readonly: true</code> enforces read-only roles; also read from <code>.claude/agents/</code></td><td class="plain"><code>plugins/sdlc-core/agents/</code></td></tr>
-      <tr><td>Hooks</td><td class="plain"><code>beforeShellExecution</code>, <code>preToolUse</code> (Write), <code>beforeMCPExecution</code>, <code>sessionStart</code> (<code>additional_context</code>), <code>stop</code> (<code>followup_message</code>); <code>failClosed</code>; MDM or dashboard distribution on Enterprise</td><td class="plain"><code>hooks/cursor-hooks.json</code></td></tr>
-      <tr><td>Plugins, team marketplaces</td><td class="plain"><code>.cursor-plugin/plugin.json</code> beside the Claude manifest; Required install mode; group-based access</td><td class="plain"><code>.cursor-plugin/</code></td></tr>
-      <tr><td>MCP</td><td class="plain"><code>mcp.json</code> in the plugin; <code>.cursor/mcp.json</code> in repos with <code>${env:VAR}</code>; enterprise MCP allowlist</td><td class="plain">Templates</td></tr>
-      <tr><td>Bugbot</td><td class="plain">Reads <code>.cursor/BUGBOT.md</code> (the review guidance, same text as <code>REVIEW.md</code>); project rules don't apply to Bugbot</td><td class="plain"><code>templates/repo/common/.cursor/</code></td></tr>
-      <tr><td>Cloud agents, Automations</td><td class="plain"><code>.cursor/environment.json</code> installs the toolchain; triggers from Slack, GitHub, Linear and Jira; vendored hooks give guardrails</td><td class="plain">Setup E</td></tr>
-      <tr><td>CLI</td><td class="plain"><code>agent -p --output-format json</code>, <code>--force</code> for edits; let deterministic steps run <code>git</code>, <code>gh</code> and <code>evidence.py</code></td><td class="plain">Setup D alternative</td></tr>
-      <tr><td>AGENTS.md, CLAUDE.md</td><td class="plain">Read natively, including nested files</td><td class="plain">Every repo</td></tr>
-      <tr><td>Enterprise controls</td><td class="plain">Privacy Mode, audit logs, model access control, terminal sandbox, repository blocklist</td><td class="plain">Dashboard</td></tr>
-    </tbody>
-  </table></div>
-  <p>Details and a two-minute check for your Cursor version are in <code>cursor/README.md</code>.</p>
-</section>
-
 <section id="enterprise" class="pb">
-  <div class="secno">14</div>
+  <div class="secno">13</div>
   <h2>Running it in an enterprise</h2>
   <h3>Distribution and updates</h3>
   <div class="tw"><table class="mid">
     <thead><tr><th>Consumer</th><th>How a new version arrives</th></tr></thead>
     <tbody>
       <tr><td>Claude Code, plugin mode</td><td class="plain"><code>autoUpdate: true</code> on the marketplace (repo or managed settings), or <code>/plugin update</code>; running sessions need <code>/reload-plugins</code></td></tr>
-      <tr><td>Cursor team marketplace</td><td class="plain">Auto Refresh (needs the GitHub App) or a manual refresh in the dashboard</td></tr>
       <tr><td>Vendored repos</td><td class="plain">Re-run <code>aisdlc.py vendor</code>; review the diff in a PR; the version is pinned in <code>.claude/aisdlc/VERSION.json</code></td></tr>
       <tr><td>CI workflows</td><td class="plain">Bump <code>AISDLC_REF</code> to the new release tag</td></tr>
     </tbody>
   </table></div>
   <p>Each plugin is versioned with semver. Patch releases are wording; minor releases add a skill or check; major releases
-  change a gate. <code>tests/test_manifests.py</code> fails the build if the Claude manifest, the Cursor manifest and the
+  change a gate. <code>tests/test_manifests.py</code> fails the build if a plugin manifest and the
   marketplace disagree. <code>claude plugin tag</code> cuts the release. CODEOWNERS give each stack pack to its guild.</p>
   <h3>Security model</h3>
   <ul>
@@ -854,13 +818,13 @@ python3 tools/aisdlc.py doctor --target ../data-airflow
 </section>
 
 <section id="rollout" class="pb">
-  <div class="secno">15</div>
+  <div class="secno">14</div>
   <h2>Rollout and metrics</h2>
   <div class="tw"><table class="wide">
     <thead><tr><th>Weeks</th><th>Do</th><th>Exit criteria</th></tr></thead>
     <tbody>
       <tr><td class="num">0–1</td><td class="plain">Pick one repo per stack. Baseline the last 20 comparable tickets (lead time, review cycles, CI failures, reopen rate). Run <code>aisdlc.py init</code> and <code>doctor</code>. Publish the PRD template. Apply managed settings to the pilot group.</td><td class="plain"><code>doctor</code> passes; the evidence workflow runs on an ordinary PR</td></tr>
-      <tr><td class="num">2–3</td><td class="plain">Run the PRD gate on every new PRD (Setup B plus the intake workflow). Write specs for 3 stories.</td><td class="plain">At least one PRD bounced and fixed in one round; 3 approved specs</td></tr>
+      <tr><td class="num">2–3</td><td class="plain">Run the PRD gate on every new PRD (Setup A plus the intake workflow). Write specs for 3 stories.</td><td class="plain">At least one PRD bounced and fixed in one round; 3 approved specs</td></tr>
       <tr><td class="num">3–5</td><td class="plain">Build and verify 5–10 low- and medium-risk stories (Setups A, B and C). Make <code>ai-evidence</code> a required check. Run <code>learn</code> after each merge.</td><td class="plain">Evidence PASS on every draft PR; no gate bypassed; the first knowledge PRs merged</td></tr>
       <tr><td class="num">6–8</td><td class="plain">Add CI-driven intake and build (D), and cloud agents (E) if wanted. Run evals in CI for skill changes.</td><td class="plain">Go/no-go on the metrics below</td></tr>
     </tbody>
@@ -885,13 +849,13 @@ python3 tools/aisdlc.py doctor --target ../data-airflow
 </section>
 
 <section id="others" class="pb">
-  <div class="secno">16</div>
+  <div class="secno">15</div>
   <h2>What others do</h2>
   <p>A summary of the sourced survey in <code>docs/research.md</code>, which has dates, numbers and links.</p>
   <div class="tw"><table class="wide">
     <thead><tr><th>Organisation</th><th>What they do</th><th>Lesson we adopt</th></tr></thead>
     <tbody>
-      <tr><td>Stripe</td><td class="plain">Minions: one-shot agents in pre-warmed devboxes, "blueprints" mixing deterministic and agent steps, curated MCP tools. Over 1,300 merged PRs a week, all human-reviewed</td><td class="plain">Deterministic skeleton; at most 2 CI rounds, then a human; rules shared between Cursor and Claude Code</td></tr>
+      <tr><td>Stripe</td><td class="plain">Minions: one-shot agents in pre-warmed devboxes, "blueprints" mixing deterministic and agent steps, curated MCP tools. Over 1,300 merged PRs a week, all human-reviewed</td><td class="plain">Deterministic skeleton; at most 2 CI rounds, then a human; lean, shared rules</td></tr>
       <tr><td>Spotify</td><td class="plain">Honk on the Claude Agent SDK; verifiers in the stop hook; an LLM judge. Merged changes rose from 8,100 to 17,000 a year, faster than "some of our verification controls could adapt"</td><td class="plain">Verify before a PR exists; expect PRs that pass CI but are wrong; data repos need tests before agents</td></tr>
       <tr><td>Uber</td><td class="plain">uReview on over 90% of diffs; AutoCover with a mutation-testing validator; design-to-draft-PR agent</td><td class="plain">Validate tests objectively; precision over volume in AI review</td></tr>
       <tr><td>Meta</td><td class="plain">TestGen-LLM filters (builds, passes, not flaky, adds coverage); RADAR risk-gated review of low-risk diffs</td><td class="plain">Filter AI-written tests by objective criteria; tier review by risk</td></tr>
@@ -914,7 +878,7 @@ python3 tools/aisdlc.py doctor --target ../data-airflow
 </section>
 
 <section id="antipatterns" class="pb">
-  <div class="secno">17</div>
+  <div class="secno">16</div>
   <h2>What doesn't work</h2>
   <ul>
     <li><strong>Building the orchestrator first.</strong> It means months of infrastructure before learning whether specs, gates and evidence work for your teams.</li>
@@ -932,17 +896,17 @@ python3 tools/aisdlc.py doctor --target ../data-airflow
 </section>
 
 <section id="verified" class="pb">
-  <div class="secno">18</div>
+  <div class="secno">17</div>
   <h2>What was verified</h2>
   <div class="two">
     <div>
       <h3>Verified in this repository (22 Oct 2026)</h3>
       <ul>
-        <li><span class="chip pass">PASS</span> 77 unit tests on Python 3.9 and 3.13. They cover the PRD lint, AC coverage, fail-to-pass in throwaway git repos, evidence manifests, the Atlassian client against recorded requests (Cloud and Data Center), schema snapshots, every hook in both output formats, the onboarding CLI, and manifest consistency.</li>
+        <li><span class="chip pass">PASS</span> 76 unit tests on Python 3.9 and 3.13. They cover the PRD lint, AC coverage, fail-to-pass in throwaway git repos, evidence manifests, the Atlassian client against recorded requests (Cloud and Data Center), schema snapshots, every hook, the onboarding CLI, and manifest consistency.</li>
         <li><span class="chip pass">PASS</span> <code>claude plugin validate --strict</code> for the marketplace and all five plugins (Claude Code 2.1.308).</li>
         <li><span class="chip pass">PASS</span> 3 behavioural evals with real model runs; the spec gate scored +0.5 against the no-plugin baseline.</li>
         <li><span class="chip pass">PASS</span> <code>make demo</code>: PRD gate, cross-stack AC coverage, fail-to-pass evidence, and the PR gate going from deny to allow.</li>
-        <li><span class="chip pass">PASS</span> Formats checked against current documentation for Claude Code, Cursor, Atlassian, MongoDB, DBHub, Airflow 3, Playwright, and GitHub Action versions.</li>
+        <li><span class="chip pass">PASS</span> Formats checked against current documentation for Claude Code, Atlassian, MongoDB, DBHub, Airflow 3, Playwright, and GitHub Action versions.</li>
       </ul>
     </div>
     <div>
@@ -950,7 +914,6 @@ python3 tools/aisdlc.py doctor --target ../data-airflow
       <ul>
         <li><span class="chip warn">TODO</span> Live calls to your Confluence, Jira, Sentry, MongoDB and schema database.</li>
         <li><span class="chip warn">TODO</span> The GitHub workflows on real runners. They parse, but were not executed here.</li>
-        <li><span class="chip warn">TODO</span> Cursor running the plugin hooks (Cursor isn't available here): expect a blocked <code>git push --force</code>.</li>
         <li><span class="chip warn">TODO</span> Claude Code cloud sessions with vendored configuration.</li>
         <li><span class="chip warn">TODO</span> Replace the placeholder CODEOWNERS teams and the example Jira statuses with your own.</li>
       </ul>

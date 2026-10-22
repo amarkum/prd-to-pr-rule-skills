@@ -11,14 +11,13 @@ See `templates/repo/airflow/.mcp.json`.
 
 ## Install
 
-`/plugin install sdlc-connectors@ai-sdlc` in Claude Code (it also enables `sdlc-core`), or the team marketplace in Cursor.
-Authenticate once with `/mcp` (Claude Code) or the MCP settings (Cursor). Headless CI uses `sdlc-core/scripts/atlassian.py`
-with an API token instead of OAuth.
+`/plugin install sdlc-connectors@ai-sdlc` (it also enables `sdlc-core`). Authenticate once with `/mcp`. Headless CI
+uses `sdlc-core/scripts/atlassian.py` with an API token instead of OAuth.
 
 ## Swap or extend observability
 
 Datadog: `https://mcp.datadoghq.com/v1/mcp` (US1). Grafana: `grafana/mcp-grafana` with `--disable-write`.
-PagerDuty: `https://mcp.pagerduty.com/mcp`. Add them to `.mcp.json` / `mcp.json` the same way.
+PagerDuty: `https://mcp.pagerduty.com/mcp`. Add them to `.mcp.json` the same way.
 
 Privacy: data flows to Atlassian and Sentry under your existing agreements. See the Atlassian privacy policy
 (https://www.atlassian.com/legal/privacy-policy) and the Sentry privacy policy (https://sentry.io/privacy/).

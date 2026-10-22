@@ -1,8 +1,0 @@
-{
-  "name": "stack-frontend",
-  "version": "1.0.0",
-  "description": "React and TypeScript feature conventions and evidence-grade testing for the AI SDLC builder.",
-  "author": {"name": "Web Platform Guild"},
-  "repository": "https://github.com/amarkum/prd-to-pr-rule-skills",
-  "keywords": ["react", "typescript", "playwright"]
-}

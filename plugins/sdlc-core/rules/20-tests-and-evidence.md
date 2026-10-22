@@ -1,6 +1,5 @@
 ---
 description: Test and evidence standard for AI-built changes
-alwaysApply: true
 ---
 # Tests and evidence (always on)
 

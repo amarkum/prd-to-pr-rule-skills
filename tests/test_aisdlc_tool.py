@@ -25,18 +25,18 @@ class AisdlcToolTests(unittest.TestCase):
     def test_doctor_fails_on_bare_repo(self):
         res = tool("doctor", "--target", str(self.repo))
         self.assertEqual(res.returncode, 1)
-        self.assertIn("FAIL  AGENTS.md present", res.stdout)
+        self.assertIn("FAIL  CLAUDE.md present", res.stdout)
 
     def test_init_airflow_then_doctor_passes(self):
         res = tool("init", "--target", str(self.repo), "--stack", "airflow", "--jira", "PAY", "--name", "data-airflow",
                    "--description", "Payroll pipelines")
         self.assertEqual(res.returncode, 0, res.stderr)
-        for rel in ["AGENTS.md", "CLAUDE.md", "REVIEW.md", ".cursor/BUGBOT.md", ".ai/repo.yaml", ".ai/dbhub.toml",
-                    ".mcp.json", ".cursor/mcp.json", ".github/workflows/ai-evidence.yml",
+        for rel in ["CLAUDE.md", "REVIEW.md", ".ai/repo.yaml", ".ai/dbhub.toml", ".mcp.json", ".github/workflows/ai-evidence.yml",
                     ".github/workflows/ai-prd-intake.yml", ".github/pull_request_template.md", "specs/README.md",
                     "docs/knowledge/README.md", "tests/dags/test_dag_integrity.py"]:
             self.assertTrue((self.repo / rel).is_file(), rel)
-        self.assertIn("# data-airflow", (self.repo / "AGENTS.md").read_text())
+        self.assertIn("# data-airflow", (self.repo / "CLAUDE.md").read_text())
+        self.assertFalse((self.repo / "AGENTS.md").exists() or (self.repo / ".cursor").exists())
         self.assertIn("name: data-airflow", (self.repo / ".ai/repo.yaml").read_text())
         settings = json.loads((self.repo / ".claude/settings.json").read_text())
         self.assertTrue(settings["enabledPlugins"]["stack-airflow@ai-sdlc"])
@@ -45,14 +45,14 @@ class AisdlcToolTests(unittest.TestCase):
         self.assertIn(".ai/evidence/", (self.repo / ".gitignore").read_text())
         doc = tool("doctor", "--target", str(self.repo))
         self.assertEqual(doc.returncode, 0, doc.stdout)
-        self.assertIn("WARN  AGENTS.md 'fill in' sections completed", doc.stdout)
+        self.assertIn("WARN  CLAUDE.md 'fill in' sections completed", doc.stdout)
 
     def test_init_is_idempotent_and_merges_settings(self):
         (self.repo / ".claude").mkdir()
         (self.repo / ".claude/settings.json").write_text(json.dumps({"permissions": {"allow": ["Bash(make *)"]}}))
         tool("init", "--target", str(self.repo), "--stack", "frontend")
         second = tool("init", "--target", str(self.repo), "--stack", "frontend")
-        self.assertIn("skip    AGENTS.md", second.stdout)
+        self.assertIn("skip    CLAUDE.md", second.stdout)
         allow = json.loads((self.repo / ".claude/settings.json").read_text())["permissions"]["allow"]
         self.assertIn("Bash(make *)", allow)
         self.assertEqual(len(allow), len(set(allow)))
@@ -66,8 +66,8 @@ class AisdlcToolTests(unittest.TestCase):
         self.assertNotIn("${CLAUDE_PLUGIN_ROOT}", skill)
         for rel in [".claude/skills/mfe-remote/SKILL.md", ".claude/skills/frontend-feature/SKILL.md",
                     ".claude/agents/builder.md", ".claude/aisdlc/hooks/aisdlc_hooks.py",
-                    ".claude/aisdlc/scripts/schema_snapshot.py", ".claude/aisdlc/rules/10-security-and-data.mdc",
-                    ".cursor/rules/aisdlc-00-ai-sdlc-workflow.mdc", ".cursor/hooks.json", ".claude/aisdlc/VERSION.json"]:
+                    ".claude/aisdlc/scripts/schema_snapshot.py", ".claude/aisdlc/rules/10-security-and-data.md",
+                    ".claude/aisdlc/VERSION.json"]:
             self.assertTrue((self.repo / rel).is_file(), rel)
         settings = json.loads((self.repo / ".claude/settings.json").read_text())
         self.assertFalse(settings["enabledPlugins"]["sdlc-core@ai-sdlc"])

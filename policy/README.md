@@ -27,6 +27,3 @@
   for CI images that seed plugins).
 - `sandbox` settings (`enabled`, `filesystem`, `network.allowedDomains`) confine Bash on macOS, Linux and WSL2. Combine
   them with `sandbox.network.allowManagedDomainsOnly` for egress control.
-
-Cursor equivalents: Team Rules (enforced), team marketplace with the plugin set to **Required**, MDM-distributed hooks
-(`/Library/Application Support/Cursor/hooks.json`, `/etc/cursor/hooks.json`), the MCP allowlist, and Privacy Mode.

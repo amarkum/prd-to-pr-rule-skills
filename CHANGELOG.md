@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+Breaking: the standard is Claude Code only.
+- Removed the Cursor marketplace, plugin manifests, hook wiring (`cursor-hooks.json`, `--format cursor`), `.mdc` rule
+  format, `.cursor/` templates and `cursor/` docs. Rules are now `rules/*.md`, injected by the SessionStart hook.
+- Product repos get a single `CLAUDE.md` (Commands, Architecture, Conventions, Things Claude gets wrong, Verifying your
+  work) instead of `AGENTS.md` plus an import. `aisdlc.py doctor` checks `CLAUDE.md`. Existing repos: move the content
+  of `AGENTS.md` into `CLAUDE.md`.
+
 ## 1.0.0 (2026-10-22)
 
 Initial standard.

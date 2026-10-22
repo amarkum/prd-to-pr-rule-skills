@@ -8,7 +8,7 @@ allowed-tools: Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/evidence.py *), Bash(p
 # Verify
 
 Evidence is produced by scripts at a committed SHA, never asserted in prose.
-Paths: `${CLAUDE_PLUGIN_ROOT}` is this plugin's root (in Cursor: the folder two levels above this skill).
+Paths: `${CLAUDE_PLUGIN_ROOT}` is this plugin's root.
 
 ## 1. Run
 

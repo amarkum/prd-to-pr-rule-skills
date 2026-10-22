@@ -14,7 +14,7 @@ a query and its result count, a ticket key, or a URL. Mark anything uncited as a
 1. **Code and git** (always): delegate to the `repo-investigator` subagent with the PRD and the questions to answer.
    It returns entry points, similar existing features, the files and contracts likely to change, existing tests to
    extend, and relevant history (`git log -S`, `git log --grep <KEY area>`, blame on hot files).
-2. **Repo facts**: `.ai/repo.yaml` (stack, checks, related repos, protected paths) and `AGENTS.md`.
+2. **Repo facts**: `.ai/repo.yaml` (stack, checks, related repos, protected paths) and `CLAUDE.md`.
 3. **Data schemas**: use the `schema-lookup` skill. Committed snapshots first; live read-only MCP (MongoDB, SQL schema
    database) only for what the snapshots lack.
 4. **Production history**: use the `history-lookup` skill: Jira bugs, incidents and postmortems, Sentry or Datadog issues,

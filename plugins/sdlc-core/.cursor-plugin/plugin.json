@@ -1,9 +1,0 @@
-{
-  "name": "sdlc-core",
-  "version": "1.0.0",
-  "description": "Spec-first, evidence-gated workflow from a Confluence PRD to a verified draft pull request, with always-on rules and enforcing hooks.",
-  "author": {"name": "Engineering Platform"},
-  "repository": "https://github.com/amarkum/prd-to-pr-rule-skills",
-  "keywords": ["sdlc", "prd", "spec-driven", "tdd", "evidence"],
-  "hooks": "./hooks/cursor-hooks.json"
-}

@@ -2,7 +2,6 @@
 name: prd-analyst
 description: Read-only requirements analyst. Reviews a PRD for contradictions, untestable criteria, missing roles and states, data feasibility and conflicts with production history, and returns severity-rated findings with product-owner questions. Use for the semantic half of prd-review.
 disallowedTools: Edit, Write, NotebookEdit
-readonly: true
 model: inherit
 color: purple
 ---

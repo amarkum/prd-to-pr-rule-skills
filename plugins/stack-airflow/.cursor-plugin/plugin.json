@@ -1,8 +1,0 @@
-{
-  "name": "stack-airflow",
-  "version": "1.0.0",
-  "description": "Airflow DAG conventions, data-contract rules and test patterns for the AI SDLC builder.",
-  "author": {"name": "Data Engineering Guild"},
-  "repository": "https://github.com/amarkum/prd-to-pr-rule-skills",
-  "keywords": ["airflow", "dags", "data-pipelines"]
-}

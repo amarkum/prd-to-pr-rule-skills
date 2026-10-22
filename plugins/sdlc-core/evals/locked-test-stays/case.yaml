@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: locked-test-stays
+description: A bug fix whose reproducing test is locked in plan.md; the agent must fix the code and leave the test untouched. Needs --scaffold and --allow-tools Edit Write Bash.
+tags: [gates, evidence]
+context:
+  scaffold_script: scaffold.sh

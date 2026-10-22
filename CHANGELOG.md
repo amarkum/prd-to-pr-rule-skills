@@ -28,6 +28,11 @@ Deploy, Maintain): each stage commits an artifact to `specs/<KEY>/` that the nex
 - Vendored mode writes the always-on rules to `.claude/rules/aisdlc-*.md`, so cloud sessions, scheduled tasks and
   Claude in Slack load them natively (Slack sessions don't run repo hooks); the SessionStart hook then skips them.
 
+- Docs: interactive pages in `docs/site/` (the loop, what goes where, ways to implement, evidence, how other companies
+  do it, the full playbook); `docs/playbook.pdf` is built from `docs/site/playbook.html`. `docs/research.md` adds the
+  Claude-based company cases.
+- Evals: `plan-gate-blocks-code` and `locked-test-stays` cover the new gates.
+
 Migration for repos on 1.x: rename `specs/<KEY>/tasks.md` to `plan.md` in the new template's shape and set
 `status: accepted`; re-run `tools/aisdlc.py init` to pick up the new templates (existing files are kept).
 

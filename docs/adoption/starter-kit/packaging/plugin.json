@@ -1,0 +1,8 @@
+{
+  "name": "agentic-sdlc",
+  "version": "0.1.0",
+  "description": "Agentic SDLC skills, specialist subagents and guard hooks: intent, spec, plan-change, verify-change, release-manifest and incident-to-intent, with a test guard, a production-boundary guard and a verify gate.",
+  "author": {
+    "name": "Engineering Enablement"
+  }
+}

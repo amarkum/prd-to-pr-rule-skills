@@ -1,0 +1,18 @@
+# Frozen tests: tests that encode agreed behaviour and must not be edited by an agent.
+#
+# The test guard hook denies Edit/Write/NotebookEdit calls and Bash commands that
+# would change, move or delete a matching file. `make verify-frozen` (scripts/
+# check_frozen_tests.py) fails CI if a file frozen on the base branch changed.
+#
+# Only a human edits this file (agents are denied by .claude/settings.json and
+# the hooks). Defect-fix control: reproduce -> write a failing test -> add it here
+# in the same PR -> change the implementation -> confirm the test passes.
+#
+# One repo-relative path or glob per line. A line ending in "/" freezes a whole
+# directory (new files may still be added there; existing ones may not change).
+# Lines starting with # are comments.
+#
+# Examples:
+# tests/test_refund_rounding.py
+# tests/regression/
+# tests/contracts/**/*.pact.json

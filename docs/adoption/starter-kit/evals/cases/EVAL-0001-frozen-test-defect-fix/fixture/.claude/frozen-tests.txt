@@ -1,0 +1,2 @@
+# Frozen for EVAL-0001: the agent must fix pricing.py, not the test.
+tests/test_pricing.py

@@ -1,0 +1,272 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/agentic-sdlc/feature-record.schema.json",
+  "title": "Feature-level record",
+  "description": "One record per change, from the first signal to confirmed impact. Built nightly from the change artifacts, the issue tracker, git and PR data, the deploy system, analytics and Claude Code telemetry. Every flow, quality, agent-system and output metric is computed from these records.",
+  "type": "object",
+  "required": [
+    "change_id",
+    "class",
+    "work_type",
+    "owner",
+    "team",
+    "timestamps"
+  ],
+  "properties": {
+    "change_id": {
+      "type": "string",
+      "description": "Folder name under docs/changes/, or the PR number for trivial changes"
+    },
+    "title": {
+      "type": "string"
+    },
+    "class": {
+      "enum": [
+        "trivial",
+        "standard",
+        "significant",
+        "high-risk"
+      ]
+    },
+    "work_type": {
+      "enum": [
+        "feature",
+        "defect",
+        "maintenance",
+        "risk-reduction",
+        "tech-debt",
+        "operational-support"
+      ],
+      "description": "Effort-distribution category"
+    },
+    "owner": {
+      "type": "string",
+      "description": "The single accountable builder"
+    },
+    "team": {
+      "type": "string"
+    },
+    "repositories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "agentic_workflow": {
+      "type": "boolean",
+      "description": "True when the change followed the artifact chain its class requires"
+    },
+    "handoff_roles": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "product",
+          "design",
+          "architecture",
+          "engineering",
+          "qa",
+          "security",
+          "sre",
+          "release",
+          "data",
+          "other"
+        ]
+      },
+      "description": "Distinct human roles that did work on, or approved, the change between approved intent and production. Automated and policy gates do not count."
+    },
+    "handoff_depth": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Number of distinct handoff_roles; 1 means the accountable builder's role only"
+    },
+    "timestamps": {
+      "type": "object",
+      "description": "ISO 8601 UTC. Null when the stage did not happen (yet).",
+      "properties": {
+        "idea_received": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "intent_approved": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "spec_approved": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "plan_approved": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "first_commit": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "pr_opened": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "pr_merged": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "deployed_staging": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "deployed_production": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "adoption_threshold_met": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "impact_confirmed": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "idea_received",
+        "pr_merged",
+        "deployed_production"
+      ]
+    },
+    "quality": {
+      "type": "object",
+      "properties": {
+        "first_pass_pr_success": {
+          "type": "boolean",
+          "description": "CI green on the first push of the PR"
+        },
+        "verify_loop_iterations": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "review_rounds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "escaped_defects_30d": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "caused_incident": {
+          "type": "boolean"
+        },
+        "rolled_back": {
+          "type": "boolean"
+        }
+      }
+    },
+    "agent": {
+      "type": "object",
+      "properties": {
+        "sessions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cost_usd": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Sum of claude_code.cost.usage for the change's sessions, plus CI agent runs"
+        },
+        "human_interventions": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Times a human had to correct, take over or restart agent work"
+        },
+        "agent_rework_commits": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "gates_auto_passed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "gates_human_overridden": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "eval_suite_version": {
+          "type": "string"
+        }
+      }
+    },
+    "impact": {
+      "type": "object",
+      "properties": {
+        "metric": {
+          "type": "string"
+        },
+        "baseline": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "target": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "observed": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "threshold_met": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "measured_on": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        }
+      }
+    }
+  }
+}

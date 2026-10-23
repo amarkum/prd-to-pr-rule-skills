@@ -55,6 +55,8 @@ those gates as code. An incomplete PRD goes back to its product owner as concret
 | How others do it | [`docs/site/companies.html`](docs/site/companies.html) | 29 sourced company cases grouped into seven ways of automating delivery, 16 of them built on Claude. Includes filters, charts and a source link for every number. |
 | The full playbook | [`docs/site/playbook.html`](docs/site/playbook.html) | The long-form reference behind all of the above. |
 | **The playbook as a PDF** | [`docs/playbook.pdf`](docs/playbook.pdf) | 14 A4 pages for reading offline, printing or attaching, built from the page above. |
+| **Adoption plan** | [`docs/adoption/index.html`](docs/adoption/index.html) | How the organisation adopts the Agentic SDLC: the risks, a dated roadmap from Mon 26 Oct 2026, when each autonomy stage arrives, the Claude capability map, the measurement model, leadership decisions and copy-paste prompts. |
+| Execution tracker | [`docs/adoption/agentic-sdlc-execution-plan.xlsx`](docs/adoption/agentic-sdlc-execution-plan.xlsx) | 54 actions across 8 areas with sub-steps, measurable output, status, dates, owners and the support each needs, plus KPIs, milestones, decisions, the task force, risks and evidence. |
 
 GitHub shows the HTML files as source code. To view the pages, clone the repo and open `docs/site/index.html` in a
 browser; they need no build step or server. To host them for your team, turn on GitHub Pages for the `main` branch's
@@ -68,6 +70,7 @@ browser; they need no build step or server. To host them for your team, turn on 
 | Behavioural eval results (real Claude sessions with and without the plugin) | [`docs/evals.md`](docs/evals.md) |
 | The worked example: PRDs before and after, intent, spec, plan and test results from three repos | [`examples/`](examples/README.md) |
 | The original draft plan this standard replaces | [`AI_Native_Engineering_Implementation_Plan.pdf`](AI_Native_Engineering_Implementation_Plan.pdf) |
+| The vision the adoption plan implements, and a tested reference starter kit (guards, skills, subagents, templates, eval harness) | [`docs/adoption/`](docs/adoption/README.md) |
 | Rolling it out: the one-time admin setup, updates and rollback, and the policy explained line by line | [`policy/README.md`](policy/README.md) |
 | What each plugin does and how to install it | [`plugins/sdlc-core/README.md`](plugins/sdlc-core/README.md), [`plugins/sdlc-connectors/README.md`](plugins/sdlc-connectors/README.md) |
 | How lessons are recorded and retired | [`knowledge/README.md`](knowledge/README.md) |

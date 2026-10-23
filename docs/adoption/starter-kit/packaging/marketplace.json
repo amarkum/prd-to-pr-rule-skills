@@ -1,0 +1,14 @@
+{
+  "name": "acme-engineering",
+  "description": "Internal Claude Code plugins for the Agentic SDLC program",
+  "owner": {
+    "name": "Engineering Enablement"
+  },
+  "plugins": [
+    {
+      "name": "agentic-sdlc",
+      "source": "./plugins/agentic-sdlc",
+      "description": "Agentic SDLC skills, specialist subagents and guard hooks"
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+# <Repository name>
+
+<One paragraph: what this service does, who uses it, and what it must never get wrong.>
+Owner team: <team>. On-call: <rotation link>. Production boundary: agents never deploy to or
+change production. Dev, QA and staging are fine when you name the environment explicitly.
+
+## Commands
+Use these, not ad hoc commands. They are the same ones CI and the Stop hook run.
+- `make build`: <what it does, roughly how long it takes>
+- `make lint`: <linters and formatters; it never auto-fixes>
+- `make test`: <unit tests, fast; how to run one test: `<command> path::name`>
+- `make verify`: everything a change must pass before review. "Done" means this passes.
+- Integration tests need <docker compose up / local stack>; see <path>.
+
+## Architecture
+- <Module or service>: <responsibility>. Talks to <x> through <y>.
+- <Data stores and who owns each table or collection>
+- <Event or queue topology, external vendors>
+- Deeper notes: <docs/architecture.md>. Policy packs: `docs/policies/`.
+
+## Directory structure
+- `src/<area>/`: <what lives here>
+- `tests/`: unit tests mirror `src/`; integration tests in `tests/integration/`
+- `docs/changes/<id>/`: the change artifacts (intent, spec, plan, evidence, review, release manifest)
+
+## Conventions
+- <Language version, formatter, import order, naming>
+- <Error handling and logging pattern; how to add a metric or trace span>
+- <How to add an API endpoint, a migration, a feature flag>
+- Commit messages: `<type>(<scope>): <summary> [<change id>]`
+
+## How we deliver changes
+Classes and required artifacts: @docs/changes/README.md
+1. `/intent <ticket>`: draft intent.md, which the product owner approves.
+2. `/spec <id>`: for significant and high-risk changes only.
+3. `/plan-change <id>` in plan mode: the builder approves plan.md before code changes.
+4. Implement in small verified steps. For a defect, the failing test comes first and a human
+   freezes it in `.claude/frozen-tests.txt`.
+5. `/verify-change <id>`: closed loop until `make verify` passes, independent verifier, specialist
+   reviews, then evidence.md and review.md.
+6. Open the PR and link every artifact. `/release-manifest <id>` after merge.
+
+## Testing rules
+- Never skip, focus, weaken or delete a test to get a green run. The test guard hook will ask a
+  human, and frozen tests cannot be edited at all.
+- Prefer behaviour assertions over implementation details. Every validation and authorisation rule
+  gets a negative test.
+- No real customer data, credentials or production endpoints in fixtures.
+
+## Known traps
+Add a line every time an agent or a person repeats a mistake: what goes wrong, why, how to avoid it.
+- <e.g. Money is integer cents. Python's round() is banker's rounding: use Decimal with ROUND_HALF_UP.>
+- <e.g. The orders table is partitioned by month; queries without created_at scan everything.>
+
+## Must not change
+Changes here need an explicit human decision in the spec, never an agent's judgement.
+- <Public API v1 response shapes; mobile clients pin them>
+- <Migration files that have already run anywhere>
+- <`.claude/settings.json`, `.claude/hooks/`, `.claude/frozen-tests.txt`: human-owned guardrails>

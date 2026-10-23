@@ -1,0 +1,54 @@
+# Agentic SDLC standard targets.
+#
+# Copy this to Makefile (or `include` it from your Makefile) and set the three *_CMD values to the
+# repository's real commands. People, agents, CI and the Stop hook all call these targets, so keep
+# them fast and deterministic. `make verify` is the single definition of "done".
+#
+# Examples:
+#   Node:   BUILD_CMD = npm run build      LINT_CMD = npm run lint -- --max-warnings=0   TEST_CMD = npm test -- --ci
+#   Python: BUILD_CMD = python3 -m compileall -q src   LINT_CMD = ruff check . && ruff format --check .   TEST_CMD = pytest -q
+#   Go:     BUILD_CMD = go build ./...     LINT_CMD = golangci-lint run                   TEST_CMD = go test ./...
+#   JVM:    BUILD_CMD = ./gradlew assemble LINT_CMD = ./gradlew spotlessCheck             TEST_CMD = ./gradlew test
+
+SHELL := /bin/bash
+.DEFAULT_GOAL := help
+
+not_set = echo "Makefile: set $(1) to this repository's $(2) command" >&2; exit 1
+
+BUILD_CMD ?= $(call not_set,BUILD_CMD,build)
+LINT_CMD  ?= $(call not_set,LINT_CMD,lint)
+TEST_CMD  ?= $(call not_set,TEST_CMD,unit test)
+# Slower checks that only run in verify: integration, contract, security scan, UI snapshots.
+VERIFY_EXTRA_CMD ?= true
+# Branch that changes are compared with for frozen tests and artifacts.
+BASE_REF ?= origin/main
+
+.PHONY: help build lint test verify verify-frozen verify-artifacts hooks-test evals
+
+help: ## List targets
+	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  %-18s %s\n", $$1, $$2}'
+
+build: ## Compile or bundle
+	@$(BUILD_CMD)
+
+lint: ## Static checks and format check (never auto-fixes)
+	@$(LINT_CMD)
+
+test: ## Fast unit tests
+	@$(TEST_CMD)
+
+verify: build lint test verify-frozen verify-artifacts ## Everything a change must pass before review
+	@$(VERIFY_EXTRA_CMD)
+	@echo "verify: OK"
+
+verify-frozen: ## Fail if a test frozen on the base branch was changed or deleted
+	@python3 scripts/check_frozen_tests.py --base $(BASE_REF)
+
+verify-artifacts: ## Fail if a change folder lacks the artifacts its class requires
+	@python3 scripts/check_artifacts.py --base $(BASE_REF)
+
+hooks-test: ## Self-test the Claude Code hooks
+	@python3 .claude/hooks/tests/run_hook_tests.py
+
+evals: ## Run the agent eval suite (calls Claude headless and costs money)
+	@python3 evals/run_evals.py

@@ -1,0 +1,12 @@
+{
+  "session_id": "sample-session",
+  "transcript_path": "/dev/null",
+  "cwd": ".",
+  "permission_mode": "default",
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "cat .env | grep STRIPE",
+    "description": "Look up the Stripe key"
+  }
+}

@@ -2,6 +2,19 @@
 
 From this release on, entries are dated: merging to `main` is the release, and plugins carry no version numbers.
 
+## 2026-10-23: adoption plan and execution tracker
+
+Documentation only: no plugin, policy or workflow changes, so nothing changes on anyone's machine.
+
+- **New `docs/adoption/`.**
+  - `index.html`: the plan for adopting the Agentic SDLC, with a dated roadmap from Mon 26 Oct 2026, the autonomy
+    stages, the Claude capability map, the measurement model, leadership decisions and copy-paste prompts.
+  - `agentic-sdlc-execution-plan.xlsx`: the execution tracker the program reviews every two weeks.
+  - `vision.md`: the source vision.
+  - `starter-kit/`: a tested reference kit. Its guards, agents, skills and eval harness are candidates for
+    `sdlc-core`; none of it is in the marketplace.
+- README and CLAUDE.md link to it.
+
 ## 2026-10-22: zero-touch distribution
 
 Developers install nothing and repos copy nothing.

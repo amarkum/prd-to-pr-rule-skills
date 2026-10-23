@@ -21,6 +21,8 @@ every machine, and each repo's one-file CI caller runs the shared workflow. Merg
 - `docs/site/`: the interactive pages (plain HTML, CSS and JS; content in `assets/data.js` and `assets/companies.js`).
   `docs/playbook.pdf` is built from `docs/site/playbook.html` (`make pdf`). `docs/research.md`: sourced notes behind the
   companies page. `examples/`: PRDs, intent, spec, plan, JUnit, `demo.py`.
+- `docs/adoption/`: the adoption plan (page, execution tracker, source vision) and a reference starter kit. Nothing in it
+  ships through the marketplace; parts of the kit move into `plugins/` through the normal PR and eval process.
 
 ## Commands
 

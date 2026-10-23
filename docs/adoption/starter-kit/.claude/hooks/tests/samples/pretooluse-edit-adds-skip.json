@@ -1,0 +1,13 @@
+{
+  "session_id": "sample-session",
+  "transcript_path": "/dev/null",
+  "cwd": ".",
+  "permission_mode": "default",
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Edit",
+  "tool_input": {
+    "file_path": "tests/test_cart.py",
+    "old_string": "def test_total():",
+    "new_string": "@pytest.mark.skip(reason=\"flaky\")\ndef test_total():"
+  }
+}

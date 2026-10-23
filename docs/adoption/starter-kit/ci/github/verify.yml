@@ -1,0 +1,29 @@
+# Deterministic gates on every PR: the same `make verify` the agent and the Stop hook run, plus
+# the PR-stage artifact check. Copy to .github/workflows/ and make it a required status check.
+name: Verify
+
+on:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      # Add this repository's toolchain setup here (setup-node, setup-python, setup-java, ...).
+      - name: Read change class and exceptions from PR labels
+        id: labels
+        run: |
+          echo "class=$(jq -r '[.pull_request.labels[].name | select(startswith("class:"))][0] // "" | sub("class:"; "")' "$GITHUB_EVENT_PATH")" >> "$GITHUB_OUTPUT"
+          echo "unfreeze=$(jq -r 'if any(.pull_request.labels[].name; . == "unfreeze-approved") then "1" else "" end' "$GITHUB_EVENT_PATH")" >> "$GITHUB_OUTPUT"
+      - name: make verify
+        env:
+          ALLOW_FROZEN_CHANGE: ${{ steps.labels.outputs.unfreeze }}
+        run: make verify BASE_REF=origin/${{ github.base_ref }}
+      - name: Artifacts required at PR stage
+        env:
+          CHANGE_CLASS: ${{ steps.labels.outputs.class }}
+        run: python3 scripts/check_artifacts.py --base origin/${{ github.base_ref }} --stage pr

@@ -1,0 +1,1678 @@
+<title>Agentic SDLC Adoption Plan</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="A dated 12-month plan for adopting the Continuous Agentic SDLC, with a risk critique, a Claude capability map, a measurement model, leadership decisions, a copy-paste Claude playbook and a tested starter kit.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+/* Layout: a controlled engineering document. Sticky contents rail on the left, one reading
+   column on the right; wide tables, the timeline and code scroll inside their own frames. */
+:root {
+  --paper: #F3F6F6;
+  --sheet: #FFFFFF;
+  --ink: #14232A;
+  --ink-2: #455760;
+  --ink-3: #6A7C85;
+  --rule: #CFD9DC;
+  --rule-soft: #E3EAEC;
+  --accent: #0A6A70;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #DCEDED;
+  --gate: #9C540F;
+  --gate-soft: #F5E7D6;
+  --pass: #1B7549;
+  --pass-soft: #DCF0E4;
+  --ask: #8F5503;
+  --ask-soft: #F7EAD0;
+  --deny: #A9281D;
+  --deny-soft: #F7E0DD;
+  --code-bg: #E9EFF0;
+  --shadow: 0 1px 2px rgba(20, 35, 42, 0.06), 0 10px 28px rgba(20, 35, 42, 0.07);
+  --font-display: "IBM Plex Sans Condensed", "Roboto Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Source Serif 4", "Source Serif Pro", Georgia, "Times New Roman", serif;
+  --font-ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0E1518; --sheet: #142026; --ink: #E0E8EB; --ink-2: #A8B6BC; --ink-3: #7D8F97;
+    --rule: #2A3B43; --rule-soft: #1C2B31; --accent: #55C2C5; --accent-ink: #062224; --accent-soft: #11343A;
+    --gate: #E49B57; --gate-soft: #3A2A1B; --pass: #5BCB97; --pass-soft: #133526; --ask: #E6AA4E;
+    --ask-soft: #3A2C15; --deny: #F07D71; --deny-soft: #3E1F1C; --code-bg: #0F1B20;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 10px 28px rgba(0, 0, 0, 0.35);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0E1518; --sheet: #142026; --ink: #E0E8EB; --ink-2: #A8B6BC; --ink-3: #7D8F97;
+  --rule: #2A3B43; --rule-soft: #1C2B31; --accent: #55C2C5; --accent-ink: #062224; --accent-soft: #11343A;
+  --gate: #E49B57; --gate-soft: #3A2A1B; --pass: #5BCB97; --pass-soft: #133526; --ask: #E6AA4E;
+  --ask-soft: #3A2C15; --deny: #F07D71; --deny-soft: #3E1F1C; --code-bg: #0F1B20;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 10px 28px rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
+}
+
+/* Base (matches the publish skeleton so the local file renders the same) */
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 1.5rem; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font: 400 1.0625rem/1.65 var(--font-body);
+  font-optical-sizing: auto;
+}
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+a { color: var(--accent); text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+[tabindex="-1"]:focus { outline: none; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+/* Shell */
+.shell {
+  display: grid; grid-template-columns: 15rem minmax(0, 1fr); gap: 3.5rem;
+  max-width: 82rem; margin: 0 auto;
+  padding-left: max(32px, env(safe-area-inset-left, 0px));
+  padding-right: max(32px, env(safe-area-inset-right, 0px));
+  padding-block: 0 4rem;
+}
+main { min-width: 0; padding-block: 2.75rem 1rem; }
+
+/* Contents rail */
+.toc {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 1.25rem); align-self: start;
+  max-height: calc(100vh - 2.5rem); overflow-y: auto; padding-block: 1.75rem 1rem;
+  font: 400 0.875rem/1.35 var(--font-ui);
+}
+.toc-title { font: 600 0.72rem/1 var(--font-ui); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 0.9rem 0.55rem; }
+.toc ol, .toc-panel ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.1rem; }
+.toc a, .toc-panel a {
+  display: grid; grid-template-columns: 1.75rem minmax(0, 1fr); align-items: baseline;
+  padding: 0.38rem 0.55rem; border-radius: 5px; color: var(--ink-2); text-decoration: none;
+}
+.toc a .n, .toc-panel a .n { font: 500 0.72rem/1 var(--font-mono); color: var(--ink-3); }
+.toc a:hover, .toc-panel a:hover { color: var(--ink); background: var(--rule-soft); }
+.toc a[aria-current="true"], .toc-panel a[aria-current="true"] { color: var(--ink); background: var(--accent-soft); font-weight: 500; }
+.toc-foot { margin-top: 1.25rem; padding: 0.9rem 0.55rem 0; border-top: 1px solid var(--rule); display: grid; gap: 0.6rem; color: var(--ink-3); font-size: 0.78rem; }
+
+.btn {
+  font: 500 0.8rem/1 var(--font-ui); color: var(--ink); background: var(--sheet);
+  border: 1px solid var(--rule); border-radius: 5px; padding: 0.5rem 0.7rem; cursor: pointer;
+}
+.btn:hover { border-color: var(--ink-3); }
+
+/* Phone and tablet top bar */
+.topbar {
+  display: none; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  background: var(--sheet); border-bottom: 1px solid var(--rule);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0.55rem;
+  align-items: center; justify-content: space-between; gap: 0.75rem;
+  font-family: var(--font-ui);
+}
+.topbar-title { font: 600 0.95rem/1.2 var(--font-display); letter-spacing: 0.01em; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.topbar-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+.toc-panel {
+  position: absolute; left: 0; right: 0; top: 100%;
+  background: var(--sheet); border-bottom: 1px solid var(--rule); box-shadow: var(--shadow);
+  max-height: 70vh; overflow-y: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0.75rem 1rem; font: 400 0.95rem/1.35 var(--font-ui);
+}
+@media (max-width: 1080px) {
+  .shell { grid-template-columns: minmax(0, 1fr); gap: 0; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .toc { display: none; }
+  .topbar { display: flex; }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--sheet); }
+  main { padding-block: 1.75rem 1rem; }
+  html { scroll-padding-top: 4.25rem; }
+}
+
+/* Type */
+h1, h2, h3, h4 { text-wrap: balance; }
+h1 { font: 700 clamp(2.2rem, 4.6vw, 3.25rem)/1.03 var(--font-display); letter-spacing: -0.012em; margin: 0.9rem 0 1rem; }
+h2 { font: 600 clamp(1.65rem, 2.8vw, 2.1rem)/1.12 var(--font-display); letter-spacing: -0.005em; margin: 0 0 1.1rem; display: flex; gap: 0.7rem; align-items: baseline; }
+h2 .sec-n { font: 500 0.95rem/1 var(--font-mono); color: var(--accent); flex-shrink: 0; }
+h3 { font: 600 1.16rem/1.3 var(--font-ui); margin: 2.25rem 0 0.65rem; letter-spacing: -0.005em; }
+h4 { font: 600 0.74rem/1.2 var(--font-ui); letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-2); margin: 1.35rem 0 0.5rem; }
+p, li { max-width: 68ch; }
+p { margin: 0 0 1rem; }
+ul, ol { padding-left: 1.25rem; margin: 0 0 1rem; }
+li { margin: 0.25rem 0; }
+li::marker { color: var(--ink-3); }
+strong, b { font-weight: 600; }
+.lede { font-size: 1.22rem; line-height: 1.55; color: var(--ink-2); max-width: 62ch; }
+.small { font: 400 0.85rem/1.5 var(--font-ui); color: var(--ink-2); }
+.muted { color: var(--ink-3); }
+code, .mono { font-family: var(--font-mono); }
+code { font-size: 0.84em; background: var(--code-bg); padding: 0.08em 0.36em; border-radius: 3px; overflow-wrap: anywhere; }
+.file { font: 500 0.82rem/1.2 var(--font-mono); color: var(--accent); }
+.nums { font-variant-numeric: tabular-nums; }
+
+/* Sections */
+section { padding-block: 3.25rem 0.5rem; border-top: 1px solid var(--rule); }
+section:first-of-type { border-top: 0; padding-top: 0; }
+.subhead { font: 600 0.74rem/1 var(--font-ui); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 0.6rem; }
+
+/* Masthead */
+.docstrip { display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem; align-items: center; font: 500 0.78rem/1.3 var(--font-ui); color: var(--ink-2); padding-bottom: 0.9rem; border-bottom: 1px solid var(--rule); }
+.docstrip .label { color: var(--accent); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.72rem; }
+.mast-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 20rem); gap: 1.25rem 2rem; margin-top: 1.75rem; align-items: start; }
+@media (max-width: 860px) { .mast-grid { grid-template-columns: minmax(0, 1fr); } }
+.onescreen { min-width: 0; }
+.onescreen ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.7rem; }
+.onescreen li { display: grid; grid-template-columns: 5.6rem minmax(0, 1fr); gap: 0.9rem; max-width: none; margin: 0; font-size: 1rem; line-height: 1.55; }
+.onescreen .when { font: 500 0.78rem/1.45 var(--font-mono); color: var(--accent); padding-top: 0.12rem; }
+@media (max-width: 520px) { .onescreen li { grid-template-columns: minmax(0, 1fr); gap: 0.1rem; } }
+.assume { min-width: 0; background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; padding: 1rem 1.1rem; font: 400 0.86rem/1.5 var(--font-ui); color: var(--ink-2); }
+.assume h3 { margin: 0 0 0.5rem; font-size: 0.74rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
+.assume ul { margin: 0; padding-left: 1rem; }
+
+/* Artifact chain */
+.chain { margin: 2rem 0 0.5rem; }
+.chain ol { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.75rem; }
+.chain li {
+  position: relative; max-width: none; margin: 0; min-width: 0;
+  background: var(--sheet); border: 1px solid var(--rule); border-radius: 7px;
+  padding: 0.8rem 0.8rem 0.9rem; display: grid; gap: 0.3rem; align-content: start;
+  font: 400 0.8rem/1.4 var(--font-ui); color: var(--ink-2);
+}
+.chain li:not(:last-child)::after {
+  content: "\2192"; position: absolute; right: -0.68rem; top: 0.95rem; z-index: 1;
+  width: 1.1rem; text-align: center; color: var(--accent); background: var(--paper);
+  font: 600 0.95rem/1 var(--font-ui);
+}
+.chain .ph { display: flex; justify-content: space-between; align-items: baseline; font: 600 0.7rem/1 var(--font-ui); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
+.chain .art { font: 500 0.92rem/1.25 var(--font-mono); color: var(--accent); overflow-wrap: anywhere; }
+.chain .who { color: var(--ink); font-weight: 500; }
+.chain-loop { margin-top: 0.75rem; display: flex; gap: 0.6rem; align-items: baseline; padding: 0.65rem 0.85rem; border: 1px dashed var(--accent); border-radius: 7px; font: 400 0.86rem/1.45 var(--font-ui); color: var(--ink-2); }
+.chain-loop .sym { color: var(--accent); font-weight: 600; }
+.chain figcaption { margin-top: 0.6rem; font: 400 0.82rem/1.5 var(--font-ui); color: var(--ink-3); max-width: 75ch; }
+@media (max-width: 1240px) and (min-width: 1081px), (max-width: 900px) {
+  .chain ol { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .chain li:nth-child(3n)::after { display: none; }
+}
+@media (max-width: 560px) {
+  .chain ol { grid-template-columns: minmax(0, 1fr); gap: 0.85rem; }
+  .chain li:not(:last-child)::after { content: "\2193"; right: auto; left: 1rem; top: auto; bottom: -0.85rem; display: block; }
+}
+
+/* Tables */
+.table-wrap { overflow-x: auto; margin: 1rem 0 1.6rem; border: 1px solid var(--rule); border-radius: 8px; background: var(--sheet); }
+table { width: 100%; border-collapse: collapse; font: 400 0.88rem/1.45 var(--font-ui); }
+th { text-align: left; font-weight: 600; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); padding: 0.65rem 0.85rem; border-bottom: 1px solid var(--rule); background: var(--rule-soft); vertical-align: bottom; }
+td { padding: 0.68rem 0.85rem; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+tbody tr:last-child td { border-bottom: 0; }
+td p, td li { max-width: none; }
+td ul { margin: 0; padding-left: 1rem; }
+td code { font-size: 0.8rem; }
+.w-wide { min-width: 52rem; }
+.w-mid { min-width: 40rem; }
+.t-key { font-weight: 600; color: var(--ink); }
+@media (max-width: 720px) {
+  table.stack { min-width: 0; }
+  table.stack thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  table.stack tr { display: block; padding: 0.8rem 0.9rem; border-bottom: 1px solid var(--rule); }
+  table.stack tbody tr:last-child { border-bottom: 0; }
+  table.stack td { display: block; position: relative; border: 0; padding: 0.22rem 0 0.22rem 6.6rem; min-height: 1.4rem; }
+  table.stack td::before { content: attr(data-label); position: absolute; left: 0; top: 0.32rem; width: 6rem; font: 600 0.66rem/1.6 var(--font-ui); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+}
+
+/* Chips */
+.chip { display: inline-flex; align-items: center; gap: 0.3rem; font: 600 0.7rem/1 var(--font-ui); letter-spacing: 0.04em; padding: 0.3rem 0.5rem; border-radius: 999px; border: 1px solid var(--rule); color: var(--ink-2); background: var(--sheet); white-space: nowrap; vertical-align: 0.1em; }
+.chip.allow { color: var(--pass); background: var(--pass-soft); border-color: transparent; }
+.chip.ask { color: var(--ask); background: var(--ask-soft); border-color: transparent; }
+.chip.deny { color: var(--deny); background: var(--deny-soft); border-color: transparent; }
+.chip.c-trivial { color: var(--ink-2); background: var(--rule-soft); border-color: transparent; }
+.chip.c-standard { color: var(--accent); background: var(--accent-soft); border-color: transparent; }
+.chip.c-significant { color: var(--gate); background: var(--gate-soft); border-color: transparent; }
+.chip.c-high { color: var(--deny); background: var(--deny-soft); border-color: transparent; }
+.chip.c-wave { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+/* Builder split */
+.split { margin: 1.25rem 0 1.5rem; max-width: 44rem; }
+.split-bar { display: grid; grid-template-columns: 60fr 40fr; height: 2.4rem; border-radius: 6px; overflow: hidden; border: 1px solid var(--rule); }
+.split-bar span { display: flex; align-items: center; padding: 0 0.8rem; font: 600 0.8rem/1.2 var(--font-ui); min-width: 0; }
+.split-bar .a { background: var(--accent); color: var(--accent-ink); }
+.split-bar .b { background: var(--accent-soft); color: var(--ink); }
+.split-legend { display: grid; grid-template-columns: 60fr 40fr; gap: 0.8rem; margin-top: 0.5rem; font: 400 0.82rem/1.45 var(--font-ui); color: var(--ink-2); }
+.split-legend > div { min-width: 0; }
+@media (max-width: 560px) { .split-legend { grid-template-columns: minmax(0, 1fr); } }
+
+/* Autonomy ladder */
+.ladder { list-style: none; padding: 0; margin: 1.25rem 0 0.5rem; display: grid; gap: 0.45rem; }
+.ladder li { max-width: none; margin: 0 0 0 calc(var(--step) * 2.2rem); display: grid; grid-template-columns: 3rem 8.5rem minmax(0, 1fr) auto; gap: 0.9rem; align-items: center; background: var(--sheet); border: 1px solid var(--rule); border-radius: 7px; padding: 0.6rem 0.9rem; font: 400 0.88rem/1.4 var(--font-ui); }
+.ladder .lv { font: 500 0.95rem/1 var(--font-mono); color: var(--accent); }
+.ladder .act { font-weight: 600; color: var(--ink); }
+.ladder .desc { color: var(--ink-2); min-width: 0; }
+.ladder li.out { border-style: dashed; background: transparent; }
+.ladder li.out .lv { color: var(--ink-3); }
+@media (max-width: 760px) {
+  .ladder li { margin-left: 0; grid-template-columns: 2.6rem minmax(0, 1fr); gap: 0.2rem 0.75rem; }
+  .ladder .act, .ladder .desc, .ladder .chip { grid-column: 2; }
+  .ladder .chip { justify-self: start; }
+}
+
+/* Bands and pillars */
+.bands { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem; margin: 1rem 0 1.5rem; }
+.band { min-width: 0; background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; padding: 0.9rem 1rem; font: 400 0.84rem/1.45 var(--font-ui); color: var(--ink-2); }
+.band h4 { margin: 0 0 0.45rem; color: var(--ink); }
+.band ul { margin: 0; padding-left: 1rem; }
+@media (max-width: 980px) { .bands { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .bands { grid-template-columns: minmax(0, 1fr); } }
+
+.success { margin: 2rem 0 0.5rem; padding: 1.25rem 1.4rem; background: var(--accent-soft); border-radius: 10px; }
+.success .subhead { color: var(--accent); }
+.success p { margin: 0; font-size: 1.2rem; line-height: 1.5; color: var(--ink); max-width: 62ch; }
+
+/* Risks */
+.risks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem; margin: 1.25rem 0 1rem; }
+@media (max-width: 900px) { .risks { grid-template-columns: minmax(0, 1fr); } }
+.risk { min-width: 0; background: var(--sheet); border: 1px solid var(--rule); border-radius: 9px; padding: 1rem 1.15rem 0.95rem; display: grid; gap: 0.45rem; align-content: start; font: 400 0.9rem/1.5 var(--font-ui); color: var(--ink-2); }
+.risk h3 { margin: 0 0 0.15rem; font-size: 1.02rem; color: var(--ink); display: flex; gap: 0.55rem; align-items: baseline; }
+.risk h3 .rid { font: 500 0.78rem/1 var(--font-mono); color: var(--deny); flex-shrink: 0; }
+.risk p { margin: 0; max-width: none; }
+.risk .k { font-weight: 600; color: var(--ink); }
+.risk .where { font: 500 0.76rem/1.4 var(--font-mono); color: var(--ink-3); padding-top: 0.3rem; border-top: 1px solid var(--rule-soft); margin-top: 0.2rem; }
+
+.flow3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; margin: 1rem 0 1.25rem; counter-reset: f; }
+.flow3 > div { min-width: 0; position: relative; background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; padding: 0.85rem 1rem; font: 400 0.86rem/1.45 var(--font-ui); color: var(--ink-2); }
+.flow3 > div b { display: block; color: var(--ink); margin-bottom: 0.25rem; }
+.flow3 .when { font: 500 0.72rem/1 var(--font-mono); color: var(--accent); display: block; margin-bottom: 0.45rem; }
+@media (max-width: 760px) { .flow3 { grid-template-columns: minmax(0, 1fr); } }
+
+.principles { counter-reset: p; list-style: none; padding: 0; display: grid; gap: 0.55rem; margin: 1rem 0 1rem; }
+.principles li { counter-increment: p; display: grid; grid-template-columns: 2.4rem minmax(0, 1fr); gap: 0.6rem; max-width: 72ch; margin: 0; }
+.principles li::before { content: "P" counter(p); font: 500 0.8rem/1.9 var(--font-mono); color: var(--accent); }
+
+/* Timeline */
+.gantt-wrap { overflow-x: auto; margin: 1.25rem 0 0.75rem; border: 1px solid var(--rule); border-radius: 9px; background: var(--sheet); }
+.gantt { position: relative; display: grid; grid-template-columns: 12.5rem repeat(53, minmax(0.62rem, 1fr)); grid-auto-rows: 2.35rem; min-width: 56rem; padding: 0.5rem 0.75rem 0.75rem 0; font: 400 0.78rem/1.2 var(--font-ui); }
+.g-month { grid-row: 1; align-self: center; padding-left: 0.3rem; border-left: 1px solid var(--rule); color: var(--ink-3); font: 600 0.7rem/1 var(--font-ui); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+.g-label { grid-column: 1; align-self: center; padding: 0 0.75rem 0 0.9rem; color: var(--ink); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.g-label .wid { font: 500 0.75rem/1 var(--font-mono); color: var(--accent); margin-right: 0.45rem; }
+.gantt-hint { display: none; }
+@media (max-width: 640px) {
+  .gantt { grid-template-columns: 7.25rem repeat(53, minmax(0.62rem, 1fr)); min-width: 46rem; }
+  .g-label { position: sticky; left: 0; z-index: 3; align-self: stretch; display: flex; align-items: center; background: var(--sheet); padding: 0 0.5rem 0 0.75rem; font-size: 0.74rem; line-height: 1.15; white-space: normal; }
+  .gantt-hint { display: block; margin: -0.25rem 0 0.75rem; }
+}
+.g-bar { align-self: center; height: 1.45rem; border-radius: 4px; background: var(--accent-soft); border: 1px solid var(--accent); display: flex; align-items: center; justify-content: space-between; padding: 0 0.35rem; color: var(--ink); font: 500 0.7rem/1 var(--font-mono); white-space: nowrap; overflow: hidden; position: relative; z-index: 1; }
+.g-bar.g-roi { background: var(--gate-soft); border-color: var(--gate); }
+.g-bar .gate { color: var(--gate); font-size: 0.8rem; }
+.g-holiday { grid-row: 2 / 9; background: repeating-linear-gradient(135deg, var(--rule-soft) 0 6px, transparent 6px 12px); border-radius: 3px; }
+.g-holiday-label { grid-row: 8; align-self: center; color: var(--ink-3); font: 500 0.66rem/1.1 var(--font-ui); white-space: nowrap; padding-left: 0.2rem; z-index: 2; }
+.legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; font: 400 0.8rem/1.4 var(--font-ui); color: var(--ink-2); margin-bottom: 1.25rem; }
+.legend .sw { display: inline-block; width: 0.9rem; height: 0.65rem; border-radius: 2px; vertical-align: -0.02rem; margin-right: 0.35rem; border: 1px solid var(--accent); background: var(--accent-soft); }
+.legend .sw.h { border-color: var(--rule); background: repeating-linear-gradient(135deg, var(--rule) 0 3px, transparent 3px 6px); }
+.legend .gate { color: var(--gate); }
+
+.dates { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.6rem; margin: 0.5rem 0 1.5rem; }
+.dates > div { min-width: 0; background: var(--sheet); border: 1px solid var(--rule); border-radius: 7px; padding: 0.6rem 0.8rem; font: 400 0.82rem/1.4 var(--font-ui); color: var(--ink-2); }
+.dates b { display: block; font: 500 0.88rem/1.3 var(--font-mono); color: var(--ink); margin-bottom: 0.15rem; }
+@media (max-width: 820px) { .dates { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .dates { grid-template-columns: minmax(0, 1fr); } }
+
+/* Waves */
+.wave { margin: 1.5rem 0; background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.wave-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.2rem 1rem; align-items: baseline; padding: 1rem 1.25rem 0.9rem; border-bottom: 1px solid var(--rule-soft); }
+.wave-id { grid-row: span 2; font: 600 1.6rem/1 var(--font-mono); color: var(--accent); }
+.wave-head h3 { margin: 0; font: 600 1.3rem/1.2 var(--font-display); }
+.wave-head .when { font: 500 0.8rem/1.4 var(--font-mono); color: var(--ink-2); }
+.wave-goal { padding: 0.9rem 1.25rem 0; margin: 0; font-size: 1.02rem; max-width: 80ch; }
+.wave-body { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 0 2rem; padding: 0.2rem 1.25rem 1.1rem; font: 400 0.89rem/1.5 var(--font-ui); color: var(--ink-2); }
+.wave-body > div { min-width: 0; }
+.wave-body ul { padding-left: 1.05rem; margin-bottom: 0.4rem; }
+.wave-body li { max-width: none; margin: 0.28rem 0; }
+.wave-body .crit li::marker { content: "\25B8  "; color: var(--accent); }
+@media (max-width: 860px) { .wave-body { grid-template-columns: minmax(0, 1fr); } }
+
+/* Kit */
+.tree { font: 400 0.8rem/1.55 var(--font-mono); background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; padding: 0.9rem 1.1rem; overflow-x: auto; white-space: pre; color: var(--ink-2); margin: 0.75rem 0 1.25rem; }
+.tree b { color: var(--ink); font-weight: 500; }
+.tree i { color: var(--ink-3); font-style: normal; }
+pre.code { font: 400 0.8rem/1.55 var(--font-mono); background: var(--code-bg); border-radius: 8px; padding: 0.9rem 1.05rem; overflow-x: auto; margin: 0.75rem 0 1.25rem; color: var(--ink); }
+.tests { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; margin: 0.75rem 0 1.25rem; }
+.tests > div { min-width: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.6rem; align-items: start; background: var(--sheet); border: 1px solid var(--rule); border-radius: 7px; padding: 0.65rem 0.8rem; font: 400 0.84rem/1.45 var(--font-ui); color: var(--ink-2); }
+@media (max-width: 720px) { .tests { grid-template-columns: minmax(0, 1fr); } }
+
+/* Gap scores */
+.score { display: grid; grid-template-columns: 1.4rem minmax(3rem, 1fr); align-items: center; gap: 0.45rem; font: 500 0.85rem/1 var(--font-mono); color: var(--ink); min-width: 6rem; }
+.score::after { content: ""; height: 0.5rem; border-radius: 2px; background: linear-gradient(90deg, var(--accent) calc(var(--v) * 10%), var(--rule-soft) calc(var(--v) * 10%)); }
+.score.hyp { color: var(--ink-3); }
+.score.hyp::after { background: linear-gradient(90deg, var(--ink-3) calc(var(--v) * 10%), var(--rule-soft) calc(var(--v) * 10%)); }
+
+/* ROI calculator */
+.roi { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 1.25rem; margin: 1rem 0 1.5rem; background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; padding: 1.1rem 1.25rem; font-family: var(--font-ui); }
+@media (max-width: 820px) { .roi { grid-template-columns: minmax(0, 1fr); } }
+.roi fieldset { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem 0.9rem; }
+@media (max-width: 460px) { .roi fieldset { grid-template-columns: minmax(0, 1fr); } }
+.roi legend { font: 600 0.72rem/1 var(--font-ui); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 0.75rem; padding: 0; }
+.roi label { display: grid; gap: 0.25rem; font: 500 0.78rem/1.3 var(--font-ui); color: var(--ink-2); min-width: 0; }
+.roi input { width: 100%; box-sizing: border-box; font: 500 0.92rem/1.2 var(--font-mono); color: var(--ink); background: var(--paper); border: 1px solid var(--rule); border-radius: 5px; padding: 0.45rem 0.55rem; font-variant-numeric: tabular-nums; }
+.roi input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+.roi-out { min-width: 0; display: grid; gap: 0.5rem; align-content: start; }
+.roi-out .row { display: flex; justify-content: space-between; gap: 1rem; padding: 0.4rem 0; border-bottom: 1px solid var(--rule-soft); font: 400 0.86rem/1.35 var(--font-ui); color: var(--ink-2); }
+.roi-out .row output { font: 500 0.92rem/1.35 var(--font-mono); color: var(--ink); font-variant-numeric: tabular-nums; text-align: right; }
+.roi-out .big { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; margin-top: 0.4rem; }
+.roi-out .big > div { background: var(--accent-soft); border-radius: 8px; padding: 0.7rem 0.8rem; font: 500 0.72rem/1.2 var(--font-ui); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); }
+.roi-out .big output { display: block; margin-top: 0.35rem; font: 600 1.45rem/1 var(--font-display); letter-spacing: 0; text-transform: none; color: var(--ink); font-variant-numeric: tabular-nums; }
+.roi-note { grid-column: 1 / -1; margin: 0; font: 400 0.8rem/1.45 var(--font-ui); color: var(--ink-3); max-width: none; }
+
+/* Prompts */
+.pgroup { margin: 2rem 0 0.5rem; }
+.prompt { margin: 0.85rem 0 1.1rem; background: var(--sheet); border: 1px solid var(--rule); border-radius: 9px; overflow: hidden; }
+.prompt-head { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; padding: 0.6rem 0.65rem 0.6rem 1rem; border-bottom: 1px solid var(--rule-soft); }
+.prompt-title { font: 600 0.9rem/1.3 var(--font-ui); color: var(--ink); min-width: 0; }
+.prompt-title .pid { font: 500 0.75rem/1 var(--font-mono); color: var(--accent); margin-right: 0.5rem; }
+.copy { flex-shrink: 0; font: 500 0.76rem/1 var(--font-ui); color: var(--ink); background: var(--paper); border: 1px solid var(--rule); border-radius: 5px; padding: 0.42rem 0.65rem; cursor: pointer; min-width: 4.2rem; }
+.copy:hover { border-color: var(--ink-3); }
+.copy.ok { color: var(--pass); border-color: var(--pass); }
+.prompt pre { margin: 0; padding: 0.85rem 1rem; font: 400 0.8rem/1.6 var(--font-mono); color: var(--ink); background: var(--code-bg); white-space: pre-wrap; overflow-wrap: anywhere; }
+.prompt .note { margin: 0; padding: 0.55rem 1rem 0.65rem; font: 400 0.8rem/1.45 var(--font-ui); color: var(--ink-3); max-width: none; }
+
+/* Checklist */
+.check-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0.5rem 1rem; }
+.check-progress { font: 500 0.82rem/1 var(--font-mono); color: var(--accent); }
+.checklist { list-style: none; padding: 0; margin: 1rem 0; display: grid; gap: 0.5rem; }
+.checklist li { max-width: none; margin: 0; display: grid; grid-template-columns: 1.35rem minmax(0, 1fr); gap: 0.75rem; align-items: start; background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; padding: 0.75rem 0.95rem; font: 400 0.9rem/1.5 var(--font-ui); color: var(--ink); }
+.checklist input { width: 1.1rem; height: 1.1rem; margin: 0.18rem 0 0; accent-color: var(--accent); cursor: pointer; }
+.checklist label { cursor: pointer; min-width: 0; }
+.checklist .day { display: block; font: 500 0.74rem/1.3 var(--font-mono); color: var(--accent); margin-bottom: 0.15rem; }
+.checklist .done-when { display: block; color: var(--ink-3); font-size: 0.82rem; margin-top: 0.2rem; }
+.checklist input:checked + label > .task { text-decoration: line-through; text-decoration-color: var(--ink-3); color: var(--ink-2); }
+
+/* Do-not list */
+.dont { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; margin: 1rem 0; }
+@media (max-width: 820px) { .dont { grid-template-columns: minmax(0, 1fr); } }
+.dont li { max-width: none; margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.65rem; align-items: start; background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; padding: 0.75rem 0.9rem; font: 400 0.9rem/1.5 var(--font-ui); color: var(--ink-2); }
+.dont li b { color: var(--ink); }
+
+footer.end { margin-top: 3rem; padding-top: 1.25rem; border-top: 1px solid var(--rule); font: 400 0.8rem/1.5 var(--font-ui); color: var(--ink-3); }
+</style>
+
+<div class="topbar" id="topbar">
+  <span class="topbar-title">Agentic SDLC Adoption Plan</span>
+  <span class="topbar-actions">
+    <button class="btn" type="button" data-theme-toggle>Theme: auto</button>
+    <button class="btn" type="button" id="toc-toggle" aria-expanded="false" aria-controls="toc-panel">Contents</button>
+  </span>
+  <nav class="toc-panel" id="toc-panel" aria-label="Contents" hidden>
+    <ol>
+      <li><a href="#summary"><span class="n">0</span>Summary</a></li>
+      <li><a href="#understood"><span class="n">1</span>What I understood</a></li>
+      <li><a href="#risks"><span class="n">2</span>Risks and design principles</a></li>
+      <li><a href="#roadmap"><span class="n">3</span>12-month roadmap</a></li>
+      <li><a href="#capabilities"><span class="n">4</span>Claude capability map</a></li>
+      <li><a href="#kit"><span class="n">5</span>Starter kit</a></li>
+      <li><a href="#measurement"><span class="n">6</span>Measurement model</a></li>
+      <li><a href="#gaps"><span class="n">7</span>Gap trajectory</a></li>
+      <li><a href="#decisions"><span class="n">8</span>Leadership decisions</a></li>
+      <li><a href="#playbook"><span class="n">9</span>Claude playbook</a></li>
+      <li><a href="#first-10-days"><span class="n">10</span>Next 10 working days</a></li>
+      <li><a href="#dont"><span class="n">11</span>What not to do</a></li>
+      <li><a href="#sources"><span class="n">A</span>Sources and checks</a></li>
+    </ol>
+  </nav>
+</div>
+
+<div class="shell">
+  <nav class="toc" aria-label="Contents">
+    <p class="toc-title">Contents</p>
+    <ol>
+      <li><a href="#summary"><span class="n">0</span>Summary</a></li>
+      <li><a href="#understood"><span class="n">1</span>What I understood</a></li>
+      <li><a href="#risks"><span class="n">2</span>Risks and design principles</a></li>
+      <li><a href="#roadmap"><span class="n">3</span>12-month roadmap</a></li>
+      <li><a href="#capabilities"><span class="n">4</span>Claude capability map</a></li>
+      <li><a href="#kit"><span class="n">5</span>Starter kit</a></li>
+      <li><a href="#measurement"><span class="n">6</span>Measurement model</a></li>
+      <li><a href="#gaps"><span class="n">7</span>Gap trajectory</a></li>
+      <li><a href="#decisions"><span class="n">8</span>Leadership decisions</a></li>
+      <li><a href="#playbook"><span class="n">9</span>Claude playbook</a></li>
+      <li><a href="#first-10-days"><span class="n">10</span>Next 10 working days</a></li>
+      <li><a href="#dont"><span class="n">11</span>What not to do</a></li>
+      <li><a href="#sources"><span class="n">A</span>Sources and checks</a></li>
+    </ol>
+    <div class="toc-foot">
+      <button class="btn" type="button" data-theme-toggle>Theme: auto</button>
+      <span>Rev 2 · Fri 23 Oct 2026</span>
+    </div>
+  </nav>
+
+  <main>
+    <!-- ============================== SUMMARY ============================== -->
+    <section id="summary" data-spy>
+      <div class="docstrip">
+        <span class="label">Plan of record</span>
+        <span>Continuous Agentic SDLC</span>
+        <span>Rev 2 · Fri 23 Oct 2026</span>
+        <span>Owner: Amar Kumar</span>
+        <span>Tracker: <a href="agentic-sdlc-execution-plan.xlsx">agentic-sdlc-execution-plan.xlsx</a></span>
+        <span class="chip ask">Draft for the review on Mon 26 Oct</span>
+      </div>
+      <h1>Agentic SDLC Adoption Plan</h1>
+      <p class="lede">A 12-month plan, starting Monday 26 October 2026, to turn AI-tool adoption into measurable value per builder. One accountable builder owns each change. Every phase produces a small reviewed artifact. Agents do most of the work inside guardrails written as code, and people spend their attention on judgement.</p>
+
+      <figure class="chain" aria-label="The six-phase artifact chain">
+        <ol>
+          <li><span class="ph"><span>1 · Plan</span></span><span class="art">intent.md</span><span class="who">Intent Agent</span><span>Why the change exists</span></li>
+          <li><span class="ph"><span>2 · Design</span></span><span class="art">spec.md</span><span class="who">Specialist agents</span><span>What is built, against which standards</span></li>
+          <li><span class="ph"><span>3 · Build</span></span><span class="art">plan.md + code</span><span class="who">Planning and coding agents</span><span>How it is built</span></li>
+          <li><span class="ph"><span>4 · Test</span></span><span class="art">evidence.md</span><span class="who">Test and verifier agents</span><span>Proof it works and is safe</span></li>
+          <li><span class="ph"><span>5 · Deploy</span></span><span class="art">release-manifest.yaml</span><span class="who">Release agent</span><span>What shipped, at what risk</span></li>
+          <li><span class="ph"><span>6 · Maintain</span></span><span class="art">telemetry + incidents</span><span class="who">SRE and incident agents</span><span>What happened, what next</span></li>
+        </ol>
+        <div class="chain-loop"><span class="sym">&#8634;</span><span>Production signals are diagnosed by agents and come back as a new <span class="file">intent.md</span>. Anyone can walk back from a release to the review, plan, spec, intent and the original customer problem.</span></div>
+        <figcaption>The artifact chain from the vision. Each artifact is reviewed, machine-readable, and the input to the next phase. Together they are the workflow state and the audit trail. In the starter kit they live in <code>docs/changes/&lt;id&gt;/</code>.</figcaption>
+      </figure>
+
+      <div class="mast-grid">
+        <div class="onescreen">
+          <p class="subhead">The plan on one screen</p>
+          <ol>
+            <li><span class="when">W0 · 26 Oct–6 Nov</span><span><b>Mobilize.</b> Review the plan with the executive sponsor, name and approve a task force of 6–7, lock the baseline from internal analytics, and inventory every agent teams have built so they merge into one framework.</span></li>
+            <li><span class="when">W1 · Nov 2026</span><span><b>Standardize and instrument.</b> 27 → 40 of 48 repos on the standard, AI code share and feature-level records live, managed settings for every builder, and framework v0.5 in daily use by the pilot team.</span></li>
+            <li><span class="when">W2 · Dec–Jan</span><span><b>Framework v1 and expansion.</b> One agent framework, skills-first and packaged as a plugin, by Fri 18 Dec. The pilot team moves to “agent drafts the intent and the PR, a human reviews the PR”. 48/48 repos and the first backend cohort by Fri 29 Jan.</span></li>
+            <li><span class="when">W3 · Feb–Apr</span><span><b>Automated gates and scale.</b> Second backend cohort, required gates on every repo, multi-agent PR review and a release agent up to staging. The first human gate is retired once its automated replacement has earned it.</span></li>
+            <li><span class="when">W4 · May–Jul</span><span><b>Every team on the workflow</b>, and the product-builder role made official in the career framework.</span></li>
+            <li><span class="when">W5 · Jun–Oct</span><span><b>Close the loop</b> with SRE diagnosis and incident agents on an explicit autonomy ladder, then review ROI on measured numbers. Readout on Mon 1 Nov 2027.</span></li>
+          </ol>
+        </div>
+        <aside class="assume" aria-label="Assumptions">
+          <h3>Assumptions</h3>
+          <ul>
+            <li>From the company plan: 48 repos in scope with 27 on the standard, one team piloting the workflow, and a 1.3x productivity multiple against a 10x aspiration.</li>
+            <li>Company targets: 40/48 repos by 30 Nov, 48/48 by 29 Jan, agent framework from December. Targets marked proposed are confirmed on Mon 26 Oct.</li>
+            <li>Biweekly reviews with the executive sponsor every other Monday from 26 Oct. Per-team baselines are still to be locked from internal analytics.</li>
+            <li>Claude features below were checked against Claude Code 2.1.302 and its docs on 23 Oct 2026.</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============================== 1 UNDERSTOOD ============================== -->
+    <section id="understood" data-spy>
+      <h2><span class="sec-n">1</span>What I understood</h2>
+
+      <h3>The thesis in plain words</h3>
+      <p><b>Adopting AI is different from getting value from it.</b> Most organizations now use AI coding tools every day. Few can show that they deliver more value per person or per unit of cost. Tool usage, lines of code and PR counts show that activity happened. They do not show that customers got more.</p>
+      <p><b>Faster coding moves the bottleneck.</b> When agents make code cheap, the waiting moves to everything around the code: unclear requirements, design decisions, finding the standards, human review, security and compliance checks, deployment approvals and incident analysis. Speed up only the coding step and the system stays almost as slow as before.</p>
+      <p><b>The root cause is the design of the organization.</b> Work travels through a relay: product manager, designer, developer, tester, lead reviewer, release team. Every handoff loses context, adds a queue, causes rework and spreads ownership thin. AI makes each runner faster while the relay stays slow. So the model collapses roles around one accountable builder and redesigns the whole lifecycle: agents do the work, deterministic gates constrain them, and humans judge, approve and stay accountable.</p>
+      <p>Two effects make this urgent. AI amplifies the system it lands in: a team with clear ownership, good standards and fast feedback gets faster, while a fragmented team produces more activity and the same value. And there is a trust paradox: people feel more productive while trusting the output less, which raises the need for validation, automated gates and observability.</p>
+
+      <h3>Six phases, one artifact chain</h3>
+      <div class="table-wrap">
+        <table class="w-wide">
+          <thead><tr><th>Phase</th><th>Agent role</th><th>Artifact</th><th>What it proves</th><th>Gate before the next phase</th></tr></thead>
+          <tbody>
+            <tr><td class="t-key">1 Plan</td><td>Intent Agent</td><td><span class="file">intent.md</span></td><td>Why the change exists</td><td>Problem, measurable outcome, scope, constraints and a named owner are agreed. The product owner approves.</td></tr>
+            <tr><td class="t-key">2 Design</td><td>Specialist agents feeding a design synthesizer</td><td><span class="file">spec.md</span></td><td>What is built, against which standards</td><td>Policy packs applied while writing, not weeks later in review. A tech lead approves.</td></tr>
+            <tr><td class="t-key">3 Build</td><td>Planning and coding agents</td><td><span class="file">plan.md</span> + code</td><td>How it is built</td><td>The builder approves the plan before code changes: files, sequence, tests, rollback, verification.</td></tr>
+            <tr><td class="t-key">4 Test</td><td>Test and verification agents</td><td>Verification evidence</td><td>That it works and is safe</td><td>A closed loop (compile, lint, unit, integration, contract, security, UI) passes before any human sees it.</td></tr>
+            <tr><td class="t-key">5 Deploy</td><td>Release agent</td><td>Release manifest</td><td>What shipped, under what risk</td><td>Agents run dev, QA and staging. Production needs a human or policy gate.</td></tr>
+            <tr><td class="t-key">6 Maintain</td><td>SRE and incident agents</td><td>Telemetry + incidents</td><td>What happened and what should happen next</td><td>High-confidence diagnoses become a new intent. Low-confidence ones go to a human.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>The single accountable builder</h3>
+      <p>One person owns a change from requirement to release readiness. They do not work alone: agents, automated gates, domain specialists, reviewers, standards, test frameworks and release controls support them. They are accountable for knowing why the change matters, who it affects, what success means, what the risks are, how it will be validated and whether it is ready to release. That is a product engineer, an outcome owner rather than a ticket taker.</p>
+      <div class="split" role="img" aria-label="Product engineer effort: 50 to 70 percent on the problem, 30 to 50 percent orchestrating agents">
+        <div class="split-bar"><span class="a">50–70% the problem</span><span class="b">30–50% the agents</span></div>
+        <div class="split-legend">
+          <div>Understanding the customer problem, the outcome, edge cases and the definition of done.</div>
+          <div>Orchestrating agents to design, build, test and prepare release evidence.</div>
+        </div>
+      </div>
+
+      <h3>The autonomy ladder</h3>
+      <p>Autonomy is a ladder, not a switch. This plan sets an explicit ceiling for year one.</p>
+      <ol class="ladder">
+        <li style="--step:0"><span class="lv">L0</span><span class="act">Observe</span><span class="desc">A deterministic detector flags a signal.</span><span class="chip allow">W5 · pilot services</span></li>
+        <li style="--step:1"><span class="lv">L1</span><span class="act">Diagnose</span><span class="desc">An agent correlates logs, traces, metrics and deployments.</span><span class="chip allow">W5 · pilot services</span></li>
+        <li style="--step:2"><span class="lv">L2</span><span class="act">Recommend</span><span class="desc">The agent proposes a root cause and a fix.</span><span class="chip allow">W5 · pilot services</span></li>
+        <li style="--step:3"><span class="lv">L3</span><span class="act">Create pull request</span><span class="desc">The agent opens a PR for human review.</span><span class="chip allow">W5 · high-confidence only</span></li>
+        <li style="--step:4"><span class="lv">L4</span><span class="act">Run approved runbook</span><span class="desc">The agent runs a pre-approved deterministic remediation.</span><span class="chip ask">Named runbooks only</span></li>
+        <li style="--step:5" class="out"><span class="lv">L5</span><span class="act">Autonomous remediation</span><span class="desc">Remediates without a human in the loop, within guardrails.</span><span class="chip deny">Out of scope, year 1</span></li>
+      </ol>
+
+      <h3>Four metric bands</h3>
+      <p>The metric set has to get worse when speed, safety or customer impact degrade, even if code volume rises.</p>
+      <div class="bands">
+        <div class="band"><h4>Flow</h4><ul><li>Idea to approved intent</li><li>Intent to approved spec</li><li>Spec to working PR</li><li>PR to production</li><li>Idea to impact</li></ul></div>
+        <div class="band"><h4>Build and test</h4><ul><li>First-pass PR success</li><li>Daily and release build pass rate</li><li>Escaped defects</li><li>Test coverage quality</li><li>Verification loop completion</li></ul></div>
+        <div class="band"><h4>Operate</h4><ul><li>Change failure rate</li><li>Mean time to detect</li><li>Mean time to recover</li><li>Deployment frequency</li><li>First-time deployment correctness</li></ul></div>
+        <div class="band"><h4>Agent system</h4><ul><li>Autonomous gate completion</li><li>Human intervention rate</li><li>Agent rework rate</li><li>Agent eval pass rate</li><li>Cost per successful change</li><li>Share on the standard workflow</li></ul></div>
+      </div>
+
+      <h3>Five pillars, five stages</h3>
+      <div class="table-wrap">
+        <table class="w-wide">
+          <thead><tr><th>Pillar / stage</th><th>What it means</th><th>Exit condition or gap in the vision</th><th>My reading</th></tr></thead>
+          <tbody>
+            <tr><td class="t-key">1 Coding agent adoption</td><td>Every builder has the tools, standards and training.</td><td>Sustained active use. Proves people can use the tools, not that value increased.</td><td>A precondition. Stop reporting it as the main growth metric.</td></tr>
+            <tr><td class="t-key">2 Transform to product builder</td><td>Engineers own the journey from customer intent to release evidence.</td><td>Role defined, goals instrumented, behaviour tracked.</td><td>The hardest pillar, because it changes jobs, incentives and careers.</td></tr>
+            <tr><td class="t-key">3 Empower builders</td><td>Remove the relay of requirement, design, build, test, review, release.</td><td>A defined class of change reaches production through one builder and automated controls.</td><td>Depends on pillar 4. Human gates can only go once automated gates exist.</td></tr>
+            <tr><td class="t-key">4 Standardize and automate</td><td>Repo context, shared rules and skills, standard commands, hooks, quality gates, security and testing patterns.</td><td>Good agent behaviour repeatable across critical repositories.</td><td>Start here. It is the cheapest and it unlocks everything else.</td></tr>
+            <tr><td class="t-key">5 Agentic SDLC</td><td>The standard flow: requirement, intent, spec, plan, code, test, PR, release evidence.</td><td>Most eligible changes on the workflow; recurring failures become durable controls.</td><td>The end state for year one, for the classes of change that have proven it.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Decisions the vision asks of leadership</h3>
+      <ol>
+        <li>Adopt the artifact chain: intent, spec, plan, verification evidence, release manifest, production feedback.</li>
+        <li>Define the product-builder role and what builders own.</li>
+        <li>Move from activity metrics to value metrics.</li>
+        <li>Standardize engineering repositories.</li>
+        <li>Treat agent behaviour as production behaviour.</li>
+      </ol>
+      <p>Section <a href="#decisions">8</a> folds them into twelve decisions, each with a recommendation and the date it is needed.</p>
+
+      <div class="success">
+        <p class="subhead">Definition of success</p>
+        <p>We have succeeded when one accountable builder, working with agents and automated gates, takes a short requirement for a defined class of change to a released and adopted feature, and the numbers show more impact per builder than the baseline with no loss of quality or safety.</p>
+      </div>
+    </section>
+
+    <!-- ============================== 2 RISKS ============================== -->
+    <section id="risks" data-spy>
+      <h2><span class="sec-n">2</span>Risks and design principles</h2>
+      <p>The direction of the vision is sound. These are the places where it fails in practice, and the principle this plan uses against each one.</p>
+
+      <div class="risks">
+        <article class="risk">
+          <h3><span class="rid">R1</span>No baseline, so nothing can be proven</h3>
+          <p><span class="k">What goes wrong.</span> A year from now someone asks whether output per person went up. Without numbers from before the change, every answer is an opinion, and good results look like seasonality or new hires.</p>
+          <p><span class="k">Principle.</span> Measure before changing anything. Freeze a baseline window (May–Oct 2026), lock the metric definitions, and keep a comparison team that does not change during W2–W3.</p>
+          <p class="where">Wave 0 · metrics/feature-record.schema.json</p>
+        </article>
+        <article class="risk">
+          <h3><span class="rid">R2</span>The full chain on every change becomes process theater</h3>
+          <p><span class="k">What goes wrong.</span> Six artifacts for a typo fix teaches people that the process is paperwork. They fill templates with boilerplate, and the real thinking moves back into chat.</p>
+          <p><span class="k">Principle.</span> Proportional process. Tier the chain by change class (table below). Agents draft every artifact and humans review. Measure artifact overhead and delete sections nobody reads.</p>
+          <p class="where">W1–W2 tuning · docs/changes/README.md · scripts/check_artifacts.py</p>
+        </article>
+        <article class="risk">
+          <h3><span class="rid">R3</span>Human review becomes the new bottleneck</h3>
+          <p><span class="k">What goes wrong.</span> Agents produce more and bigger PRs than people can read. Review queues grow, reviewers skim, and quality falls exactly where it was supposed to rise.</p>
+          <p><span class="k">Principle.</span> Review by risk, not by line. Agents absorb style, simple bugs, coverage and standard policy. Humans judge problem fit, architecture, blast radius and residual risk. Cap parallel sessions at what people can review, keep PRs small, and track review wait as a flow metric.</p>
+          <p class="where">W2–W3 · review-synthesizer · claude-pr-review.yml</p>
+        </article>
+        <article class="risk">
+          <h3><span class="rid">R4</span>Agents game the tests</h3>
+          <p><span class="k">What goes wrong.</span> Under pressure to go green, an agent skips a test, loosens an assertion, deletes a case or special-cases the test input. The dashboard improves and the product gets worse.</p>
+          <p><span class="k">Principle.</span> Tests are a contract. Freeze defect tests, block edits to them with a hook, ask a human before any skip marker lands, check frozen files again in CI, verify independently, and keep eval cases that fail when an agent cheats. Hooks catch the obvious; evals and review catch the subtle.</p>
+          <p class="where">W1 · test_guard.py · check_frozen_tests.py · EVAL-0001</p>
+        </article>
+        <article class="risk">
+          <h3><span class="rid">R5</span>Roles and incentives are the hardest part</h3>
+          <p><span class="k">What goes wrong.</span> The tooling works and nothing changes, because performance reviews still reward tickets closed, and QA, PM and release specialists see the plan as a threat to their jobs.</p>
+          <p><span class="k">Principle.</span> Design the role with the people in it. Co-write the product-builder role with the pilot team, give QA, PM and release specialists explicit new paths (gates, evals, policy packs, discovery), and change what reviews reward before scaling.</p>
+          <p class="where">W2 draft · W4 career framework · decision D12</p>
+        </article>
+        <article class="risk">
+          <h3><span class="rid">R6</span>Goodhart's law on the metrics</h3>
+          <p><span class="k">What goes wrong.</span> A measure that becomes a target stops measuring. Teams split changes to raise counts, reclassify defects as features, or game cycle time by opening PRs late.</p>
+          <p><span class="k">Principle.</span> Pair every metric with a counter-metric (speed with change failure rate, output with impact, cost with success). Report at team level only, lock definitions for a quarter, and read the numbers next to retro notes.</p>
+          <p class="where">Section 6 · paired metrics</p>
+        </article>
+        <article class="risk">
+          <h3><span class="rid">R7</span>Agents get access to credentials and production</h3>
+          <p><span class="k">What goes wrong.</span> A session inherits a developer's cloud profile, reads a <code>.env</code>, or is talked into running a deploy. One prompt injection or one confused command reaches production.</p>
+          <p><span class="k">Principle.</span> Agents never hold production credentials. Dev, QA and staging credentials are short-lived and scoped. Bash runs in a sandbox with a network allowlist, secret files are denied by managed settings, and a production-boundary hook backs this up.</p>
+          <p class="where">W1 · managed settings · prod_boundary_guard.py</p>
+        </article>
+        <article class="risk">
+          <h3><span class="rid">R8</span>Empowering before standardizing</h3>
+          <p><span class="k">What goes wrong.</span> The vision lists Stage 3 (Empower) before Stage 4 (Standardize). Removing human approvals before automated gates exist removes the only control there is.</p>
+          <p><span class="k">Principle.</span> Replace, don't remove. Stage 4 starts in W1. A human gate is retired only after its automated replacement has run in shadow with measured agreement (see below).</p>
+          <p class="where">W1 → W3 · shadow log</p>
+        </article>
+        <article class="risk">
+          <h3><span class="rid">R9</span>Agent sprawl and silent drift</h3>
+          <p><span class="k">What goes wrong.</span> Every team writes its own agents and prompts. A model update or a prompt tweak changes behaviour and nobody notices until something escapes.</p>
+          <p><span class="k">Principle.</span> Six core agents and shared skills from one plugin. Agent configuration changes by PR and must pass the eval suite, which also runs weekly to catch model drift.</p>
+          <p class="where">W1 plugin · agent-evals.yml · decision D3</p>
+        </article>
+        <article class="risk">
+          <h3><span class="rid">R10</span>Cost without a ceiling, or a ceiling that kills value</h3>
+          <p><span class="k">What goes wrong.</span> Agent compute grows without anyone watching, or finance caps it so hard that builders stop using agents for the work that pays.</p>
+          <p><span class="k">Principle.</span> A monthly envelope per builder set from telemetry, hard caps on automated runs, and one number that matters: cost per successful change, not cost per token.</p>
+          <p class="where">Decision D8 · OpenTelemetry · --max-budget-usd</p>
+        </article>
+        <article class="risk">
+          <h3><span class="rid">R11</span>Teams keep building agents on their own</h3>
+          <p><span class="k">What goes wrong.</span> Security, operations and requirements teams each ship their own agent. Effort is duplicated, behaviour differs from team to team, and nobody can evaluate or govern the whole.</p>
+          <p><span class="k">Principle.</span> One framework. Inventory what exists, merge the useful parts into shared skills and subagents, and make their owners contributors. No standalone agents after Fri 6 Nov.</p>
+          <p class="where">W0 · tracker 1.5 · decision D3</p>
+        </article>
+        <article class="risk">
+          <h3><span class="rid">R12</span>The program depends on one person</h3>
+          <p><span class="k">What goes wrong.</span> Every decision and every change routes through the transformation lead, so progress stops whenever the lead is in meetings, on leave or pulled into other work.</p>
+          <p><span class="k">Principle.</span> A task force with a named owner for every area, a framework deputy, and a tracker that anyone can run the stand-up from.</p>
+          <p class="where">W0 · tracker 1.2–1.4 · decisions D2, D5</p>
+        </article>
+      </div>
+
+      <h3>Tier the chain by change class</h3>
+      <p>The class is proposed in the intent, set by the builder, and checked by <code>scripts/check_artifacts.py</code>. When in doubt, choose the higher class.</p>
+      <div class="table-wrap">
+        <table class="w-wide">
+          <thead><tr><th>Class</th><th>Typical changes</th><th>Required artifacts</th><th>Human approvals</th></tr></thead>
+          <tbody>
+            <tr><td><span class="chip c-trivial">trivial</span></td><td>Copy or typo, config value, dependency patch bump with green CI, docs</td><td>None. A clear PR description is the record.</td><td>One PR reviewer</td></tr>
+            <tr><td><span class="chip c-standard">standard</span></td><td>Small feature or defect fix in one service, behind a flag; no schema, auth, payment or PII change</td><td><span class="file">intent.md</span> (short), <span class="file">plan.md</span>, <span class="file">evidence.md</span></td><td>Product owner approves the intent; builder approves the plan; review focuses on judgement</td></tr>
+            <tr><td><span class="chip c-significant">significant</span></td><td>Cross-service feature, API contract change, backward-compatible migration, new dependency</td><td>intent, spec, plan, evidence, release manifest</td><td>Product owner, tech lead (spec), PR reviewer, production gate</td></tr>
+            <tr><td><span class="chip c-high">high-risk</span></td><td>Authentication or authorization, payments, PII, irreversible data change, infrastructure or network policy</td><td>Everything above plus a named security approver on the spec</td><td>All of the above plus security; the production gate is always human</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Replace, don't remove: how a human gate is retired</h3>
+      <div class="flow3">
+        <div><span class="when">W1–W3</span><b>Build the automated gate</b><code>make verify</code>, the artifact check, frozen-test check and multi-agent review, all as required CI checks.</div>
+        <div><span class="when">W3 · from Mon 1 Feb</span><b>Run it in shadow</b>The human gate still decides. Every PR logs both decisions so agreement and misses can be measured.</div>
+        <div><span class="when">W3 · by Fri 30 Apr</span><b>Retire the human gate for one class</b>Only when agreement is at least 90% over 4+ weeks and no blocking issue was missed. Significant and high-risk classes keep their human gates.</div>
+      </div>
+
+      <h3>Design principles</h3>
+      <ol class="principles">
+        <li><span><b>Baseline before change.</b> No wave starts without the numbers it will be judged on.</span></li>
+        <li><span><b>Proportional process.</b> Artifacts scale with risk, and agents draft them.</span></li>
+        <li><span><b>Replace, don't remove.</b> A human gate goes only when an automated gate has a track record.</span></li>
+        <li><span><b>Review by risk.</b> Humans judge fit, architecture, blast radius and residual risk.</span></li>
+        <li><span><b>Tests are a contract.</b> Frozen tests, guard hooks, independent verification, evals.</span></li>
+        <li><span><b>Paired, team-level metrics.</b> No individual leaderboards in year one.</span></li>
+        <li><span><b>No production credentials for agents.</b> The boundary is identity and sandbox; hooks are a seatbelt.</span></li>
+        <li><span><b>Agent configuration is production code.</b> Versioned, reviewed, evaluated, distributed from one place.</span></li>
+        <li><span><b>People first.</b> Roles and incentives are designed with the people who hold them.</span></li>
+      </ol>
+    </section>
+
+    <!-- ============================== 3 ROADMAP ============================== -->
+    <section id="roadmap" data-spy>
+      <h2><span class="sec-n">3</span>12-month roadmap</h2>
+      <p>Six waves from Monday 26 October 2026 to Friday 29 October 2027, front-loaded to meet the company targets: 40 of 48 repos on the standard by 30 November, the agent framework in December, and 48 of 48 by 29 January. Each wave closes at the next biweekly review with the executive sponsor. Every action, owner and date is in the <a href="agentic-sdlc-execution-plan.xlsx">execution tracker</a>; exit numbers marked proposed are confirmed at the 26 Oct review.</p>
+
+      <div class="gantt-wrap">
+        <div class="gantt" role="img" aria-label="Timeline: W0 late October to early November 2026; W1 November 2026; W2 December 2026 to January 2027 with a holiday period; W3 February to April 2027; W4 May to July 2027; W5 June to October 2027 with the ROI review in the last two weeks.">
+          <div class="g-label" style="grid-row: 1" aria-hidden="true"></div>
+          <div class="g-month" style="grid-column: 3 / 7">Nov ’26</div>
+          <div class="g-month" style="grid-column: 7 / 12">Dec</div>
+          <div class="g-month" style="grid-column: 12 / 16">Jan ’27</div>
+          <div class="g-month" style="grid-column: 16 / 20">Feb</div>
+          <div class="g-month" style="grid-column: 20 / 24">Mar</div>
+          <div class="g-month" style="grid-column: 24 / 29">Apr</div>
+          <div class="g-month" style="grid-column: 29 / 33">May</div>
+          <div class="g-month" style="grid-column: 33 / 37">Jun</div>
+          <div class="g-month" style="grid-column: 37 / 42">Jul</div>
+          <div class="g-month" style="grid-column: 42 / 46">Aug</div>
+          <div class="g-month" style="grid-column: 46 / 51">Sep</div>
+          <div class="g-month" style="grid-column: 51 / 55">Oct</div>
+          <div class="g-holiday" style="grid-column: 10 / 12"></div>
+          <div class="g-holiday-label" style="grid-column: 10 / 15">holiday period</div>
+
+          <div class="g-label" style="grid-row: 2"><span class="wid">W0</span>Mobilize and baseline</div>
+          <div class="g-bar" style="grid-column: 2 / 4; grid-row: 2; justify-content: flex-end" title="W0: 2 weeks"><span class="gate">&#9670;</span></div>
+          <div class="g-label" style="grid-row: 3"><span class="wid">W1</span>Standardize, instrument</div>
+          <div class="g-bar" style="grid-column: 3 / 8; grid-row: 3"><span>40/48</span><span class="gate">&#9670;</span></div>
+          <div class="g-label" style="grid-row: 4"><span class="wid">W2</span>Framework v1, expansion</div>
+          <div class="g-bar" style="grid-column: 7 / 16; grid-row: 4"><span>v1.0 · 48/48</span><span class="gate">&#9670;</span></div>
+          <div class="g-label" style="grid-row: 5"><span class="wid">W3</span>Automated gates, scale</div>
+          <div class="g-bar" style="grid-column: 16 / 29; grid-row: 5"><span>13w</span><span class="gate">&#9670;</span></div>
+          <div class="g-label" style="grid-row: 6"><span class="wid">W4</span>Every team, builder role</div>
+          <div class="g-bar" style="grid-column: 29 / 42; grid-row: 6"><span>13w</span><span class="gate">&#9670;</span></div>
+          <div class="g-label" style="grid-row: 7"><span class="wid">W5</span>Close the loop</div>
+          <div class="g-bar" style="grid-column: 34 / 55; grid-row: 7"><span>21w</span><span class="gate">&#9670;</span></div>
+          <div class="g-label" style="grid-row: 8"><span class="wid">&nbsp;&nbsp;</span>ROI review</div>
+          <div class="g-bar g-roi" style="grid-column: 53 / 55; grid-row: 8" title="ROI review: 2 weeks"></div>
+        </div>
+      </div>
+      <p class="small gantt-hint">Swipe the timeline sideways to see the whole year.</p>
+      <div class="legend">
+        <span><span class="sw"></span>Wave</span>
+        <span><span class="sw h"></span>Low capacity, Mon 21 Dec 2026 – Fri 1 Jan 2027</span>
+        <span><span class="gate">&#9670;</span> Gate at the next biweekly review</span>
+        <span>One column per week, from Mon 26 Oct 2026 to the week of Mon 25 Oct 2027</span>
+      </div>
+
+      <div class="dates nums">
+        <div><b>Mon 26 Oct 2026</b>Plan v1 with the executive sponsor; decisions D1, D3 and D5</div>
+        <div><b>Mon 9 Nov 2026</b>W0 gate: baseline locked, framework charter (D4), evidence pack</div>
+        <div><b>Mon 30 Nov 2026</b>40 of 48 repos on the standard; framework v0.5 in the pilot team</div>
+        <div><b>Fri 18 Dec 2026</b>Framework v1.0; pilot team at autonomy stage 2; first showcase</div>
+        <div><b>Fri 29 Jan 2027</b>48 of 48 repos; backend cohort 1 live; W2 gate on Mon 1 Feb</div>
+        <div><b>Fri 30 Apr 2027</b>First human gate retired; stage 3 for standard changes; W3 gate on Mon 10 May</div>
+      </div>
+      <p class="small">Cadence: daily 11:00 task-force stand-up, a demo every Friday, the biweekly review with the executive sponsor every other Monday from Mon 26 Oct 2026, and a monthly gap report on the first Friday of each month from Fri 4 Dec 2026 (Fri 8 Jan 2027 in January). The tracker is updated every Friday by 17:00.</p>
+
+      <h3>When the shift happens</h3>
+      <p>The autonomy stages from the company plan, with proposed dates. Each step needs the previous one to hold for the same group.</p>
+      <div class="table-wrap">
+        <table class="w-wide nums">
+          <thead><tr><th>Stage</th><th>Agent does</th><th>Human does</th><th>Pilot team</th><th>4–5 backend teams</th><th>All teams</th></tr></thead>
+          <tbody>
+            <tr><td class="t-key">1 Foundation (today)</td><td>Assists with code</td><td>Writes intents and plans, approves everything</td><td>Today</td><td>Today</td><td>Today</td></tr>
+            <tr><td class="t-key">2</td><td>Drafts the intent and the PR</td><td>Reviews the PR</td><td>Fri 18 Dec 2026</td><td>Fri 26 Feb 2027</td><td>Fri 30 Jul 2027</td></tr>
+            <tr><td class="t-key">3</td><td>Self-verifies with evidence</td><td>Reviews exceptions</td><td>Fri 30 Apr 2027</td><td>Fri 25 Jun 2027</td><td>Fri 29 Oct 2027</td></tr>
+            <tr><td class="t-key">4</td><td>Fixes what production signals find and opens the PR (L3)</td><td>Final review</td><td>Fri 27 Aug 2027, pilot services</td><td>Year two</td><td>Year two</td></tr>
+            <tr><td class="t-key">5</td><td>Remediates within guardrails (L4, named runbooks)</td><td>Audits</td><td>After decision D11</td><td>Year two</td><td>Not in year one</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- W0 -->
+      <article class="wave" id="w0">
+        <header class="wave-head"><span class="wave-id">W0</span><h3>Mobilize and baseline</h3><span class="when">Fri 23 Oct – Fri 6 Nov 2026 · 2 weeks · gate Mon 9 Nov</span></header>
+        <p class="wave-goal"><b>Goal.</b> Turn the plan into a staffed program with the numbers it will be judged on.</p>
+        <div class="wave-body">
+          <div>
+            <h4>Deliverables</h4>
+            <ul>
+              <li>Plan v1 reviewed with the executive sponsor on Mon 26 Oct; decisions D1, D3 and D5.</li>
+              <li>Task force of 6–7 approved by Wed 28 Oct, kickoff Thu 29 Oct, daily 11:00 stand-up.</li>
+              <li>Inventory of every agent and skill teams have built, each with a merge, keep or retire decision.</li>
+              <li>Baseline from internal analytics (AI code share, change and epic lead time, adoption, the 1.3x multiple) with definitions v1.</li>
+              <li>Repo standard v2, framework charter, pilot readout and the industry evidence pack.</li>
+            </ul>
+            <h4>Claude action points</h4>
+            <ul>
+              <li>Prompts <a href="#p-b1">B1–B5</a> fill gaps in the internal analytics and classify effort.</li>
+              <li>Claude drafts the charter, the evidence pack and the inventory from team inputs.</li>
+              <li>Starter kit installed in the pilot repo; hook and eval self-tests green.</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Exit criteria</h4>
+            <ul class="crit">
+              <li>Task force names approved; every member owns an action in the tracker.</li>
+              <li>Baseline values and definitions entered for every KPI.</li>
+              <li>Every existing agent has a decision; no new standalone agents after Fri 6 Nov.</li>
+              <li>Charter and evidence pack ready for decision D4 on Mon 9 Nov.</li>
+            </ul>
+            <h4>Pillars moved</h4>
+            <div class="chips"><span class="chip">Program</span><span class="chip">All: measurement</span><span class="chip">1 Adoption</span></div>
+            <h4>Risks</h4>
+            <ul>
+              <li>People not freed up. Allocation approved in D2 and checked daily.</li>
+              <li>Disputed numbers. Lock definitions by Fri 6 Nov.</li>
+              <li>Diwali week. Confirm the 9 Nov review date.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <!-- W1 -->
+      <article class="wave" id="w1">
+        <header class="wave-head"><span class="wave-id">W1</span><h3>Standardize and instrument</h3><span class="when">Mon 2 Nov – Mon 30 Nov 2026 · 4 weeks · gate Mon 7 Dec</span></header>
+        <p class="wave-goal"><b>Goal.</b> Good agent behaviour is repeatable in most repositories and the value metrics are live, before any role or gate changes. Stage 4 starts here.</p>
+        <div class="wave-body">
+          <div>
+            <h4>Deliverables</h4>
+            <ul>
+              <li>27 → 40 of 48 repos on the standard, tracked by an automated scorecard.</li>
+              <li>AI code share dashboard and feature-level records for the pilot team.</li>
+              <li>Managed settings for every builder: no bypass mode, secret denies, sandbox, telemetry with team tags.</li>
+              <li>Workflow v1 with phase gates, tiered by change class; framework v0.5 (intent, requirements, planning, verifier, review synthesizer) in daily use by the pilot team.</li>
+              <li>Internal plugin marketplace, and the skill-launched UI spike that answers the executive sponsor's question.</li>
+              <li>Access review: no production credentials in agent sessions.</li>
+            </ul>
+            <h4>Claude action points</h4>
+            <ul>
+              <li>Prompts <a href="#p-r1">R1</a> and <a href="#p-r2">R2</a> across the 13 repos; scorecard check in CI.</li>
+              <li>Package the framework as a plugin and validate it with <code>claude plugin validate --strict</code>; eval self-test in CI.</li>
+              <li><code>/intent</code> and <code>/plan-change</code> used daily in the pilot team (<a href="#p-c1">C1–C3</a>).</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Exit criteria</h4>
+            <ul class="crit">
+              <li>40 of 48 repos green on the scorecard on Mon 30 Nov.</li>
+              <li>AI code share and feature records live, refreshed weekly.</li>
+              <li>At least 90% of sessions tagged by team; zero agent sessions with production credentials.</li>
+              <li>The pilot team uses framework v0.5 every day.</li>
+            </ul>
+            <h4>Pillars moved</h4>
+            <div class="chips"><span class="chip">4 Standardize</span><span class="chip">1 Adoption</span><span class="chip">5 Agentic SDLC</span></div>
+            <h4>Risks</h4>
+            <ul>
+              <li>Slow repo reviews. Claude drafts every change; one-hour review slots.</li>
+              <li>CLAUDE.md bloat. Keep it under about 150 lines and import deeper docs.</li>
+              <li>A slow <code>make verify</code> breaks the loop. Split fast and slow checks.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <!-- W2 -->
+      <article class="wave" id="w2">
+        <header class="wave-head"><span class="wave-id">W2</span><h3>Agent framework v1 and expansion</h3><span class="when">Tue 1 Dec 2026 – Fri 29 Jan 2027 · light 21 Dec – 1 Jan · gate Mon 1 Feb</span></header>
+        <p class="wave-goal"><b>Goal.</b> One framework covers the build-and-test lifecycle, the pilot team works at autonomy stage 2, and the first backend teams join.</p>
+        <div class="wave-body">
+          <div>
+            <h4>Deliverables</h4>
+            <ul>
+              <li>Framework v1.0 on Fri 18 Dec: architecture, security (merged from the security team's agent) and test agents, release-manifest and incident-to-intent skills, 15 eval cases.</li>
+              <li>Pilot team at stage 2: the agent drafts the intent and the PR, a human reviews the PR.</li>
+              <li>48 of 48 repos on the standard; guardrails in every critical repo.</li>
+              <li>Policy packs v1: security, testing, API, logging and PII.</li>
+              <li>Backend cohort 1 (two teams) live by Fri 29 Jan, with feature records.</li>
+              <li>First monthly gap report (Fri 4 Dec), first showcase (Fri 18 Dec) and the product-builder role draft.</li>
+            </ul>
+            <h4>Claude action points</h4>
+            <ul>
+              <li>Seed evals from historical PRs (<a href="#p-e1">E1</a>) and run the improvement loop (<a href="#p-c5">C5</a>).</li>
+              <li>Claude as program analyst for retros and the monthly report (<a href="#p-a1">A1</a>, <a href="#p-a2">A2</a>).</li>
+              <li>Design the SRE diagnosis agent with the Agent SDK (<a href="#p-s1">S1</a>), merging the operations team's agent.</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Exit criteria</h4>
+            <ul class="crit">
+              <li>At least 80% of the pilot team's eligible changes through the workflow; change lead time down 30% against baseline.</li>
+              <li>48/48 repos; eval pass rate of at least 85%.</li>
+              <li>Cohort 1 live, with the repo standard in place first.</li>
+            </ul>
+            <h4>Pillars moved</h4>
+            <div class="chips"><span class="chip">4 Standardize</span><span class="chip">5 Agentic SDLC</span><span class="chip">2 Product builder</span></div>
+            <h4>Risks</h4>
+            <ul>
+              <li>Holiday capacity. Front-load before 18 Dec.</li>
+              <li>Merged agents behave differently. Evals before every merge.</li>
+              <li>Review becomes the bottleneck. Small PRs and risk-based review.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <!-- W3 -->
+      <article class="wave" id="w3">
+        <header class="wave-head"><span class="wave-id">W3</span><h3>Automated gates and scale</h3><span class="when">Mon 1 Feb – Fri 30 Apr 2027 · 13 weeks · gate Mon 10 May</span></header>
+        <p class="wave-goal"><b>Goal.</b> Retire human gates for the standard class where automated gates have earned it, and reach stage 3 for standard changes. This is the Stage 3 (Empower) exit for one class.</p>
+        <div class="wave-body">
+          <div>
+            <h4>Deliverables</h4>
+            <ul>
+              <li>Backend cohort 2 by Fri 26 Feb; at least 60% of eligible changes through the workflow by Fri 30 Apr.</li>
+              <li>Required quality gates on 48/48 repos; multi-agent PR review in CI.</li>
+              <li>Shadow log of automated against human decisions; first human gate retired for the standard class.</li>
+              <li>Release agent up to staging; SRE agent at L1–L2 on one service.</li>
+              <li>Team-level scorecards; one accountable builder per feature in onboarded teams.</li>
+            </ul>
+            <h4>Claude action points</h4>
+            <ul>
+              <li>Workflows from <code>starter-kit/ci/github/</code>; eval suite grown to 30 cases.</li>
+              <li>Shadow-mode analysis (<a href="#p-g1">G1</a>) and the release job (<a href="#p-g2">G2</a>).</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Exit criteria</h4>
+            <ul class="crit">
+              <li>Each retired gate ran 4 weeks in shadow at 90% agreement or better, with no missed blocker.</li>
+              <li>At least 10 standard changes from requirement to production with one builder and automated controls; change failure rate no worse than baseline.</li>
+              <li>Eval pass rate of at least 85% enforced on every framework change.</li>
+            </ul>
+            <h4>Pillars moved</h4>
+            <div class="chips"><span class="chip">4 Standardize</span><span class="chip">3 Empower</span><span class="chip">5 Agentic SDLC</span></div>
+            <h4>Risks</h4>
+            <ul>
+              <li>Gates too strict, so people route around them. Tune with data; keep a fast exception path.</li>
+              <li>Flaky or costly evals. Several runs per case and budget caps.</li>
+              <li>Over-privileged release agent. Environment-scoped credentials only.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <!-- W4 -->
+      <article class="wave" id="w4">
+        <header class="wave-head"><span class="wave-id">W4</span><h3>Every team on the workflow, and the builder role</h3><span class="when">Mon 3 May – Fri 30 Jul 2027 · 13 weeks · gate Mon 2 Aug</span></header>
+        <p class="wave-goal"><b>Goal.</b> The standard workflow becomes how engineering works, and the product-builder role is official.</p>
+        <div class="wave-body">
+          <div>
+            <h4>Deliverables</h4>
+            <ul>
+              <li>Two more teams onboarded every month, each starting with the repo standard and training.</li>
+              <li>Product-builder role in the career framework, with team-level scorecards.</li>
+              <li>80% of builders certified on a real change by Fri 30 Jul.</li>
+              <li>Autonomy ladder policy for operations (decision D11).</li>
+            </ul>
+            <h4>Claude action points</h4>
+            <ul>
+              <li>Claude drafts each team's onboarding and CLAUDE.md (<a href="#p-r1">R1</a> at scale).</li>
+              <li>Training delivered as skills from the marketplace.</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Exit criteria</h4>
+            <ul class="crit">
+              <li>At least 50% of builders on the workflow every month.</li>
+              <li>Role approved by HR and engineering leadership and used in the next review cycle.</li>
+              <li>Impact-qualified changes per builder up at least 15% for onboarded teams, with quality holding.</li>
+            </ul>
+            <h4>Pillars moved</h4>
+            <div class="chips"><span class="chip">2 Product builder</span><span class="chip">3 Empower</span></div>
+            <h4>Risks</h4>
+            <ul>
+              <li>Fear and attrition. Co-design the role and publish clear paths for QA, PM and release specialists.</li>
+              <li>Later cohorts slip. No onboarding without the repo standard.</li>
+              <li>Dashboards used to rank people. Team level only.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <!-- W5 -->
+      <article class="wave" id="w5">
+        <header class="wave-head"><span class="wave-id">W5</span><h3>Close the loop: SRE and incident agents, ROI review</h3><span class="when">Mon 7 Jun – Fri 29 Oct 2027 · overlaps W4 · ROI review 18–29 Oct · readout Mon 1 Nov 2027</span></header>
+        <p class="wave-goal"><b>Goal.</b> Production feedback turns into new intents within an explicit autonomy ladder, and leadership sees ROI on measured numbers.</p>
+        <div class="wave-body">
+          <div>
+            <h4>Deliverables</h4>
+            <ul>
+              <li>SRE and incident agents at L1–L3 on onboarded services by Fri 27 Aug.</li>
+              <li>Every incident in onboarded teams becomes an intent, a frozen regression test, an eval case and a known trap.</li>
+              <li>70% of eligible changes across engineering through the workflow.</li>
+              <li>ROI review, the gap assessment re-rated with evidence, and the year-two plan.</li>
+            </ul>
+            <h4>Claude action points</h4>
+            <ul>
+              <li>Agent SDK services at scale (<a href="#p-s1">S1</a>) and <code>/incident-to-intent</code> for every incident (<a href="#p-i1">I1</a>).</li>
+              <li>Claude as analyst for the ROI review and the readout (<a href="#p-a3">A3</a>).</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Exit criteria</h4>
+            <ul class="crit">
+              <li>On-call rates the agent's hypothesis correct in at least 70% of diagnosed alerts; zero write actions outside approved runbooks.</li>
+              <li>Repeat preventable failures down at least 30% against baseline.</li>
+              <li>ROI computed with every input sourced, plus a sensitivity analysis.</li>
+            </ul>
+            <h4>Pillars moved</h4>
+            <div class="chips"><span class="chip">5 Agentic SDLC</span><span class="chip">3 Empower</span></div>
+            <h4>Risks</h4>
+            <ul>
+              <li>Noisy alerts make a noisy agent. Deterministic detectors first, then confidence thresholds.</li>
+              <li>Climbing the ladder too fast. L4 needs a track record at L3.</li>
+              <li>Attribution in the ROI. Comparison team and sensitivity ranges.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- ============================== 4 CAPABILITY MAP ============================== -->
+    <section id="capabilities" data-spy>
+      <h2><span class="sec-n">4</span>Claude capability map</h2>
+      <p>Each concept in the vision mapped to a Claude feature that exists today, how this plan uses it, and where it lives in the starter kit. Features were checked against Claude Code 2.1.302 and its documentation on 23 Oct 2026.</p>
+      <div class="table-wrap">
+        <table class="stack w-wide">
+          <thead><tr><th>Vision concept</th><th>Claude feature</th><th>How we use it</th><th>In the kit</th><th>Wave</th></tr></thead>
+          <tbody>
+            <tr><td data-label="Concept" class="t-key">Repository context</td><td data-label="Feature"><code>CLAUDE.md</code>, loaded every session; <code>/init</code> drafts one; <code>@path</code> imports; <code>/memory</code> to edit</td><td data-label="Use">One short CLAUDE.md per repo: commands, architecture, conventions, known traps, must-not-change. Every repeated mistake adds a line.</td><td data-label="Kit"><span class="file">CLAUDE.md.template</span></td><td data-label="Wave"><span class="chip c-wave">W1</span></td></tr>
+            <tr><td data-label="Concept" class="t-key">Shared skills and policy packs</td><td data-label="Feature">Skills (<code>.claude/skills/&lt;name&gt;/SKILL.md</code>, run as <code>/name</code>); plugins bundle skills, agents and hooks; an internal marketplace (<code>marketplace.json</code>, <code>extraKnownMarketplaces</code>, <code>enabledPlugins</code>)</td><td data-label="Use">Repo copies of the six skills during the pilot, one plugin from W3, policy packs as files that skills and reviewers cite by rule id.</td><td data-label="Kit"><span class="file">.claude/skills/</span>, <span class="file">packaging/</span>, <span class="file">docs/policies/</span></td><td data-label="Wave"><span class="chip c-wave">W1 → W2</span></td></tr>
+            <tr><td data-label="Concept" class="t-key">Specialist agents</td><td data-label="Feature">Subagents in <code>.claude/agents/*.md</code>, each with its own context, tool allowlist and model</td><td data-label="Use">Six core agents. Reviewers are read-only. <code>/spec</code> and <code>/verify-change</code> fan out to them in parallel.</td><td data-label="Kit"><span class="file">.claude/agents/</span></td><td data-label="Wave"><span class="chip c-wave">W2</span></td></tr>
+            <tr><td data-label="Concept" class="t-key">Approval gates are code; frozen tests; production boundary</td><td data-label="Feature">Hooks: <code>PreToolUse</code> returns <span class="chip allow">allow</span> <span class="chip ask">ask</span> <span class="chip deny">deny</span> before a tool runs; <code>Stop</code> can block the agent from finishing</td><td data-label="Use">Test guard, production-boundary guard, and a verify gate that refuses "done" while <code>make verify</code> fails (at most 3 blocks per session).</td><td data-label="Kit"><span class="file">.claude/hooks/</span></td><td data-label="Wave"><span class="chip c-wave">W1</span></td></tr>
+            <tr><td data-label="Concept" class="t-key">Secrets, network controls, sandboxed execution</td><td data-label="Feature">Permission rules (<code>allow</code>, <code>ask</code>, <code>deny</code>, e.g. <code>Read(./.env)</code>); managed settings that users and repos cannot override, including <code>disableBypassPermissionsMode</code>; sandboxing with <code>sandbox.network.allowedDomains</code></td><td data-label="Use">Deny secret files and guardrail edits in every repo; org policy, sandbox and telemetry in managed settings.</td><td data-label="Kit"><span class="file">.claude/settings.json</span>, <span class="file">managed-settings.example.json</span></td><td data-label="Wave"><span class="chip c-wave">W1</span></td></tr>
+            <tr><td data-label="Concept" class="t-key">plan.md approval</td><td data-label="Feature">Plan mode (Shift+Tab, or <code>--permission-mode plan</code>): Claude explores and proposes, with no edits until approved</td><td data-label="Use"><code>/plan-change</code> runs in plan mode, so approving the plan is approving plan.md.</td><td data-label="Kit"><span class="file">skills/plan-change</span></td><td data-label="Wave"><span class="chip c-wave">W1–W2</span></td></tr>
+            <tr><td data-label="Concept" class="t-key">Two or three parallel sessions</td><td data-label="Feature">Git worktrees: <code>claude --worktree &lt;name&gt;</code> gives each session its own checkout</td><td data-label="Use">One worktree per independent stream in plan.md, never more than a human can review.</td><td data-label="Kit">plan template</td><td data-label="Wave"><span class="chip c-wave">W2</span></td></tr>
+            <tr><td data-label="Concept" class="t-key">Multi-agent PR review</td><td data-label="Feature"><code>anthropics/claude-code-action@v1</code>; <code>/code-review</code> (bundled skill, and the code-review plugin in CI); <code>/security-review</code> (built-in)</td><td data-label="Use">CI job one runs the code-review plugin; job two runs the repo's reviewers and the synthesizer. Builders run <code>/security-review</code> before opening a PR.</td><td data-label="Kit"><span class="file">ci/github/claude-pr-review.yml</span></td><td data-label="Wave"><span class="chip c-wave">W3</span></td></tr>
+            <tr><td data-label="Concept" class="t-key">Intent Agent and SRE Diagnosis Agent as services</td><td data-label="Feature">Claude Agent SDK (Python <code>claude-agent-sdk</code>, TypeScript <code>@anthropic-ai/claude-agent-sdk</code>) with MCP servers; in-process tools via <code>create_sdk_mcp_server</code></td><td data-label="Use">Event-driven services with read-only tools, turn and budget caps. They open intents and PRs and never touch production.</td><td data-label="Kit">prompt <a href="#p-s1">S1</a></td><td data-label="Wave"><span class="chip c-wave">W3–W5</span></td></tr>
+            <tr><td data-label="Concept" class="t-key">Agent evals in CI</td><td data-label="Feature">Headless <code>claude -p --output-format json</code> with <code>--max-turns</code>, <code>--max-budget-usd</code>, <code>--allowedTools</code>; <code>claude plugin eval</code> for packaged skills</td><td data-label="Use">Eval harness on every agent-config change and weekly; each case must pass with its reference fix and fail without it.</td><td data-label="Kit"><span class="file">evals/run_evals.py</span>, <span class="file">ci/github/agent-evals.yml</span></td><td data-label="Wave"><span class="chip c-wave">W2–W3</span></td></tr>
+            <tr><td data-label="Concept" class="t-key">Agent-system metrics</td><td data-label="Feature">Claude Code OpenTelemetry: <code>claude_code.cost.usage</code>, <code>token.usage</code>, <code>session.count</code>, <code>commit.count</code>, <code>pull_request.count</code>, <code>code_edit_tool.decision</code>, <code>active_time.total</code>; events such as <code>tool_decision</code>; team tags via <code>OTEL_RESOURCE_ATTRIBUTES</code></td><td data-label="Use">Cost per successful change, intervention signals and usage by team, joined to the feature-level record.</td><td data-label="Kit"><span class="file">managed-settings.example.json</span>, <span class="file">metrics/</span></td><td data-label="Wave"><span class="chip c-wave">W0–W1</span></td></tr>
+            <tr><td data-label="Concept" class="t-key">Intake from tickets, support and chat</td><td data-label="Feature">MCP servers connected to Claude Code (<code>/mcp</code>)</td><td data-label="Use"><code>/intent</code> reads the ticket and its linked threads directly.</td><td data-label="Kit"><span class="file">skills/intent</span></td><td data-label="Wave"><span class="chip c-wave">W1–W2</span></td></tr>
+            <tr><td data-label="Concept" class="t-key">Release Agent up to the production boundary</td><td data-label="Feature">Claude Code in CI (the GitHub Action or <code>claude -p</code>) running <code>/release-manifest</code>, with environment-scoped credentials</td><td data-label="Use">Assembles the manifest and readiness summary after dev, QA and staging; production stays behind the human or policy gate.</td><td data-label="Kit"><span class="file">skills/release-manifest</span></td><td data-label="Wave"><span class="chip c-wave">W3</span></td></tr>
+            <tr><td data-label="Concept" class="t-key">Impact analysis</td><td data-label="Feature">Codebase exploration in plan mode; optionally your Kompactor code graph: <code>kompactor graph impact &lt;file|symbol&gt;</code></td><td data-label="Use">Callers and blast radius recorded in plan.md before code changes.</td><td data-label="Kit">plan template</td><td data-label="Wave"><span class="chip c-wave">W2</span></td></tr>
+            <tr><td data-label="Concept" class="t-key">Encode corrections; incidents become controls</td><td data-label="Feature">CLAUDE.md known traps, eval cases and hooks, driven by the <code>/incident-to-intent</code> skill</td><td data-label="Use">Every repeated mistake or incident leaves a durable control behind.</td><td data-label="Kit"><span class="file">skills/incident-to-intent</span></td><td data-label="Wave"><span class="chip c-wave">W2 → W5</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small">Naming note: Claude Code already has a built-in <code>/plan</code> command and a bundled <code>/verify</code> skill, and a project skill with the same name would replace them. The kit's skills are therefore <code>/plan-change</code> and <code>/verify-change</code>.</p>
+    </section>
+
+    <!-- ============================== 5 KIT ============================== -->
+    <section id="kit" data-spy>
+      <h2><span class="sec-n">5</span>Starter kit</h2>
+      <p>A working kit in <a href="starter-kit/README.md"><code>starter-kit/</code></a> that makes a pilot repository agent-ready in an afternoon. Everything in it was run and tested while this plan was written.</p>
+      <p><b>In the prd-to-pr-rule-skills repository</b>, the standard that reaches every machine is the plugin marketplace in <code>plugins/</code> (<code>sdlc-core</code>, <code>sdlc-connectors</code> and the stack plugins), switched on by managed settings. This kit sits beside it as reference material. What it adds moves into <code>sdlc-core</code> through the repository's normal PR and eval process (tracker actions 3.5, 4.5 and 4.6): the frozen-test and production-boundary guards, the artifact gates, the <code>claude -p</code> eval harness, the architecture, security and test agents, and the release-manifest and incident-to-intent skills.</p>
+<pre class="tree"><b>starter-kit/</b>
+├── README.md                       <i>install, layers, rollout</i>
+├── install.sh                      <i>non-destructive installer for a pilot repo</i>
+├── CLAUDE.md.template              <i>repository context</i>
+├── Makefile.template               <i>build · lint · test · verify (+ verify-frozen, verify-artifacts)</i>
+├── managed-settings.example.json   <i>org policy: no bypass, secret denies, sandbox, telemetry</i>
+├── <b>.claude/</b>
+│   ├── settings.json               <i>allow / ask / deny rules + hook registration</i>
+│   ├── frozen-tests.txt            <i>tests agents may not change (humans edit this)</i>
+│   ├── hooks/                      <i>test_guard.py · prod_boundary_guard.py · stop_verify_gate.py</i>
+│   │   └── tests/                  <i>run_hook_tests.py + sample payloads</i>
+│   ├── agents/                     <i>intent-agent · architecture-reviewer · security-reviewer</i>
+│   │                               <i>test-engineer · verifier · review-synthesizer</i>
+│   └── skills/                     <i>intent · spec · plan-change · verify-change</i>
+│                                   <i>release-manifest · incident-to-intent</i>
+├── <b>docs/</b>
+│   ├── changes/README.md           <i>change classes and lifecycle</i>
+│   ├── changes/_templates/         <i>intent.md · spec.md · plan.md · evidence.md · release-manifest.yaml</i>
+│   └── policies/                   <i>policy-pack format + starter security pack</i>
+├── scripts/                        <i>check_frozen_tests.py · check_artifacts.py (CI gates)</i>
+├── evals/                          <i>run_evals.py (headless claude -p) + EVAL-0001</i>
+├── metrics/                        <i>feature-record.schema.json + formulas</i>
+├── ci/github/                      <i>claude-pr-review.yml · agent-evals.yml · verify.yml</i>
+└── packaging/                      <i>build the agentic-sdlc plugin + marketplace example</i></pre>
+
+      <h3>Install into a pilot repository</h3>
+<pre class="code">cd vision/starter-kit
+./install.sh /path/to/pilot-repo --with-ci   # never overwrites; writes *.agentic-sdlc.* next to clashes
+cd /path/to/pilot-repo
+make hooks-test                              # hook self-test
+python3 evals/run_evals.py --self-test       # eval cases tell good from bad, no API calls</pre>
+      <p>Then fill in CLAUDE.md, set the three commands at the top of the Makefile, tune the production names in the boundary hook, add CODEOWNERS for the guardrail files, and open a PR. The kit's <a href="starter-kit/README.md">README</a> covers each step and the org-wide rollout through the plugin.</p>
+
+      <h3>What each guard decides</h3>
+      <div class="table-wrap">
+        <table class="w-wide">
+          <thead><tr><th>Hook</th><th>Event</th><th>Denies</th><th>Asks a human</th></tr></thead>
+          <tbody>
+            <tr><td class="t-key"><span class="file">test_guard.py</span></td><td>PreToolUse: Edit, Write, NotebookEdit, Bash</td><td>Edits to existing frozen tests or to the frozen list; shell commands that delete, move or rewrite them</td><td>Edits that add skip or focus markers (<code>pytest.mark.skip</code>, <code>it.only</code>, <code>@Disabled</code>, <code>t.Skip</code> and more), remove test cases, or add deselects to runner config</td></tr>
+            <tr><td class="t-key"><span class="file">prod_boundary_guard.py</span></td><td>PreToolUse: Bash</td><td>Deploys, applies, migrations, DB or remote shells against production; pushes to protected branches; reading secrets or minting credentials; tampering with hooks and settings; starting Claude with permissions off</td><td>Reads from production; infrastructure changes that name no non-production environment; force-pushes, tag pushes, merges, workflow runs; skipping git hooks</td></tr>
+            <tr><td class="t-key"><span class="file">stop_verify_gate.py</span></td><td>Stop</td><td colspan="2">Runs <code>make verify</code> when the tree is dirty and blocks "done" with the failing output, at most 3 times per session. Skips clean trees and artifact-only edits, and never re-runs on an unchanged tree.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>What was tested</h3>
+      <div class="tests">
+        <div><span class="chip allow">pass</span><span><b>116 hook checks</b>: sample hook JSON piped into each script, covering deny, ask and pass cases, the Stop cap, timeouts and bad input.</span></div>
+        <div><span class="chip allow">pass</span><span><b>Eval self-test</b>: EVAL-0001 scores 1.00 with the reference fix and 0.50 on the untouched fixture.</span></div>
+        <div><span class="chip allow">pass</span><span><b>Gate scripts</b> in a throwaway pilot repo: frozen-test edits fail, unapproved intents fail, missing evidence fails, high-risk without a security approver fails, shadow mode reports without failing.</span></div>
+        <div><span class="chip allow">pass</span><span><b>Packaging</b>: plugin and marketplace manifests pass <code>claude plugin validate --strict</code>; all 16 JSON and YAML files and 16 front-matter blocks parse.</span></div>
+      </div>
+      <p class="small">Hooks are a seatbelt. Pattern matching on shell commands can be evaded, so the hard boundary stays in credentials, the sandbox and branch protection.</p>
+    </section>
+
+    <!-- ============================== 6 MEASUREMENT ============================== -->
+    <section id="measurement" data-spy>
+      <h2><span class="sec-n">6</span>Measurement model</h2>
+      <p>One record per change, from first signal to confirmed impact, feeds every number below. Report medians and 85th percentiles per change class, at team level, with definitions locked for a quarter.</p>
+
+      <h3>Question 1: is output per person really increasing?</h3>
+      <p><b>Primary measure: impact-qualified changes per builder per quarter.</b> A change counts when it reached production and met the impact threshold its intent defined (adoption, reduced effort, revenue, savings, fewer defects or tickets). Each change is weighted by class so that splitting work does not inflate the count.</p>
+<pre class="code">IQC per builder-quarter = Σ weight(class) over changes with impact.threshold_met
+                          ÷ builder FTE-quarters
+
+weight(class): trivial 0 · standard 1 · significant 3 · high-risk 5   (calibrate in W0 from median effort per class)</pre>
+      <p><b>Read it next to its guardrails:</b> cost per successful change, escaped defects per change, change failure rate, review hours per change, and how builders report their own toil. Output that rises while a guardrail falls is not a gain.</p>
+      <p><b>Attribution:</b> compare the pilot team with its own baseline period and with a comparison team that does not change in W2–W3. Say plainly what cannot be attributed to the program.</p>
+      <p><b>AI code share in production stays the company's headline metric.</b> Measure it as lines in AI-authored commits merged to main divided by all merged lines, using Claude Code's commit attribution and telemetry joined with git. Read it next to the guardrails above: a rising share counts as progress only while quality and impact hold.</p>
+
+      <h3>Question 2: how does our structure compare with a leaner AI-native model?</h3>
+      <p>Three structural measures, tracked as trends rather than headcount targets.</p>
+      <ul>
+        <li><b>Handoff depth:</b> distinct human roles that worked on or approved a change between approved intent and production. Automated and policy gates do not count.</li>
+        <li><b>Single-builder share:</b> share of non-trivial production changes with a handoff depth of 1, where every other check was automated or a policy gate.</li>
+        <li><b>Layers and span:</b> management layers between a builder and the CTO, builders per manager, and builders per coordinating role (product, QA, release, delivery management), from HR data.</li>
+      </ul>
+      <div class="table-wrap">
+        <table class="w-wide">
+          <thead><tr><th>Dimension</th><th>Handoff-heavy relay</th><th>AI-native target, standard class</th><th>Measured by</th></tr></thead>
+          <tbody>
+            <tr><td class="t-key">Roles touching a change</td><td>5–6: product, design, development, QA, lead review, release</td><td>One builder; product owner approves the intent; peer review by risk</td><td><code>handoff_depth</code></td></tr>
+            <tr><td class="t-key">Approvals</td><td>Sequential human sign-offs at every stage</td><td>Humans approve intent and plan; automated gates elsewhere; policy gate to production</td><td>gates auto-passed vs overridden</td></tr>
+            <tr><td class="t-key">Requirements</td><td>Tickets written and refined in meetings</td><td>Agent drafts intent.md from the sources; product owner approves</td><td>idea → approved intent</td></tr>
+            <tr><td class="t-key">Testing</td><td>A QA phase after development</td><td>Closed verification loop before any human looks</td><td>first-pass PR success, loop completion</td></tr>
+            <tr><td class="t-key">Review</td><td>A senior reads every line</td><td>Agents absorb mechanical review; humans judge fit and risk</td><td>review time and wait per PR</td></tr>
+            <tr><td class="t-key">Release</td><td>Release team and change board</td><td>Release agent to staging; human or policy gate to production</td><td>PR → production, change failure rate</td></tr>
+            <tr><td class="t-key">Learning from production</td><td>Postmortem documents</td><td>Incident becomes intent, test, eval and known trap within 5 days</td><td>repeat preventable incidents</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>The four bands, with sources</h3>
+      <div class="table-wrap">
+        <table class="w-wide">
+          <thead><tr><th>Band</th><th>Metric</th><th>Definition</th><th>Source</th></tr></thead>
+          <tbody>
+            <tr><td class="t-key">Flow</td><td>Idea → approved intent → spec → PR → production → impact</td><td>Differences between record timestamps; median and p85 per class</td><td>Artifact front matter, tracker, git, deploy log, analytics</td></tr>
+            <tr><td class="t-key">Flow</td><td>Flow efficiency</td><td>Active time ÷ total time per change</td><td>Status history, PR events</td></tr>
+            <tr><td class="t-key">Build and test</td><td>First-pass PR success</td><td>CI green on the first push of a PR</td><td>CI</td></tr>
+            <tr><td class="t-key">Build and test</td><td>Verification loop completion</td><td>Share of PRs whose <code>make verify</code> passed before human review</td><td>CI, evidence.md</td></tr>
+            <tr><td class="t-key">Build and test</td><td>Escaped defects</td><td>Defects traced to a change within 30 days</td><td>Tracker links</td></tr>
+            <tr><td class="t-key">Operate</td><td>Change failure rate, time to detect, time to recover, deploy frequency, first-time deploy correctness</td><td>Standard DORA-style definitions, per service</td><td>Deploy and incident tools</td></tr>
+            <tr><td class="t-key">Agent system</td><td>AI code share in production</td><td>Lines in AI-authored commits merged to main ÷ all merged lines</td><td>Claude Code attribution and telemetry, git</td></tr>
+            <tr><td class="t-key">Agent system</td><td>Autonomous gate completion</td><td>Gates auto-passed ÷ (auto-passed + human-overridden)</td><td>CI checks, shadow log</td></tr>
+            <tr><td class="t-key">Agent system</td><td>Human intervention rate</td><td>Corrections, takeovers or restarts ÷ agent sessions</td><td>Retro tags, telemetry</td></tr>
+            <tr><td class="t-key">Agent system</td><td>Agent rework rate</td><td>Follow-up fix commits ÷ commits on agent-authored changes</td><td>git</td></tr>
+            <tr><td class="t-key">Agent system</td><td>Agent eval pass rate</td><td>Passed runs ÷ total runs</td><td><code>evals/results/</code></td></tr>
+            <tr><td class="t-key">Agent system</td><td>Cost per successful change</td><td>(Agent + CI cost) ÷ changes with no rollback or incident in 30 days</td><td><code>claude_code.cost.usage</code>, CI billing</td></tr>
+            <tr><td class="t-key">Agent system</td><td>Standard-workflow share</td><td>Changes following their class's chain ÷ eligible changes</td><td><code>check_artifacts.py</code> results</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>The single feature-level record</h3>
+      <p>Defined in <a href="starter-kit/metrics/feature-record.schema.json"><code>metrics/feature-record.schema.json</code></a> and built nightly. The eleven timestamps are the backbone: every flow metric is a difference between two of them. Example record (illustrative values):</p>
+<pre class="code">{
+  "change_id": "PAY-1234-refund-rounding",
+  "class": "standard",
+  "work_type": "defect",
+  "owner": "builder-a",
+  "team": "payments",
+  "agentic_workflow": true,
+  "handoff_roles": ["engineering"],
+  "handoff_depth": 1,
+  "timestamps": {
+    "idea_received":          "2027-02-01T09:12:00Z",
+    "intent_approved":        "2027-02-01T15:40:00Z",
+    "spec_approved":          null,
+    "plan_approved":          "2027-02-02T10:05:00Z",
+    "first_commit":           "2027-02-02T10:30:00Z",
+    "pr_opened":              "2027-02-02T16:02:00Z",
+    "pr_merged":              "2027-02-03T11:20:00Z",
+    "deployed_staging":       "2027-02-03T11:55:00Z",
+    "deployed_production":    "2027-02-03T14:00:00Z",
+    "adoption_threshold_met": null,
+    "impact_confirmed":       "2027-02-17T00:00:00Z"
+  },
+  "quality": { "first_pass_pr_success": true, "verify_loop_iterations": 2, "escaped_defects_30d": 0, "rolled_back": false },
+  "agent":   { "sessions": 3, "cost_usd": 4.10, "human_interventions": 1, "gates_auto_passed": 4, "gates_human_overridden": 0 },
+  "impact":  { "metric": "refund tickets per week", "baseline": 42, "target": 5, "observed": 3, "threshold_met": true }
+}</pre>
+
+      <h3>Effort-distribution baseline</h3>
+      <p>Without this, a rise in feature output can simply mean that defect work was deferred. Claude classifies every work item from the baseline window (prompt <a href="#p-b3">B3</a>), a human audits a stratified sample of 40, and the shares are reported by count and by elapsed days.</p>
+      <div class="table-wrap">
+        <table class="w-mid">
+          <thead><tr><th>Work type</th><th>Typical signals</th><th>Baseline share (W0)</th></tr></thead>
+          <tbody>
+            <tr><td class="t-key">Feature</td><td>Story or epic with a customer outcome</td><td class="muted">to measure</td></tr>
+            <tr><td class="t-key">Defect remediation</td><td>Bug type, incident link, regression label</td><td class="muted">to measure</td></tr>
+            <tr><td class="t-key">Maintenance</td><td>Upgrades, dependency bumps, deprecations</td><td class="muted">to measure</td></tr>
+            <tr><td class="t-key">Risk reduction</td><td>Security fixes, compliance, resilience work</td><td class="muted">to measure</td></tr>
+            <tr><td class="t-key">Technical debt</td><td>Refactors, test debt, build speed</td><td class="muted">to measure</td></tr>
+            <tr><td class="t-key">Operational support</td><td>Support escalations, data fixes, on-call toil</td><td class="muted">to measure</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>ROI</h3>
+<pre class="code">Annual benefit  B = (IQC_now − IQC_baseline) × builders × 4 × value per weighted change
+                  + escaped defects avoided × cost per defect
+                  + incident minutes avoided × cost per minute
+Annual cost     C = agent compute and licences + enablement team + training and transition dip
+ROI = (B − C) ÷ C          Payback in months = C ÷ (B ÷ 12)</pre>
+      <p>Value per weighted change starts as a conservative proxy, the loaded cost of the effort that change took at baseline productivity, and is replaced by measured impact as adoption data matures. Try the formula with your own numbers:</p>
+      <form class="roi" id="roi" autocomplete="off">
+        <fieldset>
+          <legend>Inputs, annual unless stated</legend>
+          <label for="r-builders">Builders in scope<input id="r-builders" type="number" min="0" step="1" value="40"></label>
+          <label for="r-value">Value per weighted change<input id="r-value" type="number" min="0" step="100" value="8000"></label>
+          <label for="r-base">Baseline IQC per builder-quarter<input id="r-base" type="number" min="0" step="0.1" value="6.0"></label>
+          <label for="r-now">Current IQC per builder-quarter<input id="r-now" type="number" min="0" step="0.1" value="7.2"></label>
+          <label for="r-defects">Escaped defects avoided<input id="r-defects" type="number" min="0" step="1" value="30"></label>
+          <label for="r-defect-cost">Cost per escaped defect<input id="r-defect-cost" type="number" min="0" step="100" value="4000"></label>
+          <label for="r-minutes">Incident minutes avoided<input id="r-minutes" type="number" min="0" step="10" value="600"></label>
+          <label for="r-minute-cost">Cost per incident minute<input id="r-minute-cost" type="number" min="0" step="10" value="200"></label>
+          <label for="r-compute">Agent compute and licences<input id="r-compute" type="number" min="0" step="1000" value="144000"></label>
+          <label for="r-enable">Enablement team<input id="r-enable" type="number" min="0" step="1000" value="360000"></label>
+          <label for="r-dip">Training and transition dip<input id="r-dip" type="number" min="0" step="1000" value="320000"></label>
+        </fieldset>
+        <div class="roi-out" aria-live="polite">
+          <div class="row"><span>Output gain</span><output id="o-output">1,536,000</output></div>
+          <div class="row"><span>Quality gain</span><output id="o-quality">240,000</output></div>
+          <div class="row"><span>Annual benefit B</span><output id="o-benefit">1,776,000</output></div>
+          <div class="row"><span>Annual cost C</span><output id="o-cost">824,000</output></div>
+          <div class="big">
+            <div>ROI<output id="o-roi">116%</output></div>
+            <div>Payback<output id="o-payback">5.6 months</output></div>
+          </div>
+        </div>
+        <p class="roi-note">Example inputs only, not a forecast. Replace every value with the Wave 0 baseline and finance numbers, in any one currency.</p>
+      </form>
+
+      <h3>Rules that keep the metrics honest</h3>
+      <ul>
+        <li>Every speed metric has a quality partner, and every output metric has an impact partner.</li>
+        <li>Team level only. No individual leaderboards in year one.</li>
+        <li>Definitions change at most once a quarter, with the change logged.</li>
+        <li>Activity metrics (sessions, lines of AI code, PR counts) stay operational signals and never become targets.</li>
+      </ul>
+    </section>
+
+    <!-- ============================== 7 GAP TRAJECTORY ============================== -->
+    <section id="gaps" data-spy>
+      <h2><span class="sec-n">7</span>Gap-assessment trajectory</h2>
+      <p>The starting column is the example rating from the vision, which the strategy document also uses. Wave 0 confirms or corrects it with evidence. The later columns are targets for the re-rating at each gate, and a rating only moves with evidence.</p>
+      <div class="table-wrap">
+        <table class="w-wide nums">
+          <thead><tr><th>Pillar</th><th>Hypothesis now</th><th>Nov 2026</th><th>Jan 2027</th><th>Apr 2027</th><th>Oct 2027</th><th>What moves it</th></tr></thead>
+          <tbody>
+            <tr><td class="t-key">1 Coding agent adoption</td><td><span class="score hyp" style="--v:8">8</span></td><td><span class="score" style="--v:8">8</span></td><td><span class="score" style="--v:9">9</span></td><td><span class="score" style="--v:9">9</span></td><td><span class="score" style="--v:9">9</span></td><td>Managed settings and telemetry for every builder (W1); named exceptions; adoption no longer reported as growth</td></tr>
+            <tr><td class="t-key">2 Product builder</td><td><span class="score hyp" style="--v:2">2</span></td><td><span class="score" style="--v:2">2</span></td><td><span class="score" style="--v:3">3</span></td><td><span class="score" style="--v:5">5</span></td><td><span class="score" style="--v:6">6</span></td><td>Role draft (W2); one accountable builder per feature (W3); career framework (W4)</td></tr>
+            <tr><td class="t-key">3 Empower builders</td><td><span class="score hyp" style="--v:3">3</span></td><td><span class="score" style="--v:3">3</span></td><td><span class="score" style="--v:4">4</span></td><td><span class="score" style="--v:5">5</span></td><td><span class="score" style="--v:6">6</span></td><td>Pilot at stage 2 (W2); standard class through automated controls (W3); every team (W4–W5)</td></tr>
+            <tr><td class="t-key">4 Standardize and automate</td><td><span class="score hyp" style="--v:4">4</span></td><td><span class="score" style="--v:6">6</span></td><td><span class="score" style="--v:8">8</span></td><td><span class="score" style="--v:8">8</span></td><td><span class="score" style="--v:9">9</span></td><td>40/48 repos (W1); 48/48 and guardrails (W2); required gates on every repo (W3)</td></tr>
+            <tr><td class="t-key">5 Agentic SDLC</td><td><span class="score hyp" style="--v:2">2</span></td><td><span class="score" style="--v:3">3</span></td><td><span class="score" style="--v:4">4</span></td><td><span class="score" style="--v:6">6</span></td><td><span class="score" style="--v:7">7</span></td><td>Workflow v1 and framework v0.5 (W1); v1.0 and evals (W2); gates and release agent (W3); production loop (W5)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small">Scale 0–10 against a best-in-class AI-native organization. For each pillar the monthly report also states why it is not a 10 and lists the must-fix, should-fix and nice-to-have items, with time, cost and sequencing.</p>
+    </section>
+
+    <!-- ============================== 8 DECISIONS ============================== -->
+    <section id="decisions" data-spy>
+      <h2><span class="sec-n">8</span>Leadership decisions</h2>
+      <p>These match the Decisions sheet in the <a href="agentic-sdlc-execution-plan.xlsx">execution tracker</a>. The vision's five decisions are folded in: the artifact chain and repo standard (D1), agent behaviour as production behaviour (D3), value metrics (D6) and the product-builder role (D12). Bring the open ones to the review on the date shown.</p>
+      <div class="table-wrap">
+        <table class="stack w-wide">
+          <thead><tr><th>#</th><th>Decision</th><th>Recommendation</th><th>Needed by</th><th>Owner</th></tr></thead>
+          <tbody>
+            <tr><td data-label="#" class="mono">D1</td><td data-label="Decision" class="t-key">Approve plan v1: targets, dates and way of working</td><td data-label="Advice">Approve, with changes logged. Keep the company targets (40/48 by 30 Nov, 48/48 by 29 Jan, framework from December). Adopt the artifact chain, tiered by change class, and the repo standard as the way of working.</td><td data-label="Needed by" class="nums">Mon 26 Oct 2026</td><td data-label="Owner">Executive sponsor</td></tr>
+            <tr><td data-label="#" class="mono">D2</td><td data-label="Decision" class="t-key">Task force</td><td data-label="Advice">6–7 people at least 50% allocated from Mon 2 Nov to Fri 29 Jan, nominated by the engineering people leads.</td><td data-label="Needed by" class="nums">Wed 28 Oct 2026</td><td data-label="Owner">Executive sponsor with the people leads</td></tr>
+            <tr><td data-label="#" class="mono">D3</td><td data-label="Decision" class="t-key">One framework, run like production code</td><td data-label="Advice">Every agent, skill and automation goes through the shared framework, and owners of existing agents join as contributors. No new standalone agents after Fri 6 Nov. Framework changes go through PRs with code owners and must pass the eval suite.</td><td data-label="Needed by" class="nums">Mon 26 Oct 2026</td><td data-label="Owner">Executive sponsor</td></tr>
+            <tr><td data-label="#" class="mono">D4</td><td data-label="Decision" class="t-key">Form of the framework</td><td data-label="Advice">Skills-first, packaged as plugins from an internal marketplace. Add hooks where rules must be enforced, subagents for specialist reviews, MCP connectors for Jira and observability, and headless services (Agent SDK, CI) for event-driven agents. Anthropic, OpenAI and Google package their coding agents this way (Evidence sheet in the tracker).</td><td data-label="Needed by" class="nums">Mon 9 Nov 2026</td><td data-label="Owner">Executive sponsor</td></tr>
+            <tr><td data-label="#" class="mono">D5</td><td data-label="Decision" class="t-key">Lead allocation</td><td data-label="Advice">The transformation lead works only on this program until Fri 29 Jan 2027; other work is paused.</td><td data-label="Needed by" class="nums">Mon 26 Oct 2026</td><td data-label="Owner">Executive sponsor with the program sponsor</td></tr>
+            <tr><td data-label="#" class="mono">D6</td><td data-label="Decision" class="t-key">Value metrics</td><td data-label="Advice">Adopt the AI code share method and feature-level records; report value metrics with their paired quality metrics; team level only.</td><td data-label="Needed by" class="nums">Mon 9 Nov 2026</td><td data-label="Owner">Executive sponsor</td></tr>
+            <tr><td data-label="#" class="mono">D7</td><td data-label="Decision" class="t-key">Expansion teams</td><td data-label="Advice">Name the 4–5 backend teams and their order, in two cohorts (January and February).</td><td data-label="Needed by" class="nums">Mon 23 Nov 2026</td><td data-label="Owner">Executive sponsor with engineering managers</td></tr>
+            <tr><td data-label="#" class="mono">D8</td><td data-label="Decision" class="t-key">Agent compute budget</td><td data-label="Advice">A monthly envelope per builder set from November telemetry, hard caps on automated runs (<code>--max-budget-usd</code>), and a monthly review against cost per successful change.</td><td data-label="Needed by" class="nums">Mon 9 Nov 2026</td><td data-label="Owner">Executive sponsor with finance</td></tr>
+            <tr><td data-label="#" class="mono">D9</td><td data-label="Decision" class="t-key">Measurement data access</td><td data-label="Advice">Read access for the measurement analyst to analytics, Jira, GitHub, deploy logs, the incident tool and HR layer and span data.</td><td data-label="Needed by" class="nums">Wed 28 Oct 2026</td><td data-label="Owner">Executive sponsor</td></tr>
+            <tr><td data-label="#" class="mono">D10</td><td data-label="Decision" class="t-key">Production gate for the standard class</td><td data-label="Advice">A policy gate that auto-promotes once the shadow data meets the bar; significant and high-risk changes keep a human gate.</td><td data-label="Needed by" class="nums">Mon 10 May 2027</td><td data-label="Owner">Executive sponsor with security</td></tr>
+            <tr><td data-label="#" class="mono">D11</td><td data-label="Decision" class="t-key">Autonomy ceiling</td><td data-label="Advice">L3 (opens PRs) by default; L4 only for named runbooks approved by SRE; no L5 in year one.</td><td data-label="Needed by" class="nums">Mon 7 Jun 2027</td><td data-label="Owner">Executive sponsor with the head of SRE</td></tr>
+            <tr><td data-label="#" class="mono">D12</td><td data-label="Decision" class="t-key">Product-builder role</td><td data-label="Advice">Adopt the role in the career framework, with team-level scorecards and new paths for QA, PM and release specialists.</td><td data-label="Needed by" class="nums">Mon 2 Aug 2027</td><td data-label="Owner">Executive sponsor with HR</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============================== 9 PLAYBOOK ============================== -->
+    <section id="playbook" data-spy>
+      <h2><span class="sec-n">9</span>Claude playbook</h2>
+      <p>Copy-paste prompts for each step. Words in angle brackets are yours to fill in. Run them in Claude Code inside the relevant repository, or in a scratch folder for the analysis prompts, with <code>gh</code> authenticated and any MCP servers you need connected.</p>
+
+      <div class="pgroup">
+        <p class="subhead">Baseline · W0</p>
+        <div class="prompt" id="p-b1">
+          <div class="prompt-head"><span class="prompt-title"><span class="pid">B1</span>Mine merged PRs for the flow baseline</span><button class="copy" type="button" aria-label="Copy prompt B1">Copy</button></div>
+<pre>Build an engineering flow baseline from GitHub with the gh CLI.
+Repositories: &lt;org/repo-a&gt;, &lt;org/repo-b&gt;. Window: PRs merged 2026-05-01 to 2026-10-31.
+For each PR collect: repo, number, author, created_at, merged_at, first commit time (gh pr view --json commits), additions, deletions, changed files, number of reviews and distinct reviewers, whether CI passed on the first push, labels, and any issue keys in the title, body or branch name (pattern [A-Z]+-[0-9]+).
+Write the rows to baseline/prs.csv. Then write baseline/flow-summary.md with the median and 85th percentile of open-to-merge and first-commit-to-merge time per repo and per month, the method you used, and every data gap. Never estimate a missing value; mark it.</pre>
+          <p class="note">Output: baseline/prs.csv and baseline/flow-summary.md. Use <code>gh pr list --state merged --search "merged:2026-05-01..2026-10-31"</code> to page through.</p>
+        </div>
+        <div class="prompt" id="p-b2">
+          <div class="prompt-head"><span class="prompt-title"><span class="pid">B2</span>Pull ticket history and join it to PRs</span><button class="copy" type="button" aria-label="Copy prompt B2">Copy</button></div>
+<pre>Using the Jira MCP server (or the export at baseline/jira.csv if it is not connected), pull issues resolved between 2026-05-01 and 2026-10-31 in projects &lt;KEYS&gt;.
+For each issue: key, type, priority, created, first move to In Progress, resolved, every assignee and every status it passed through, components, labels, epic.
+Join to baseline/prs.csv on issue key. For each issue compute idea-to-start, start-to-merge and merge-to-release (from fix-version dates when they exist).
+Use baseline/people-roles.csv (name, role) to count the distinct roles that touched each issue after it was ready for work; call that handoff_depth.
+Write baseline/issues.csv and add a section to baseline/flow-summary.md. List unmatched PRs and issues separately instead of dropping them.</pre>
+          <p class="note">Ask HR or team leads for the people-to-role map; it is the only manual input.</p>
+        </div>
+        <div class="prompt" id="p-b3">
+          <div class="prompt-head"><span class="prompt-title"><span class="pid">B3</span>Classify the effort distribution</span><button class="copy" type="button" aria-label="Copy prompt B3">Copy</button></div>
+<pre>Classify every row in baseline/issues.csv, plus PRs in baseline/prs.csv that have no issue, into exactly one work type: feature, defect, maintenance, risk-reduction, tech-debt, operational-support. Use type, labels, title and description.
+Rules: &lt;org-specific rules, e.g. "anything linked to an incident is defect"&gt;.
+Write baseline/effort.csv with key, work_type, confidence (high, medium, low) and a one-line reason.
+Then pick a stratified sample of 40 rows (at least 5 per type) and list them in baseline/effort-audit.md for a human to check.
+Report each type's share by count and by first-commit-to-merge days.
+Flag low-confidence rows; do not guess.</pre>
+          <p class="note">If the human audit agrees with fewer than 85% of the sample, tighten the rules and rerun.</p>
+        </div>
+        <div class="prompt" id="p-b4">
+          <div class="prompt-head"><span class="prompt-title"><span class="pid">B4</span>Map the handoffs</span><button class="copy" type="button" aria-label="Copy prompt B4">Copy</button></div>
+<pre>For the 20 most recent features in baseline/issues.csv, reconstruct the path from request to production: every role that touched it (product, design, architecture, engineering, QA, security, release, SRE), what each one produced, and the waiting time between touches, using status timestamps and PR review timestamps.
+Write baseline/handoffs.md with one row per feature: the path, handoff depth, total wait time and the single longest wait. End with a short summary of where work waits most and which handoffs look like they add the least.</pre>
+          <p class="note">Check the result with three builders, one product owner and one QA lead before using it.</p>
+        </div>
+        <div class="prompt" id="p-b5">
+          <div class="prompt-head"><span class="prompt-title"><span class="pid">B5</span>Gap assessment from evidence</span><button class="copy" type="button" aria-label="Copy prompt B5">Copy</button></div>
+<pre>Read vision/vision.md (sections 15 and 16) and everything in baseline/.
+For each of the five pillars propose a 0-10 rating against a best-in-class AI-native organization. For each: the evidence (cite files and numbers), why it is not a 10, and the must-fix, should-fix and nice-to-have items with a rough time, cost and order.
+Label any rating "hypothesis" where the evidence is thin. Write baseline/gap-assessment.md.</pre>
+        </div>
+      </div>
+
+      <div class="pgroup">
+        <p class="subhead">Repository readiness · W1</p>
+        <div class="prompt" id="p-r1">
+          <div class="prompt-head"><span class="prompt-title"><span class="pid">R1</span>Write a CLAUDE.md that agents can use</span><button class="copy" type="button" aria-label="Copy prompt R1">Copy</button></div>
+<pre>Run /init, then rewrite CLAUDE.md to the structure in the starter kit's CLAUDE.md.template:
+purpose, commands, architecture, directory structure, conventions, how we deliver changes, testing rules, known traps, must not change. Keep it under 150 lines and import deeper docs with @path lines instead of pasting them.
+Read the code to fill every section. Where you are guessing, write "TODO(&lt;owner&gt;): confirm".
+For Known traps, look at the last six months of git history for reverts, hotfixes and repeated review comments (gh api repos/{owner}/{repo}/pulls/&lt;n&gt;/comments) and list the five mistakes that recur most, each with how to avoid it.</pre>
+        </div>
+        <div class="prompt" id="p-r2">
+          <div class="prompt-head"><span class="prompt-title"><span class="pid">R2</span>Add the standard make targets</span><button class="copy" type="button" aria-label="Copy prompt R2">Copy</button></div>
+<pre>Add make build, make lint, make test and make verify to this repository using the starter kit's Makefile.template. Find the real commands in package.json, pyproject.toml, build.gradle or the CI config under .github/workflows. make lint must never auto-fix. make test must finish in under 5 minutes on a laptop; move slower suites into VERIFY_EXTRA_CMD.
+Run every target, fix what is broken, then change CI to call make verify instead of repeating the commands. Report how long each target takes.</pre>
+        </div>
+        <div class="prompt" id="p-r3">
+          <div class="prompt-head"><span class="prompt-title"><span class="pid">R3</span>Install the kit and propose frozen tests</span><button class="copy" type="button" aria-label="Copy prompt R3">Copy</button></div>
+<pre>The Agentic SDLC starter kit was just installed with install.sh. Do three things:
+1. Run make hooks-test and python3 evals/run_evals.py --self-test and report the results.
+2. Find the tests that protect the most business-critical behaviour (payments, authorization, data integrity, anything touched by recent incident fixes) and propose which to freeze in .claude/frozen-tests.txt, with one line of reasoning each. Do not edit the file; I will.
+3. Propose CODEOWNERS lines so humans own .claude/settings.json, .claude/hooks/ and .claude/frozen-tests.txt.</pre>
+        </div>
+        <div class="prompt" id="p-r4">
+          <div class="prompt-head"><span class="prompt-title"><span class="pid">R4</span>Draft a policy pack from real review history</span><button class="copy" type="button" aria-label="Copy prompt R4">Copy</button></div>
+<pre>Draft docs/policies/testing.md in the format described in docs/policies/README.md:
+6 to 10 rules, each with an id (TST-001 ...), one imperative sentence, why, how to check it, and a one-line example.
+Base the rules on what this repository's tests already do well and on review comments that recur across the last 200 merged PRs (gh pr list --state merged --limit 200, then gh api repos/{owner}/{repo}/pulls/&lt;n&gt;/comments). Cite the PRs behind each rule.
+Leave out anything a linter already enforces.</pre>
+        </div>
+      </div>
+
+      <div class="pgroup">
+        <p class="subhead">The artifact chain · W2 onward</p>
+        <div class="prompt" id="p-c1">
+          <div class="prompt-head"><span class="prompt-title"><span class="pid">C1</span>Start a change from a ticket</span><button class="copy" type="button" aria-label="Copy prompt C1">Copy</button></div>
+<pre>/intent PAY-1234 Customers on annual plans see the wrong proration when they upgrade mid-cycle. Support thread: &lt;link&gt;. Constraint: invoice numbering must not change.</pre>
+          <p class="note">Produces docs/changes/PAY-1234-…/intent.md, a proposed class and the product owner's open questions.</p>
+        </div>
+        <div class="prompt" id="p-c2">
+          <div class="prompt-head"><span class="prompt-title"><span class="pid">C2</span>Spec, then plan in plan mode</span><button class="copy" type="button" aria-label="Copy prompt C2">Copy</button></div>
+<pre>/spec PAY-1234-annual-proration
+# after the spec is approved, press Shift+Tab until plan mode is on, then:
+/plan-change PAY-1234-annual-proration</pre>
+          <p class="note">Skip <code>/spec</code> for standard changes unless the builder wants one.</p>
+        </div>
+        <div class="prompt" id="p-c3">
+          <div class="prompt-head"><span class="prompt-title"><span class="pid">C3</span>Build, then close the verification loop</span><button class="copy" type="button" aria-label="Copy prompt C3">Copy</button></div>
+<pre>Implement docs/changes/PAY-1234-annual-proration/plan.md step by step. After each step run make test. For the defect part, write the failing test first and stop so I can freeze it.
+When every step is done, run /verify-change PAY-1234-annual-proration.</pre>
+        </div>
+        <div class="prompt" id="p-c4">
+          <div class="prompt-head"><span class="prompt-title"><span class="pid">C4</span>Parallel streams in their own worktrees</span><button class="copy" type="button" aria-label="Copy prompt C4">Copy</button></div>
+<pre>claude --worktree pay-1234-api
+claude --worktree pay-1234-web</pre>
+          <p class="note">One terminal each, one stream of the plan per session, two or three sessions at most.</p>
+        </div>
+        <div class="prompt" id="p-c5">
+          <div class="prompt-head"><span class="prompt-title"><span class="pid">C5</span>Encode a repeated mistake</span><button class="copy" type="button" aria-label="Copy prompt C5">Copy</button></div>
+<pre>The agent has made the same mistake twice: &lt;what happened, with links to both PRs or sessions&gt;.
+Propose the smallest durable fix and apply the parts that are safe:
+1. a one-line Known traps entry for CLAUDE.md;
+2. a new eval case in evals/cases/ that fails on the old behaviour (run --self-test on it);
+3. if a deterministic rule would have caught it, the exact hook or permission rule as a proposal only. Do not edit .claude/settings.json or .claude/hooks/.
+Then rerun the eval cases this could affect.</pre>
+        </div>
+      </div>
+
+      <div class="pgroup">
+        <p class="subhead">Evals and gates · W2–W3</p>
+        <div class="prompt" id="p-e1">
+          <div class="prompt-head"><span class="prompt-title"><span class="pid">E1</span>Seed agent evals from historical PRs</span><button class="copy" type="button" aria-label="Copy prompt E1">Copy</button></div>
+<pre>Find 10 merged PRs from the last six months that represent our common change types: an API security fix, an authentication change, a data migration, a UI component and an incident fix.
+For each, create evals/cases/EVAL-&lt;n&gt;-&lt;slug&gt;/ as described in evals/README.md:
+- fixture/: the repository at the PR's parent commit, trimmed to what is needed to build and test;
+- reference/: the files as they were merged;
+- case.yaml: the task as the original ticket stated it (no hints from the solution), plus graders for tests that must pass, files that must not change, allowed paths and forbidden patterns.
+Remove secrets and customer data. Run python3 evals/run_evals.py --self-test and fix every case that passes without its reference.</pre>
+        </div>
+        <div class="prompt" id="p-g1">
+          <div class="prompt-head"><span class="prompt-title"><span class="pid">G1</span>Shadow-mode gate analysis</span><button class="copy" type="button" aria-label="Copy prompt G1">Copy</button></div>
+<pre>Compare automated gate decisions with human decisions for the pilot PRs of the last four weeks.
+For each PR: the verify workflow result, the artifact check, the blocking findings from the specialist review, and what human reviewers did (approved, requested changes, their comments).
+Compute agreement, the blocking issues humans raised that the gates missed, and the gate blocks humans overrode. List the misses by category.
+Recommend which human checks the automated gates can replace for the standard class, which they cannot yet, and what would close each gap.</pre>
+        </div>
+        <div class="prompt" id="p-g2">
+          <div class="prompt-head"><span class="prompt-title"><span class="pid">G2</span>Release agent up to staging</span><button class="copy" type="button" aria-label="Copy prompt G2">Copy</button></div>
+<pre>Write .github/workflows/release.yml for this repository. On push to main: build once and record the artifact digest, then deploy that same artifact to dev, QA and staging in order, using GitHub environments with short-lived, environment-scoped credentials (OIDC to the cloud provider, no long-lived secrets). After each deploy run our existing smoke, integration and synthetic checks.
+Then run anthropics/claude-code-action@v1 with the prompt "/release-manifest &lt;change id&gt; &lt;version&gt;" to assemble docs/changes/&lt;id&gt;/release-manifest.yaml from the job outputs, and open a PR with it.
+The production job must use the production environment with required reviewers or our policy gate, and the agent's credentials must not be able to reach it. Explain every permission you grant.</pre>
+        </div>
+      </div>
+
+      <div class="pgroup">
+        <p class="subhead">Production loop · W5</p>
+        <div class="prompt" id="p-i1">
+          <div class="prompt-head"><span class="prompt-title"><span class="pid">I1</span>Turn an incident into controls</span><button class="copy" type="button" aria-label="Copy prompt I1">Copy</button></div>
+<pre>/incident-to-intent INC-2027-014 Postmortem: &lt;link&gt;. Customer impact: &lt;summary&gt;. Produce the new intent, the failing regression test (I will freeze it), an eval case, the Known traps line and, if the failure was mechanically preventable, the hook or CI rule as a proposal.</pre>
+        </div>
+        <div class="prompt" id="p-s1">
+          <div class="prompt-head"><span class="prompt-title"><span class="pid">S1</span>Scaffold the SRE Diagnosis Agent with the Agent SDK</span><button class="copy" type="button" aria-label="Copy prompt S1">Copy</button></div>
+<pre>Scaffold an SRE Diagnosis Agent service in Python with the Claude Agent SDK (claude-agent-sdk).
+It starts from our anomaly detector's webhook with an alert payload.
+Tools, all read-only: logs, metrics, traces and deploy history, through our observability vendor's MCP server or in-process tools built with create_sdk_mcp_server that call our read-only APIs. Restrict tools with allowed_tools, and set max_turns and max_budget_usd.
+Behaviour: correlate the alert with recent deploys listed in docs/changes/*/release-manifest.yaml, produce a root-cause hypothesis with evidence links and a confidence (high, medium, low), then either open a draft PR containing a new intent.md (high confidence) or post the diagnosis to the on-call channel for a human (otherwise). It has no write access to any production system.
+Log every tool call. Include tests that replay recorded alert fixtures.</pre>
+        </div>
+      </div>
+
+      <div class="pgroup">
+        <p class="subhead">Claude as the program's analyst · every wave</p>
+        <div class="prompt" id="p-a1">
+          <div class="prompt-head"><span class="prompt-title"><span class="pid">A1</span>Weekly pilot retro</span><button class="copy" type="button" aria-label="Copy prompt A1">Copy</button></div>
+<pre>Act as the analyst for the Agentic SDLC pilot. Read the change folders under docs/changes/ for changes merged in the last 7 days (git log --since="7 days ago" --merges), their evidence.md and review.md, the hook decisions in the telemetry export at &lt;path&gt;, and the retro notes at &lt;path&gt;.
+Report on one page:
+1. flow times per change against the class baseline;
+2. where changes waited;
+3. which review findings agents absorbed, which humans judged, and where humans overrode agents;
+4. repeated agent mistakes, each with a proposed fix (Known trap, policy rule, hook, or eval case);
+5. artifact sections that read like boilerplate or that nobody used.
+Cite files for every claim.</pre>
+        </div>
+        <div class="prompt" id="p-a2">
+          <div class="prompt-head"><span class="prompt-title"><span class="pid">A2</span>Monthly gap report</span><button class="copy" type="button" aria-label="Copy prompt A2">Copy</button></div>
+<pre>Write the Agentic SDLC gap report for &lt;month&gt;. Inputs: the feature-level records at &lt;path&gt;, evals/results/, the roadmap in vision/index.html and last month's report at &lt;path&gt;.
+For each pillar: the 0-10 rating with evidence, the change since last month, the must-fix items, and whether the current wave's exit criteria are on track (green, amber or red, with the number behind it). Check every metric against its paired guardrail.
+End with the three decisions leadership needs to take this month. One page plus an appendix table.</pre>
+        </div>
+        <div class="prompt" id="p-a3">
+          <div class="prompt-head"><span class="prompt-title"><span class="pid">A3</span>ROI review</span><button class="copy" type="button" aria-label="Copy prompt A3">Copy</button></div>
+<pre>Using the feature-level records for the baseline (May-Oct 2026) and the last two quarters, compute impact-qualified changes per builder per quarter with the class weights in metrics/README.md, cost per successful change, escaped defects and incident minutes, for pilot and comparison teams.
+Take agent cost from Claude Code telemetry (claude_code.cost.usage by team) and program costs from &lt;finance sheet&gt;. Fill in the ROI formula, show each input and its source, run a sensitivity analysis (plus and minus 30% on value per change and on attribution), and state what cannot be attributed to the program.</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================== 10 NEXT 10 WORKING DAYS ============================== -->
+    <section id="first-10-days" data-spy>
+      <div class="check-head">
+        <h2><span class="sec-n">10</span>Next 10 working days</h2>
+        <span class="check-progress" id="check-progress">0 of 14 done</span>
+      </div>
+      <p>Mon 26 Oct to Fri 6 Nov 2026, in step with the tracker. Ticks are saved in this browser only.</p>
+      <ol class="checklist">
+        <li><input type="checkbox" id="n01"><label for="n01"><span class="day">Day 1 · Mon 26 Oct</span><span class="task">Review plan v1 with the executive sponsor and take decisions D1, D3 and D5 (tracker 1.1).</span><span class="done-when">Done when the decisions are logged in the tracker.</span></label></li>
+        <li><input type="checkbox" id="n02"><label for="n02"><span class="day">Day 1 · Mon 26 Oct</span><span class="task">Start the inventory of existing agents and the industry evidence pack (1.5, 1.7).</span><span class="done-when">Done when the owners of the security, operations and requirement-analysis agents are contacted.</span></label></li>
+        <li><input type="checkbox" id="n03"><label for="n03"><span class="day">Day 2 · Tue 27 Oct</span><span class="task">Request data access for the analyst (D9) and pull baseline numbers from internal analytics (2.1).</span><span class="done-when">Done when the first baseline values are on the KPIs sheet.</span></label></li>
+        <li><input type="checkbox" id="n04"><label for="n04"><span class="day">Day 3 · Wed 28 Oct</span><span class="task">Get the task force approved (D2), answer the review comments and align the strategy document (1.2, 1.8).</span><span class="done-when">Done when names are approved and comments resolved.</span></label></li>
+        <li><input type="checkbox" id="n05"><label for="n05"><span class="day">Day 4 · Thu 29 Oct</span><span class="task">Kick off the task force and start the daily 11:00 stand-up (1.3, 1.4).</span><span class="done-when">Done when every member owns an action in the tracker.</span></label></li>
+        <li><input type="checkbox" id="n06"><label for="n06"><span class="day">Day 5 · Fri 30 Oct</span><span class="task">Finish the inventory, confirm the lead's allocation, and make the first Friday tracker update (1.5, 1.6).</span><span class="done-when">Done when every agent is listed with an owner.</span></label></li>
+        <li><input type="checkbox" id="n07"><label for="n07"><span class="day">Day 6 · Mon 2 Nov</span><span class="task">Start rollout wave 1 for 13 repos, the repo scorecard and the AI code share method (3.3, 3.2, 2.2).</span><span class="done-when">Done when every repo is assigned and the method is drafted.</span></label></li>
+        <li><input type="checkbox" id="n08"><label for="n08"><span class="day">Day 7 · Tue 3 Nov</span><span class="task">Install the starter kit in the pilot repo and run the hook and eval self-tests.</span><span class="done-when">Done when the 116 hook checks and the eval self-test pass.</span></label></li>
+        <li><input type="checkbox" id="n09"><label for="n09"><span class="day">Day 7 · Tue 3 Nov</span><span class="task">Run <code>/intent</code> on a real ticket with the pilot team.</span><span class="done-when">Done when the product owner has reviewed the draft intent.</span></label></li>
+        <li><input type="checkbox" id="n10"><label for="n10"><span class="day">Day 8 · Wed 4 Nov</span><span class="task">Review standard v2 with the backend team leads (3.1).</span><span class="done-when">Done when their comments are captured.</span></label></li>
+        <li><input type="checkbox" id="n11"><label for="n11"><span class="day">Day 9 · Thu 5 Nov</span><span class="task">Draft the pilot readout and the framework charter (5.1, 4.1).</span><span class="done-when">Done when both are ready for review.</span></label></li>
+        <li><input type="checkbox" id="n12"><label for="n12"><span class="day">Day 10 · Fri 6 Nov</span><span class="task">Lock the baseline with definitions v1 and publish standard v2 (2.1, 3.1).</span><span class="done-when">Done when the sponsor signs off.</span></label></li>
+        <li><input type="checkbox" id="n13"><label for="n13"><span class="day">Day 10 · Fri 6 Nov</span><span class="task">Send the charter, evidence pack and inventory decisions ahead of the Mon 9 Nov review (4.1, 1.7, 1.5).</span><span class="done-when">Done when the executive sponsor has them.</span></label></li>
+        <li><input type="checkbox" id="n14"><label for="n14"><span class="day">Day 10 · Fri 6 Nov</span><span class="task">Announce the program and how to contribute to all of engineering (1.9).</span><span class="done-when">Done when the announcement is sent.</span></label></li>
+      </ol>
+    </section>
+
+    <!-- ============================== 11 DON'T ============================== -->
+    <section id="dont" data-spy>
+      <h2><span class="sec-n">11</span>What not to do</h2>
+      <ul class="dont">
+        <li><span class="chip deny">no</span><span><b>Report adoption as progress.</b> Seats, sessions and lines of AI code are preconditions, not results.</span></li>
+        <li><span class="chip deny">no</span><span><b>Require all six artifacts for every change.</b> Tier by class or the chain becomes paperwork.</span></li>
+        <li><span class="chip deny">no</span><span><b>Remove a human gate before its replacement has a track record</b> in shadow mode.</span></li>
+        <li><span class="chip deny">no</span><span><b>Give agents production credentials</b>, not even temporarily, not even read-write "just for this incident".</span></li>
+        <li><span class="chip deny">no</span><span><b>Build dozens of bespoke agents.</b> Improve the six core agents with evals instead.</span></li>
+        <li><span class="chip deny">no</span><span><b>Change prompts, skills, hooks or models without running the evals.</b></span></li>
+        <li><span class="chip deny">no</span><span><b>Publish individual productivity leaderboards.</b> They turn every metric into a target.</span></li>
+        <li><span class="chip deny">no</span><span><b>Scale before the pilot's own numbers hold</b> against the baseline and the comparison team.</span></li>
+        <li><span class="chip deny">no</span><span><b>Ask humans to read every generated line.</b> Review by risk.</span></li>
+        <li><span class="chip deny">no</span><span><b>Let agents freeze or unfreeze tests.</b> Only humans edit the frozen list.</span></li>
+        <li><span class="chip deny">no</span><span><b>Skip the baseline because "we know we are slow".</b> You will need the number in month 12.</span></li>
+        <li><span class="chip deny">no</span><span><b>Run more parallel sessions than people can review.</b> Start at two or three.</span></li>
+        <li><span class="chip deny">no</span><span><b>Let templates grow.</b> Delete any section nobody reads.</span></li>
+        <li><span class="chip deny">no</span><span><b>Climb to L4 or L5</b> without a track record at the level below.</span></li>
+        <li><span class="chip deny">no</span><span><b>Build agents outside the shared framework.</b> Contribute to it instead.</span></li>
+        <li><span class="chip deny">no</span><span><b>Let the tracker go stale.</b> Update it every Friday; every review starts from it.</span></li>
+      </ul>
+    </section>
+
+    <!-- ============================== SOURCES ============================== -->
+    <section id="sources" data-spy>
+      <h2><span class="sec-n">A</span>Sources and checks</h2>
+      <ul>
+        <li>Source: <a href="vision.md"><code>vision.md</code></a>, "The Continuous Agentic SDLC" (company-neutral version), copied into this folder.</li>
+        <li>Claude features were checked against Claude Code 2.1.302 (<code>claude --help</code>, <code>claude plugin --help</code>, <code>claude plugin eval --help</code>) and the documentation pages for hooks, permissions, settings, sandboxing, managed settings, skills, subagents, plugins and marketplaces, plugin evals, GitHub Actions, monitoring and the Agent SDK, on Fri 23 Oct 2026.</li>
+        <li>Details that shaped the kit: <code>/plan</code> is a built-in command and <code>/verify</code> a bundled skill, hence <code>/plan-change</code> and <code>/verify-change</code>; MultiEdit is a legacy tool, kept in the hook matcher only for older versions; <code>Bash(git push *)</code> is the current permission-rule form.</li>
+        <li>Kompactor (<code>kompactor graph impact &lt;file|symbol&gt;</code>) is optional and used only for impact analysis in plan.md.</li>
+        <li>Company context and targets (48 repos with 27 on the standard, 40/48 by November, 48/48 by January, the framework from December, the 1.3x multiple, the pilot team, the autonomy stages and the task force) come from the strategy document as discussed on the call with the program sponsor on Fri 23 Oct 2026.</li>
+        <li>Execution tracker: <a href="agentic-sdlc-execution-plan.xlsx"><code>agentic-sdlc-execution-plan.xlsx</code></a>, with 54 actions, owners, dates, KPIs, decisions, risks and industry evidence with sources.</li>
+        <li>All weekdays in this plan were checked with the system calendar.</li>
+      </ul>
+      <footer class="end">Agentic SDLC Adoption Plan · Rev 2 · Fri 23 Oct 2026 · Prepared for Amar Kumar · Starter kit in <a href="starter-kit/README.md">starter-kit/</a></footer>
+    </section>
+  </main>
+</div>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var store = {
+    get: function (k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { window.localStorage.setItem(k, v); } catch (e) { /* storage unavailable */ } }
+  };
+
+  /* Theme: auto follows the system or the viewer; light and dark are explicit choices. */
+  var order = ["auto", "light", "dark"];
+  var toggles = document.querySelectorAll("[data-theme-toggle]");
+  function label(t) {
+    toggles.forEach(function (b) {
+      b.textContent = "Theme: " + t;
+      b.setAttribute("aria-label", "Theme: " + t + ". Switch theme");
+    });
+  }
+  var saved = store.get("asdlc-theme");
+  var theme = order.indexOf(saved) > 0 ? saved : (root.getAttribute("data-theme") || "auto");
+  if (saved === "light" || saved === "dark") root.setAttribute("data-theme", saved);
+  label(theme);
+  toggles.forEach(function (b) {
+    b.addEventListener("click", function () {
+      theme = order[(order.indexOf(theme) + 1) % order.length];
+      if (theme === "auto") root.removeAttribute("data-theme"); else root.setAttribute("data-theme", theme);
+      store.set("asdlc-theme", theme);
+      label(theme);
+    });
+  });
+
+  /* Contents: highlight the section in view, and the phone menu. */
+  var links = Array.prototype.slice.call(document.querySelectorAll(".toc a, .toc-panel a"));
+  var sections = Array.prototype.slice.call(document.querySelectorAll("main [data-spy]"));
+  function mark(id) {
+    links.forEach(function (a) { a.setAttribute("aria-current", a.getAttribute("href") === "#" + id ? "true" : "false"); });
+  }
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) mark(e.target.id); });
+    }, { rootMargin: "-15% 0px -75% 0px" });
+    sections.forEach(function (s) { io.observe(s); });
+  }
+  mark("summary");
+  window.addEventListener("scroll", function () {
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) mark("sources");
+  }, { passive: true });
+  var tocBtn = document.getElementById("toc-toggle");
+  var panel = document.getElementById("toc-panel");
+  function closePanel() { panel.hidden = true; tocBtn.setAttribute("aria-expanded", "false"); }
+  tocBtn.addEventListener("click", function () {
+    var open = panel.hidden;
+    panel.hidden = !open;
+    tocBtn.setAttribute("aria-expanded", String(open));
+  });
+  panel.addEventListener("click", function (e) { if (e.target.closest("a")) closePanel(); });
+
+  /* In-page links scroll in script, so they also work where hash navigation is blocked. */
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest('a[href^="#"]');
+    if (!a || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey) return;
+    var target = document.getElementById(a.getAttribute("href").slice(1));
+    if (!target) return;
+    e.preventDefault();
+    target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+    if (!target.hasAttribute("tabindex")) target.setAttribute("tabindex", "-1");
+    target.focus({ preventScroll: true });
+    try { history.replaceState(null, "", "#" + target.id); } catch (err) { /* not allowed here */ }
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !panel.hidden) { closePanel(); tocBtn.focus(); }
+  });
+
+  /* Copy buttons on prompts. */
+  var isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+  document.querySelectorAll(".prompt").forEach(function (box) {
+    var btn = box.querySelector(".copy");
+    var pre = box.querySelector("pre");
+    if (!btn || !pre) return;
+    function flash(msg, ok) {
+      btn.textContent = msg;
+      btn.classList.toggle("ok", !!ok);
+      window.clearTimeout(btn._t);
+      btn._t = window.setTimeout(function () { btn.textContent = "Copy"; btn.classList.remove("ok"); }, 2200);
+    }
+    function selectText() {
+      var range = document.createRange();
+      range.selectNodeContents(pre);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      flash(isMac ? "Selected: press ⌘C" : "Selected: press Ctrl+C", false);
+    }
+    btn.addEventListener("click", function () {
+      var text = pre.textContent.replace(/\s+$/, "");
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { flash("Copied", true); }, selectText);
+      } else {
+        selectText();
+      }
+    });
+  });
+
+  /* First-10-days checklist, saved per browser. */
+  var boxes = Array.prototype.slice.call(document.querySelectorAll(".checklist input[type=checkbox]"));
+  var progress = document.getElementById("check-progress");
+  function updateProgress() {
+    var n = boxes.filter(function (b) { return b.checked; }).length;
+    progress.textContent = n + " of " + boxes.length + " done";
+  }
+  boxes.forEach(function (b) {
+    if (store.get("asdlc-check-" + b.id) === "1") b.checked = true;
+    b.addEventListener("change", function () { store.set("asdlc-check-" + b.id, b.checked ? "1" : "0"); updateProgress(); });
+  });
+  updateProgress();
+
+  /* ROI calculator. */
+  var form = document.getElementById("roi");
+  var fmt = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
+  function num(id) { var v = parseFloat(document.getElementById(id).value); return isFinite(v) ? v : 0; }
+  function put(id, v) { document.getElementById(id).textContent = fmt.format(Math.round(v)); }
+  function calc() {
+    var output = (num("r-now") - num("r-base")) * num("r-builders") * 4 * num("r-value");
+    var quality = num("r-defects") * num("r-defect-cost") + num("r-minutes") * num("r-minute-cost");
+    var benefit = output + quality;
+    var cost = num("r-compute") + num("r-enable") + num("r-dip");
+    put("o-output", output); put("o-quality", quality); put("o-benefit", benefit); put("o-cost", cost);
+    document.getElementById("o-roi").textContent = cost > 0 ? Math.round((benefit - cost) / cost * 100) + "%" : "–";
+    document.getElementById("o-payback").textContent = benefit > 0 && cost > 0 ? (cost / (benefit / 12)).toFixed(1) + " months" : "–";
+  }
+  form.addEventListener("input", calc);
+  form.addEventListener("submit", function (e) { e.preventDefault(); });
+  calc();
+})();
+</script>

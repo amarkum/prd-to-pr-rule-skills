@@ -1,0 +1,53 @@
+# Agent evals: agent configuration is production code, so test it whenever it changes.
+# Copy to .github/workflows/ in the pilot repository. Needs an ANTHROPIC_API_KEY secret.
+name: Agent evals
+
+on:
+  pull_request:
+    paths:
+      - "CLAUDE.md"
+      - ".claude/**"
+      - "docs/policies/**"
+      - "docs/changes/_templates/**"
+      - "evals/**"
+  schedule:
+    - cron: "0 3 * * 1"   # weekly, to catch drift from model or tool updates
+  workflow_dispatch: {}
+
+jobs:
+  self-test:
+    # Free and deterministic: hooks behave, and every eval case can tell good from bad.
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python3 -m pip install pyyaml
+      - run: python3 .claude/hooks/tests/run_hook_tests.py
+      - run: python3 evals/run_evals.py --self-test
+
+  evals:
+    needs: self-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python3 -m pip install pyyaml
+      - name: Install Claude Code
+        run: |
+          curl -fsSL https://claude.ai/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Run eval suite
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python3 evals/run_evals.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: agent-eval-results
+          path: evals/results/

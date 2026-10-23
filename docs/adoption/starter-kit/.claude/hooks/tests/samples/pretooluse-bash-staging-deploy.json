@@ -1,0 +1,12 @@
+{
+  "session_id": "sample-session",
+  "transcript_path": "/dev/null",
+  "cwd": ".",
+  "permission_mode": "default",
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "helm upgrade --install api ./chart --kube-context staging-eu -n payments",
+    "description": "Deploy the API chart to staging"
+  }
+}

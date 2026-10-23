@@ -1,0 +1,68 @@
+# Release manifest: what shipped, and under what risk.
+# Assembled by the release-manifest skill; the production gate is decided by a human or a policy.
+schema: agentic-sdlc/release-manifest@1
+change_id: "<TICKET>-<short-slug>"
+title: "<one line>"
+class: standard                       # trivial | standard | significant | high-risk
+owner: "<builder handle>"
+version: "<semver, tag or build number>"
+
+source:
+  repository: "<org/repo>"
+  commit: "<merge commit sha>"
+  pull_request: "<url>"
+  merged_at: "YYYY-MM-DDTHH:MM:SSZ"
+
+artifacts:
+  - name: "<image or package name>"
+    digest: "<sha256:...>"
+    sbom: "<path or url>"
+
+links:
+  intent: intent.md
+  spec: spec.md                       # "none" for standard changes without a spec
+  plan: plan.md
+  evidence: evidence.md
+  review: review.md
+
+checks:                               # pass | fail | skipped
+  build: pass
+  artifact_verify: pass
+  security_scan: pass
+  dev_smoke: pass
+  qa_integration: pass
+  staging_synthetic: pass
+
+environments:
+  - name: dev
+    deployed_at: "YYYY-MM-DDTHH:MM:SSZ"
+    deployed_by: release-agent
+    result: pass
+  - name: qa
+    deployed_at: "YYYY-MM-DDTHH:MM:SSZ"
+    deployed_by: release-agent
+    result: pass
+  - name: staging
+    deployed_at: "YYYY-MM-DDTHH:MM:SSZ"
+    deployed_by: release-agent
+    result: pass
+
+risk:
+  blast_radius: "<who and what is affected if this goes wrong>"
+  feature_flag: "<flag name, or none>"
+  rollout: "<for example 5% for 1 day, then 25%, then 100%>"
+  rollback: "<exact steps, from plan.md>"
+  rollback_exercised_in_staging: false
+  data_migration: none                # none | reversible | irreversible
+
+production_gate:
+  type: human                         # human | policy
+  policy: ""                          # policy id when type is policy
+  approver: "<name or policy engine>"
+  decision: pending                   # pending | approved | rejected
+  decided_at: ""
+
+post_release:
+  adoption_metric: "<from the intent's success metrics>"
+  impact_threshold: "<what counts as impact for this change>"
+  check_on: "YYYY-MM-DD"
